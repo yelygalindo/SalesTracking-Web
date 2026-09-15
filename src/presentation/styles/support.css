@@ -1,0 +1,18 @@
+.profile-identity { display:grid; gap:2px; }
+.profile-roles { display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+.profile-roles span { padding:2px 6px; border-radius:99px; color:#285f9d; background:#eaf2fc; font-size:.62rem; font-weight:800; line-height:1.4; }
+.customer-activity > .activity-tabs button:nth-child(2),
+.customer-activity > .activity-tabs button:nth-child(3),
+.project-panel .sub-tabs button:nth-child(2),
+.project-panel .sub-tabs button:nth-child(3) { padding:8px 12px; border:1px solid #dfe4ec; border-radius:9px; }
+.customer-activity > .activity-tabs button:nth-child(2)::before,
+.customer-activity > .activity-tabs button:nth-child(3)::before,
+.project-panel .sub-tabs button:nth-child(2)::before,
+.project-panel .sub-tabs button:nth-child(3)::before { content:'+ '; }
+.customer-activity > .activity-tabs button:nth-child(2):hover,
+.customer-activity > .activity-tabs button:nth-child(3):hover,
+.project-panel .sub-tabs button:nth-child(2):hover,
+.project-panel .sub-tabs button:nth-child(3):hover { color:#e65d17; border-color:#f5a36f; background:#fff5ee; }
+.customer-row-actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; }
+.customer-row-actions .quick { padding:6px 8px; border:1px solid #e1e6ed; border-radius:8px; color:#53647a; background:#f8fafc; }
+.customer-row-actions .quick:hover { color:#e65d17; border-color:#f5a36f; background:#fff5ee; }

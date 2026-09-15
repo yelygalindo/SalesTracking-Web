@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:5000
+      - name: Build production container
+        run: docker build --build-arg VITE_API_BASE_URL=https://api.urbantrack.io -t urbantrack-crm-web:ci .
+      - name: Verify container health endpoint
+        run: |
+          docker run --rm -d --name urbantrack-web-ci -p 8080:80 urbantrack-crm-web:ci
+          for attempt in {1..20}; do
+            if curl --fail --silent http://localhost:8080/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs urbantrack-web-ci
+          exit 1

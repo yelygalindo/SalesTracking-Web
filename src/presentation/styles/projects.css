@@ -1,0 +1,20 @@
+.dashboard > .customer-overlay > .project-panel > .activity-tabs button { color:#68768a; background:transparent; box-shadow:none; }
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.project-info) button:nth-child(1),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.activity-list) button:nth-child(2),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.attachments-section) button:nth-child(3),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+div>.sub-tabs) button:nth-child(4) { color:#e65d17; background:#fff3ea; box-shadow:inset 0 -3px #f56a1c; }
+.project-info { display:grid; gap:20px; }
+.project-info > p { order:3; margin:0; padding:20px; border:1px solid #e5eaf0; border-radius:14px; color:#59677b; background:white; line-height:1.6; }
+.project-info > p::before { display:block; margin-bottom:8px; color:#273950; font-size:.85rem; font-weight:800; content:'Descripción'; }
+.project-info .customer-detail { order:1; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; padding:8px 20px; border:1px solid #e5eaf0; border-radius:14px; background:white; }
+.project-info .customer-detail div { min-height:78px; padding:16px 4px; }
+.project-info .customer-detail dd { font-size:1rem; font-weight:750; }
+.project-info .customer-detail div:nth-child(3) dd::after { display:block; width:100%; height:8px; margin-top:10px; border-radius:99px; background:#f0f2f5; content:''; }
+.project-info .status-field { order:2; width:max-content; min-width:220px; padding:14px 18px; border:1px solid #e5eaf0; border-radius:13px; background:white; }
+.project-info .detail-actions { order:4; justify-content:flex-end; margin:0; }
+.attachments-header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:18px; }
+.attachments-header h3 { margin:0 0 4px; color:#273950; }.attachments-header span { color:#8490a2; font-size:.78rem; }
+.attachment-form { border:1px solid #e5eaf0; }
+.attachment-grid article { transition:transform .18s ease,box-shadow .18s ease; }.attachment-grid article:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(24,40,64,.1); }
+.attachment-grid article>div>a { text-decoration:none; }.attachment-grid article>div strong { display:inline-block; max-width:75%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+@media(max-width:700px){.project-info .customer-detail{grid-template-columns:1fr}.attachments-header{align-items:flex-start;flex-direction:column}}

@@ -1,0 +1,11 @@
+import { useState, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { authService } from '@/features/auth/services/authService'
+import { Brand } from '@/presentation/components/Brand'
+
+export function ResetPasswordPage() {
+  const [params] = useSearchParams(); const token = params.get('token')?.trim() ?? ''
+  const [password, setPassword] = useState(''); const [confirmPassword, setConfirmPassword] = useState(''); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(''); const [error, setError] = useState('')
+  async function submit(event: FormEvent) { event.preventDefault(); setError(''); if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return } if (password !== confirmPassword) { setError('Las contraseñas no coinciden.'); return } setBusy(true); try { const response = await authService.resetPassword({ token, newPassword: password, confirmPassword }); setMessage(response.message) } catch (reason) { setError(reason instanceof Error ? reason.message : 'No fue posible restablecer la contraseña.') } finally { setBusy(false) } }
+  return <main className="simple-auth-page"><section className="simple-auth-card"><Brand/><p className="overline">Nueva contraseña</p><h1>Protege tu cuenta</h1>{!token ? <div className="form-error" role="alert">El enlace no contiene un token válido.</div> : message ? <div className="success-message" role="status">{message}</div> : <form className="simple-form" onSubmit={submit}><label htmlFor="password">Nueva contraseña</label><input id="password" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)}/><label htmlFor="confirmPassword">Confirmar contraseña</label><input id="confirmPassword" type="password" required minLength={8} autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)}/>{error && <p className="form-error" role="alert">{error}</p>}<button className="primary-button" disabled={busy}>{busy ? 'Guardando…' : 'Restablecer contraseña'}</button></form>}<Link className="back-link" to="/login">Ir a iniciar sesión</Link></section></main>
+}

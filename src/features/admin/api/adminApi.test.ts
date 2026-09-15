@@ -1,0 +1,5 @@
+import MockAdapter from 'axios-mock-adapter'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { apiClient, publicApiClient } from '@/lib/api/apiClient'
+import { adminApi } from './adminApi'
+describe('adminApi',()=>{const api=new MockAdapter(apiClient),publicApi=new MockAdapter(publicApiClient);beforeEach(()=>{api.reset();publicApi.reset()});it('crea una invitación con el contrato publicado',async()=>{api.onPost('/api/invitations').reply(201,{externalId:'inv-1',email:'ana@example.com'});await adminApi.invite({email:'ana@example.com',fullName:'Ana Pérez',roleCode:'seller'});expect(JSON.parse(api.history.post[0].data)).toEqual({email:'ana@example.com',fullName:'Ana Pérez',roleCode:'seller'})});it('acepta una invitación de manera pública',async()=>{publicApi.onPost('/api/invitations/accept').reply(200,{message:'Aceptada',externalUserId:'usr-1'});await adminApi.accept({token:'abc',password:'Secure123!',fullNameUser:'Ana'});expect(JSON.parse(publicApi.history.post[0].data)).toEqual({token:'abc',password:'Secure123!',fullNameUser:'Ana'})})})

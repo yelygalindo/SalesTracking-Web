@@ -1,0 +1,1 @@
+export type ToastTone='success'|'error';export interface ToastDetail{message:string;tone:ToastTone}export function notify(message:string,tone:ToastTone='success'){window.dispatchEvent(new CustomEvent<ToastDetail>('urbantrack:toast',{detail:{message,tone}}))}

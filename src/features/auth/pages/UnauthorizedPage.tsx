@@ -1,0 +1,2 @@
+import { useAuth } from '@/features/auth/hooks/useAuth'
+export function UnauthorizedPage() { const { logout } = useAuth(); return <main className="status-page"><p className="overline">Acceso restringido</p><h1>No tienes permiso para ver esta página</h1><p>Si necesitas acceso, comunícate con el responsable de UrbanTrack.</p><button className="primary-link button-link" onClick={() => void logout()}>Cerrar sesión</button></main> }

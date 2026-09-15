@@ -1,0 +1,75 @@
+name: Release beta
+
+on:
+  push:
+    tags: ['v*-beta.*']
+  workflow_dispatch:
+    inputs:
+      deploy_railway:
+        description: Deploy this revision to Railway beta
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: railway-beta
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/urbantrack-crm-web
+
+jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:beta
+          build-args: VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [validate, image]
+    if: github.event_name == 'push' || inputs.deploy_railway
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: beta
+    container: ghcr.io/railwayapp/cli:latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy beta to Railway
+        run: railway up --ci --service "${{ vars.RAILWAY_SERVICE }}" --environment "${{ vars.RAILWAY_ENVIRONMENT }}"
+
+  smoke-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check deployed health endpoint
+        env:
+          BETA_URL: ${{ vars.RAILWAY_BETA_URL }}
+        run: curl --fail --retry 12 --retry-delay 5 --retry-all-errors "$BETA_URL/health"
