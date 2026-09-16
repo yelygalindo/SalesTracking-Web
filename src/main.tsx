@@ -11,6 +11,7 @@ import "@/presentation/styles/theme.css";
 import "@/presentation/styles/project-detail.css";
 import "@/presentation/styles/reminders.css";
 import "@/presentation/styles/customers.css";
+import "@/presentation/styles/deliveries.css";
 import "@/presentation/styles/reports.css";
 import "@/presentation/styles/projects-operational.css";
 import "leaflet/dist/leaflet.css";
