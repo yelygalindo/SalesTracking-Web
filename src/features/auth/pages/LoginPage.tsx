@@ -49,7 +49,7 @@ export function LoginPage() {
             siempre en ruta.
           </h1>
           <p>
-            Organiza clientes, obras, jornadas y visitas desde un solo lugar.
+            Organiza clientes, proyectos, jornadas y visitas desde un solo lugar.
             Con información clara para decidir a tiempo.
           </p>
           <div className="security-note">

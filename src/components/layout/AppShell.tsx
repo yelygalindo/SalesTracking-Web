@@ -39,7 +39,7 @@ const items = [
   },
   {
     to: "/projects",
-    label: "Obras",
+    label: "Proyectos",
     icon: Building2,
     permissions: ["projects.read"],
   },

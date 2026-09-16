@@ -242,7 +242,7 @@ function ProjectSummary({
           <header>
             <div>
               <p className="overline">Ubicación</p>
-              <h3>Localización de la obra</h3>
+              <h3>Localización del proyecto</h3>
             </div>
             <MapPin />
           </header>
@@ -510,7 +510,7 @@ function ProjectProducts({ id }: { id: string }) {
     <section className="project-products">
       <header>
         <p className="overline">Productos asociados</p>
-        <h3>Materiales de la obra</h3>
+        <h3>Materiales del proyecto</h3>
       </header>
       {query.data?.map((item) => (
         <article key={item.productExternalId}>

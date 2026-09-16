@@ -326,19 +326,24 @@ function CatalogForm({
               }
             />
           </label>
-          <label>
+          <label className="catalog-option">
             <input
               type="checkbox"
               checked={unit.allowsDecimals}
               onChange={(event) =>
                 setUnit({ ...unit, allowsDecimals: event.target.checked })
               }
-            />{" "}
-            Permite decimales
+            />
+            <span>
+              <strong>Permitir cantidades decimales</strong>
+              <small>
+                Habilita valores como 1,5 o 2,75 para esta unidad.
+              </small>
+            </span>
           </label>
         </>
       )}
-      <label>
+      <label className="catalog-option">
         <input
           type="checkbox"
           checked={tab === "products" ? product.isActive : unit.isActive}
@@ -347,8 +352,15 @@ function CatalogForm({
               ? setProduct({ ...product, isActive: event.target.checked })
               : setUnit({ ...unit, isActive: event.target.checked })
           }
-        />{" "}
-        Activo
+        />
+        <span>
+          <strong>
+            {tab === "products" ? "Producto activo" : "Unidad activa"}
+          </strong>
+          <small>
+            Estará disponible para utilizarse en nuevos registros.
+          </small>
+        </span>
       </label>
       {error && <p className="form-error">{error.message}</p>}
       <button className="action-primary">Guardar</button>

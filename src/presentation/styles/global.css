@@ -924,6 +924,28 @@ button {
   height: 260px;
   width: 100%;
 }
+.location-marker-wrap {
+  border: 0;
+  background: transparent;
+}
+.location-marker {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  transform: rotate(45deg);
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #f56a1c;
+  box-shadow: 0 4px 12px rgba(23, 45, 76, 0.3);
+}
+.location-marker::after {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: #fff;
+  content: "";
+}
 .location-actions,
 .coordinate-row {
   display: flex;
@@ -975,17 +997,61 @@ button {
 }
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-top: 4px;
 }
 .admin-card {
-  padding: 24px;
+  overflow: hidden;
+  padding: 0;
   border: 1px solid #e5eaf0;
   border-radius: 16px;
   background: white;
 }
 .admin-card h2 {
-  margin-top: 0;
+  margin: 0;
+  font-size: 18px;
+}
+.admin-card-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-bottom: 1px solid #edf0f4;
+  background: #fafbfc;
+}
+.admin-card-header > span {
+  display: grid;
+  flex: 0 0 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  color: #e65d17;
+  background: #fff0e5;
+}
+.admin-card-header svg {
+  width: 19px;
+}
+.admin-card-header p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+.admin-form {
+  margin: 0;
+  padding: 20px;
+}
+.admin-results {
+  padding: 0 20px 20px;
+  border-top: 1px solid #edf0f4;
+}
+.admin-results h3 {
+  margin: 18px 0 4px;
+  color: #344054;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 .invitation-card {
   display: grid;
@@ -1309,6 +1375,39 @@ button {
   border-radius: 16px;
   background: white;
 }
+.catalog-option {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  gap: 10px !important;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #e5eaf0;
+  border-radius: 11px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.catalog-option input {
+  width: 17px !important;
+  height: 17px !important;
+  margin-top: 2px;
+  accent-color: #f56a1c;
+}
+.catalog-option span,
+.catalog-option strong,
+.catalog-option small {
+  display: block;
+}
+.catalog-option strong {
+  color: #344054;
+  font-size: 13px;
+}
+.catalog-option small {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
 .danger-text {
   color: #b42318;
 }
@@ -1344,11 +1443,37 @@ button {
   border-radius: 16px;
   background: #fff;
 }
+.workday-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.7fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.workday-overview .operations-map-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 340px;
+  padding: 16px;
+}
+.workday-overview-aside {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
 .operations-map-card > header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 16px;
+}
+.operations-map-count {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: #176b55;
+  background: #e7f5ef;
+  font-size: 12px;
+  font-weight: 700;
 }
 .operations-map-card h2,
 .operations-note h2,
@@ -1391,6 +1516,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
+.workday-overview .operations-summary {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
 .operations-summary article {
   display: flex;
   align-items: center;
@@ -1399,6 +1528,34 @@ button {
   border: 1px solid #e4e9ef;
   border-radius: 14px;
   background: #fff;
+}
+.workday-overview .operations-summary article {
+  gap: 10px;
+  min-height: 68px;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+.workday-overview .operations-summary article > span {
+  width: 34px;
+  height: 34px;
+}
+.workday-overview .operations-summary strong {
+  font-size: 16px;
+}
+.workday-overview .operations-note {
+  padding: 14px;
+  border-radius: 12px;
+}
+.workday-overview .operations-note h2 {
+  font-size: 15px;
+}
+.workday-overview .operations-note p {
+  font-size: 13px;
+  line-height: 1.45;
+}
+.workday-overview .operations-map {
+  height: 100%;
+  min-height: 260px;
 }
 .operations-summary article > span {
   display: grid;
@@ -1440,7 +1597,41 @@ button {
   margin: 16px 0 0;
   color: #667085;
 }
+.workday-visit-target,
+.workday-visit-record,
+.workday-visit-result {
+  display: grid;
+  gap: 3px;
+}
+.workday-visit-target span {
+  width: max-content;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #176b55;
+  background: #e7f5ef;
+  font-size: 11px;
+  font-weight: 700;
+}
+.workday-visit-target small,
+.workday-visit-record small {
+  color: #667085;
+}
+.workday-visit-result strong {
+  color: #172d4c;
+}
+.workday-visit-result span {
+  color: #667085;
+}
 @media (max-width: 850px) {
+  .workday-overview {
+    grid-template-columns: 1fr;
+  }
+  .workday-overview .operations-map-card {
+    min-height: auto;
+  }
+  .workday-overview .operations-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .operations-summary {
     grid-template-columns: 1fr;
   }
@@ -1452,6 +1643,17 @@ button {
   }
   .operations-filters label {
     width: 100%;
+  }
+}
+@media (max-width: 620px) {
+  .workday-overview .operations-summary {
+    grid-template-columns: 1fr;
+  }
+  .operations-map-card > header {
+    gap: 10px;
+  }
+  .operations-map-count {
+    display: none;
   }
 }
 .project-panel {

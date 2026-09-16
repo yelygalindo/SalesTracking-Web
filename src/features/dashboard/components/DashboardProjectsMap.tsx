@@ -49,7 +49,7 @@ export function DashboardProjectsMap({
   if (!projects.length)
     return (
       <div className="dashboard-map-empty">
-        No hay obras con ubicación registrada.
+        No hay proyectos con ubicación registrada.
       </div>
     );
   return (

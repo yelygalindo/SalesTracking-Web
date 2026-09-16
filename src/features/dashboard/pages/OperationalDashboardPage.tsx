@@ -220,7 +220,7 @@ function DashboardSections({
         <article className="dashboard-map-panel">
           <header className="dashboard-map-header">
             <div>
-              <h2>Mapa de obras</h2>
+              <h2>Mapa de proyectos</h2>
               <p>Proyectos con ubicación registrada.</p>
             </div>
             <div className="dashboard-map-filters">
@@ -260,7 +260,7 @@ function DashboardSections({
             loading={map.loading}
             error={map.error}
             isEmpty={!map.items.length}
-            empty="No hay obras con ubicación registrada."
+            empty="No hay proyectos con ubicación registrada."
           >
             <DashboardProjectsMap items={map.items} />
           </DataState>

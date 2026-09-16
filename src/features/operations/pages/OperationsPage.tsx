@@ -47,6 +47,13 @@ const statusLabel = (status?: string) =>
   })[status?.toLowerCase() ?? ""] ??
   status ??
   "—";
+const visitTargetLabel = (targetType: string) =>
+  ({
+    customer: "Cliente",
+    project: "Proyecto",
+  })[targetType.toLowerCase()] ?? targetType;
+const coordinates = (latitude: number, longitude: number) =>
+  `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 const dayStart = (value: string) => new Date(`${value}T00:00:00`).toISOString();
 const dayEnd = (value: string) =>
   new Date(`${value}T23:59:59.999`).toISOString();
@@ -268,8 +275,8 @@ export function OperationsPage() {
                         <td>{dateTime(item.startedAtUtc)}</td>
                         <td>{dateTime(item.endedAtUtc)}</td>
                         <td>{duration(item.startedAtUtc, item.endedAtUtc)}</td>
-                        <td>{item.visitCount ?? item.visits?.length ?? 0}</td>
-                        <td>{item.locationCount ?? 0}</td>
+                        <td>{item.visitCount}</td>
+                        <td>{item.locationCount}</td>
                         <td>
                           <span className="status-pill">
                             {statusLabel(item.status)}
@@ -336,49 +343,56 @@ function WorkdayDetail({
       >
         {workday.data && (
           <>
-            <section className="operations-summary">
-              <Summary
-                icon={<Clock3 />}
-                label="Duración"
-                value={duration(
-                  workday.data.startedAtUtc,
-                  workday.data.endedAtUtc,
-                )}
-              />
-              <Summary
-                icon={<UserRoundCheck />}
-                label="Visitas"
-                value={String(
-                  workday.data.visitCount ?? workday.data.visits?.length ?? 0,
-                )}
-              />
-              <Summary
-                icon={<Route />}
-                label="Puntos registrados"
-                value={String(points.length)}
-              />
-            </section>
-            {workday.data.note && (
-              <section className="operations-note">
-                <h2>Notas</h2>
-                <p>{workday.data.note}</p>
+            <section className="workday-overview">
+              <section className="operations-map-card">
+                <header>
+                  <div>
+                    <h2>Ruta recorrida</h2>
+                    <p>
+                      Recorrido cronológico de las ubicaciones registradas.
+                    </p>
+                  </div>
+                  <span className="operations-map-count">
+                    {workday.data.locationCount} puntos
+                  </span>
+                </header>
+                <DataState
+                  loading={locations.isLoading}
+                  error={locations.error}
+                  isEmpty={!points.length}
+                  empty="No hay puntos de ruta registrados."
+                >
+                  <TrackingMap points={points} route />
+                </DataState>
               </section>
-            )}
-            <section className="operations-map-card">
-              <header>
-                <div>
-                  <h2>Ruta recorrida</h2>
-                  <p>Recorrido cronológico de las ubicaciones registradas.</p>
-                </div>
-              </header>
-              <DataState
-                loading={locations.isLoading}
-                error={locations.error}
-                isEmpty={!points.length}
-                empty="No hay puntos de ruta registrados."
-              >
-                <TrackingMap points={points} route />
-              </DataState>
+              <aside className="workday-overview-aside">
+                <section className="operations-summary">
+                  <Summary
+                    icon={<Clock3 />}
+                    label="Duración"
+                    value={duration(
+                      workday.data.startedAtUtc,
+                      workday.data.endedAtUtc,
+                    )}
+                  />
+                  <Summary
+                    icon={<UserRoundCheck />}
+                    label="Visitas"
+                    value={String(workday.data.visitCount)}
+                  />
+                  <Summary
+                    icon={<Route />}
+                    label="Puntos registrados"
+                    value={String(workday.data.locationCount)}
+                  />
+                </section>
+                {workday.data.note && (
+                  <section className="operations-note">
+                    <h2>Nota de la jornada</h2>
+                    <p>{workday.data.note}</p>
+                  </section>
+                )}
+              </aside>
             </section>
             <section className="customer-table-card">
               <h2>Visitas</h2>
@@ -391,31 +405,63 @@ function WorkdayDetail({
                   <table>
                     <thead>
                       <tr>
-                        <th>Destino</th>
-                        <th>Inicio de visita</th>
-                        <th>Fin de visita</th>
+                        <th>Objetivo</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
                         <th>Permanencia</th>
-                        <th>Notas</th>
+                        <th>Resultado y notas</th>
                       </tr>
                     </thead>
                     <tbody>
                       {workday.data.visits.map((visit) => (
                         <tr key={visit.externalId}>
                           <td>
-                            <strong>
-                              {visit.projectName ||
-                                visit.customerName ||
-                                "Visita"}
-                            </strong>
+                            <div className="workday-visit-target">
+                              <strong>{visit.targetName || "Visita"}</strong>
+                              <span>{visitTargetLabel(visit.targetType)}</span>
+                              {visit.customerName &&
+                                visit.customerName !== visit.targetName && (
+                                  <small>Cliente: {visit.customerName}</small>
+                                )}
+                            </div>
                           </td>
-                          <td>{dateTime(visit.startedAtUtc)}</td>
-                          <td>{dateTime(visit.endedAtUtc)}</td>
                           <td>
-                            {visit.durationMinutes != null
-                              ? `${visit.durationMinutes} min`
-                              : duration(visit.startedAtUtc, visit.endedAtUtc)}
+                            <div className="workday-visit-record">
+                              <span>{dateTime(visit.checkInAtUtc)}</span>
+                              <small>
+                                {coordinates(
+                                  visit.checkInLatitude,
+                                  visit.checkInLongitude,
+                                )}
+                              </small>
+                            </div>
                           </td>
-                          <td>{visit.note || "—"}</td>
+                          <td>
+                            <div className="workday-visit-record">
+                              <span>{dateTime(visit.checkOutAtUtc)}</span>
+                              {visit.checkOutLatitude != null &&
+                                visit.checkOutLongitude != null && (
+                                  <small>
+                                    {coordinates(
+                                      visit.checkOutLatitude,
+                                      visit.checkOutLongitude,
+                                    )}
+                                  </small>
+                                )}
+                            </div>
+                          </td>
+                          <td>
+                            {duration(
+                              visit.checkInAtUtc,
+                              visit.checkOutAtUtc,
+                            )}
+                          </td>
+                          <td>
+                            <div className="workday-visit-result">
+                              {visit.result && <strong>{visit.result}</strong>}
+                              <span>{visit.notes || "Sin notas"}</span>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

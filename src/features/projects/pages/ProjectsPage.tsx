@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
@@ -74,6 +74,18 @@ export function ProjectsPage() {
           pageSize: 20,
         }),
     }),
+    metrics = useQueries({
+      queries: [undefined, "Activo", "Completado"].map((metricStatus) => ({
+        queryKey: ["project-metric", metricStatus ?? "all", sellerId],
+        queryFn: () =>
+          projectService.list({
+            status: metricStatus,
+            sellerId: canChooseSeller && sellerId ? sellerId : undefined,
+            page: 1,
+            pageSize: 1,
+          }),
+      })),
+    }),
     statuses = useQuery({
       queryKey: ["project-statuses"],
       queryFn: projectService.statuses,
@@ -115,7 +127,7 @@ export function ProjectsPage() {
         );
     },
     onSuccess: async () => {
-      notify(`La obra “${form.name}” se guardó correctamente.`);
+      notify(`El proyecto “${form.name}” se guardó correctamente.`);
       setCreating(false);
       setEditing(false);
       setSelected(null);
@@ -133,7 +145,7 @@ export function ProjectsPage() {
     remove = useMutation({
       mutationFn: () => projectService.remove(selected!),
       onSuccess: async () => {
-        notify("Obra eliminada.");
+        notify("Proyecto eliminado.");
         setSelected(null);
         await invalidate();
       },
@@ -155,9 +167,9 @@ export function ProjectsPage() {
         exportPage += 1;
       } while (exportPage <= totalPages);
       exportExcel(
-        `obras-${new Date().toISOString().slice(0, 10)}.xls`,
+        `proyectos-${new Date().toISOString().slice(0, 10)}.xls`,
         [
-          { label: "Obra", value: (row) => row.name },
+          { label: "Proyecto", value: (row) => row.name },
           { label: "Cliente", value: (row) => row.customerName || "" },
           { label: "Responsable", value: (row) => row.sellerName || "" },
           { label: "Estado", value: (row) => translateValue(row.status) },
@@ -224,7 +236,7 @@ export function ProjectsPage() {
         <div>
           <p className="overline">Gestión comercial</p>
           <h1>Proyectos</h1>
-          <p>Seguimiento de obras y oportunidades.</p>
+          <p>Administra el avance y seguimiento de tus proyectos.</p>
         </div>
         <div className="heading-actions">
         {canExport && (
@@ -255,6 +267,24 @@ export function ProjectsPage() {
         )}
         </div>
       </header>
+      <section className="customer-metrics" aria-label="Resumen de proyectos">
+        {[
+          { label: "Total proyectos", index: 0 },
+          { label: "Proyectos activos", index: 1 },
+          { label: "Proyectos completados", index: 2 },
+        ].map(({ label, index }) => (
+          <article key={label} className={index === 1 ? "accent" : ""}>
+            <span>{label}</span>
+            <strong>
+              {metrics[index].isLoading
+                ? "…"
+                : metrics[index].isError
+                  ? "—"
+                  : (metrics[index].data?.pagination.totalItems ?? 0).toLocaleString("es-BO")}
+            </strong>
+          </article>
+        ))}
+      </section>
       <div className="customer-toolbar">
         <select
           value={status}
@@ -443,7 +473,7 @@ function ProjectForm({
   const progress = Math.max(0, Math.min(100, form.progressPercentage ?? 0));
   return (
     <form className="customer-form" onSubmit={submit}>
-      <h2>Datos de la obra</h2>
+      <h2>Datos del proyecto</h2>
       <label>
         Nombre *
         <input

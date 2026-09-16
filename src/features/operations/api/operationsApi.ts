@@ -7,12 +7,19 @@ export interface SellerOption {
 }
 export interface WorkdayVisit {
   externalId: string;
+  targetType: string;
+  targetExternalId: string;
+  targetName: string;
+  customerExternalId?: string | null;
   customerName?: string | null;
-  projectName?: string | null;
-  startedAtUtc?: string | null;
-  endedAtUtc?: string | null;
-  durationMinutes?: number | null;
-  note?: string | null;
+  checkInAtUtc: string;
+  checkInLatitude: number;
+  checkInLongitude: number;
+  checkOutAtUtc?: string | null;
+  checkOutLatitude?: number | null;
+  checkOutLongitude?: number | null;
+  notes?: string | null;
+  result?: string | null;
 }
 export interface WorkdayLocation {
   externalId?: string;
@@ -28,8 +35,8 @@ export interface Workday {
   startedAtUtc: string;
   endedAtUtc?: string | null;
   note?: string | null;
-  visitCount?: number;
-  locationCount?: number;
+  visitCount: number;
+  locationCount: number;
   visits?: WorkdayVisit[];
 }
 export interface ActiveSeller {
