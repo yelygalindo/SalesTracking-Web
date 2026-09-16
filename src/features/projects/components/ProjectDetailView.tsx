@@ -140,7 +140,12 @@ export function ProjectDetailView({
           </button>
         ))}
       </nav>
-      {tab === "summary" && <ProjectSummary project={project} />}{" "}
+      {tab === "summary" && (
+        <ProjectSummary
+          project={project}
+          onShowActivity={() => setTab("activity")}
+        />
+      )}{" "}
       {tab === "activity" && (
         <ProjectActivity id={project.externalId} canUpdate={canUpdate} />
       )}{" "}
@@ -156,7 +161,17 @@ export function ProjectDetailView({
   );
 }
 
-function ProjectSummary({ project }: { project: ProjectDetail }) {
+function ProjectSummary({
+  project,
+  onShowActivity,
+}: {
+  project: ProjectDetail;
+  onShowActivity: () => void;
+}) {
+  const timeline = useQuery({
+    queryKey: ["project-timeline", project.externalId],
+    queryFn: () => projectService.timeline(project.externalId),
+  });
   const money =
     project.estimatedAmount == null
       ? "—"
@@ -165,10 +180,16 @@ function ProjectSummary({ project }: { project: ProjectDetail }) {
           currency: "BOB",
         }).format(project.estimatedAmount);
   return (
-    <div className="project-summary">
-      <section className="project-facts">
-        <h3>Información general</h3>
-        <dl>
+    <div className="project-summary project-summary-compact">
+      <div className="project-overview-grid">
+        <section className="project-facts project-overview-card">
+          <header>
+            <div>
+              <p className="overline">Resumen</p>
+              <h3>Datos principales</h3>
+            </div>
+          </header>
+          <dl>
           <div>
             <dt>Cliente</dt>
             <dd>{project.customerName || "Sin cliente"}</dd>
@@ -209,31 +230,86 @@ function ProjectSummary({ project }: { project: ProjectDetail }) {
               <dd>{formatDate(project.actualCloseDateUtc)}</dd>
             </div>
           )}
-        </dl>
-      </section>
-      <section className="project-progress-card">
-        <header>
-          <h3>Avance del proyecto</h3>
-          <strong>{project.progressPercentage}%</strong>
-        </header>
-        <progress max="100" value={project.progressPercentage} />
-      </section>
-      {project.description && (
-        <section className="project-description">
-          <h3>Descripción</h3>
-          <p>{project.description}</p>
+            {project.address && (
+              <div className="project-address-fact">
+                <dt>Dirección</dt>
+                <dd>{project.address}</dd>
+              </div>
+            )}
+          </dl>
         </section>
-      )}
-      {(project.address || project.latitude != null) && (
-        <section className="project-location">
-          <h3>Ubicación</h3>
+        <section className="project-location project-location-card">
+          <header>
+            <div>
+              <p className="overline">Ubicación</p>
+              <h3>Localización de la obra</h3>
+            </div>
+            <MapPin />
+          </header>
           <LocationViewer
             latitude={project.latitude}
             longitude={project.longitude}
             label={project.address}
+            emptyText="Este proyecto todavía no tiene una ubicación registrada."
           />
         </section>
-      )}
+      </div>
+      <div className="project-summary-secondary">
+        <section className="project-progress-card project-progress-compact">
+          <header>
+            <div>
+              <p className="overline">Ejecución</p>
+              <h3>Avance del proyecto</h3>
+            </div>
+            <strong>{project.progressPercentage}%</strong>
+          </header>
+          <progress max="100" value={project.progressPercentage} />
+          {project.description ? (
+            <p>{project.description}</p>
+          ) : (
+            <p className="muted">Sin descripción adicional.</p>
+          )}
+        </section>
+        <section className="project-recent-activity">
+          <header>
+            <div>
+              <p className="overline">Seguimiento</p>
+              <h3>Actividad reciente</h3>
+            </div>
+            <button onClick={onShowActivity}>Ver toda</button>
+          </header>
+          {timeline.isLoading ? (
+            <p className="activity-empty">Cargando actividad…</p>
+          ) : timeline.isError ? (
+            <p className="form-error">No fue posible cargar la actividad.</p>
+          ) : !timeline.data?.items.length ? (
+            <p className="activity-empty">Aún no hay actividad registrada.</p>
+          ) : (
+            <div className="project-recent-list">
+              {timeline.data.items.slice(0, 5).map((item) => {
+                const info = activityInfo(item);
+                return (
+                  <article key={item.externalId}>
+                    <span className={"recent-event-icon " + info.tone}>
+                      <info.Icon />
+                    </span>
+                    <div>
+                      <strong>{info.label}</strong>
+                      {item.description &&
+                        item.description.trim().toLowerCase() !==
+                          "sin descripción" && <p>{item.description}</p>}
+                      <small>
+                        {item.createdBy?.name || "Sistema"} ·{" "}
+                        <time>{formatDateTime(item.occurredAtUtc)}</time>
+                      </small>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
