@@ -1,6 +1,137 @@
 .customer-toolbar > select {
   min-width: 180px;
 }
+.customer-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 18px;
+}
+.customer-metrics article {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 7px 22px rgba(15, 23, 42, 0.04);
+}
+.customer-metrics article::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #cbd5e1;
+  content: "";
+}
+.customer-metrics article.accent::before {
+  background: #f56a1c;
+}
+.customer-metrics span {
+  display: block;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.customer-metrics strong {
+  display: block;
+  margin-top: 8px;
+  color: #172841;
+  font-size: 1.65rem;
+  letter-spacing: -0.04em;
+}
+.customer-row-actions {
+  position: relative;
+}
+.row-actions-menu {
+  position: relative;
+}
+.customer-table-card:has(.row-actions-menu[open]),
+.table-scroll:has(.row-actions-menu[open]) {
+  overflow: visible;
+}
+.row-actions-menu summary {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  color: #64748b;
+  background: #fff;
+  cursor: pointer;
+  list-style: none;
+}
+.row-actions-menu summary::-webkit-details-marker {
+  display: none;
+}
+.row-actions-menu summary:hover,
+.row-actions-menu[open] summary {
+  border-color: #f2b38d;
+  color: #d94f0b;
+  background: #fff7f2;
+}
+.row-actions-menu summary svg {
+  position: static;
+  width: 17px;
+  height: 17px;
+}
+.row-actions-menu > div {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  width: 210px;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+}
+.row-actions-menu > div button {
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #334155;
+  background: transparent;
+  text-align: left;
+}
+.row-actions-menu > div button:hover {
+  color: #c94d0d;
+  background: #fff7f2;
+}
+.row-actions-menu > div button.danger {
+  color: #b42318;
+}
+.pagination nav,
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.pagination .pagination-pages {
+  gap: 4px;
+}
+.pagination button {
+  width: 34px;
+  height: 34px;
+}
+.pagination button.active {
+  border-color: #f56a1c;
+  color: #fff;
+  background: #f56a1c;
+}
+.pagination button.pagination-direction {
+  width: auto;
+  padding: 0 11px;
+  color: #475569;
+  font-weight: 700;
+}
+.pagination-pages > span {
+  padding: 0 3px;
+}
 .excel-export-button {
   display: inline-flex;
   align-items: center;
@@ -123,6 +254,22 @@
   justify-self: end;
 }
 @media (max-width: 760px) {
+  .customer-metrics {
+    grid-template-columns: 1fr;
+  }
+  .pagination {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pagination nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .pagination-pages {
+    max-width: 100%;
+    overflow-x: auto;
+  }
   .entity-form-card .customer-form,
   .entity-form-card .customer-form-extras {
     grid-template-columns: 1fr;

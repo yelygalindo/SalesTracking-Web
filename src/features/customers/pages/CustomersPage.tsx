@@ -6,13 +6,18 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   ChevronLeft,
-  ChevronRight,
   FileSpreadsheet,
   Mail,
   MapPin,
+  MoreVertical,
   Pencil,
   Phone,
   Plus,
@@ -44,6 +49,7 @@ import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { translateValue } from "@/lib/i18n/labels";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { exportExcel } from "@/lib/export/exportExcel";
+import { Pagination } from "@/components/data/Pagination";
 
 const emptyForm: CustomerInputDto = {
   name: "",
@@ -118,6 +124,8 @@ export function CustomersPage() {
     [notice, setNotice] = useState("");
   const [extras, setExtras] = useState(emptyExtras);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteTargetName, setDeleteTargetName] = useState("");
+  const [openStatusEditor, setOpenStatusEditor] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
       setQuery(search.trim());
@@ -135,6 +143,19 @@ export function CustomersPage() {
         page,
         pageSize: 20,
       }),
+  });
+  const metricSeller = canViewTeam && seller ? seller : undefined;
+  const metrics = useQueries({
+    queries: [undefined, "Prospect", "Active"].map((metricStatus) => ({
+      queryKey: ["customer-metric", metricStatus ?? "total", metricSeller],
+      queryFn: () =>
+        customerService.list({
+          status: metricStatus,
+          externalUserId: metricSeller,
+          page: 1,
+          pageSize: 1,
+        }),
+    })),
   });
   const statuses = useQuery({
     queryKey: ["customer-statuses"],
@@ -155,6 +176,7 @@ export function CustomersPage() {
   });
   const refresh = async () => {
     await cache.invalidateQueries({ queryKey: ["customers"] });
+    await cache.invalidateQueries({ queryKey: ["customer-metric"] });
     if (selected)
       await cache.invalidateQueries({ queryKey: ["customer", selected] });
   };
@@ -216,6 +238,7 @@ export function CustomersPage() {
     mutationFn: () => customerService.remove(selected!),
     onSuccess: async () => {
       setConfirmDelete(false);
+      setDeleteTargetName("");
       setMode(null);
       setSelected(null);
       setNotice("Cliente eliminado correctamente.");
@@ -248,7 +271,6 @@ export function CustomersPage() {
           { label: "Teléfono", value: (row) => row.phone },
           { label: "Correo", value: (row) => row.email },
           { label: "Estado", value: (row) => row.status },
-          { label: "Próximo contacto", value: (row) => row.nextContactAtUtc ? formatDate(row.nextContactAtUtc) : "" },
           { label: "Vendedor", value: (row) => row.seller?.name || "" },
         ],
         rows,
@@ -260,6 +282,28 @@ export function CustomersPage() {
     key: K,
     value: CustomerInputDto[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
+  const openCustomer = (
+    customer: CustomerSummaryDto,
+    tab: "timeline" | "notes" | "reminders" = "timeline",
+  ) => {
+    setOpenStatusEditor(false);
+    setQuickTab(tab);
+    setSelected(customer.externalId);
+    setMode("view");
+  };
+  const editCustomer = async (customer: CustomerSummaryDto) => {
+    try {
+      const customerDetail = await cache.fetchQuery({
+        queryKey: ["customer", customer.externalId],
+        queryFn: () => customerService.detail(customer.externalId),
+      });
+      setSelected(customer.externalId);
+      setForm(formFrom(customerDetail));
+      setMode("edit");
+    } catch (error) {
+      notify(message(error), "error");
+    }
+  };
 
   if (mode === "create" || mode === "edit")
     return (
@@ -340,12 +384,32 @@ export function CustomersPage() {
         </div>
       </header>
       {notice && <p className="customer-feedback">{notice}</p>}
+      <section className="customer-metrics" aria-label="Resumen de clientes">
+        {[
+          { label: "Total clientes", index: 0 },
+          { label: "Prospectos", index: 1 },
+          { label: "Clientes activos", index: 2 },
+        ].map(({ label, index }) => (
+          <article key={label} className={index === 1 ? "accent" : ""}>
+            <span>{label}</span>
+            <strong>
+              {metrics[index].isLoading
+                ? "…"
+                : metrics[index].isError
+                  ? "—"
+                  : (metrics[index].data?.totalItems ?? 0).toLocaleString(
+                      "es-BO",
+                    )}
+            </strong>
+          </article>
+        ))}
+      </section>
       <div className="customer-toolbar">
         <label>
           <Search />
           <input
             aria-label="Buscar clientes"
-            placeholder="Buscar por nombre, empresa o contacto"
+            placeholder="Buscar por nombre, empresa o correo"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -398,7 +462,6 @@ export function CustomersPage() {
                   <th>Cliente</th>
                   <th>Contacto</th>
                   <th>Estado</th>
-                  <th>Próximo contacto</th>
                   {canViewTeam && <th>Vendedor</th>}
                   <th>Acciones</th>
                 </tr>
@@ -419,47 +482,63 @@ export function CustomersPage() {
                         {translateValue(c.status)}
                       </span>
                     </td>
-                    <td>
-                      {c.nextContactAtUtc
-                        ? formatDate(c.nextContactAtUtc)
-                        : "Sin programar"}
-                    </td>
                     {canViewTeam && <td>{c.seller?.name || "Sin asignar"}</td>}
                     <td>
                       <div className="customer-row-actions">
                         <button
                           className="row-action"
-                          onClick={() => {
-                            setQuickTab("timeline");
-                            setSelected(c.externalId);
-                            setMode("view");
-                          }}
+                          onClick={() => openCustomer(c)}
                         >
                           Ver detalle
                         </button>
-                        {canUpdate && (
-                          <>
-                            <button
-                              className="row-action quick"
-                              onClick={() => {
-                                setQuickTab("notes");
-                                setSelected(c.externalId);
-                                setMode("view");
-                              }}
-                            >
-                              + Nota
-                            </button>
-                            <button
-                              className="row-action quick"
-                              onClick={() => {
-                                setQuickTab("reminders");
-                                setSelected(c.externalId);
-                                setMode("view");
-                              }}
-                            >
-                              + Recordatorio
-                            </button>
-                          </>
+                        {(canUpdate || canDelete) && (
+                          <details
+                            className="row-actions-menu"
+                            name="customer-actions"
+                          >
+                            <summary aria-label={`Más acciones para ${c.name}`}>
+                              <MoreVertical />
+                            </summary>
+                            <div role="menu">
+                              {canUpdate && (
+                                <>
+                                  <button onClick={() => openCustomer(c, "notes")}>
+                                    Agregar nota
+                                  </button>
+                                  <button
+                                    onClick={() => openCustomer(c, "reminders")}
+                                  >
+                                    Agregar recordatorio
+                                  </button>
+                                  <button onClick={() => void editCustomer(c)}>
+                                    Editar
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setOpenStatusEditor(true);
+                                      setQuickTab("timeline");
+                                      setSelected(c.externalId);
+                                      setMode("view");
+                                    }}
+                                  >
+                                    Cambiar estado
+                                  </button>
+                                </>
+                              )}
+                              {canDelete && (
+                                <button
+                                  className="danger"
+                                  onClick={() => {
+                                    setSelected(c.externalId);
+                                    setDeleteTargetName(c.name);
+                                    setConfirmDelete(true);
+                                  }}
+                                >
+                                  Desactivar/eliminar
+                                </button>
+                              )}
+                            </div>
+                          </details>
                         )}
                       </div>
                     </td>
@@ -469,29 +548,15 @@ export function CustomersPage() {
             </table>
           </div>
         )}
-        {list.data && list.data.totalPages > 1 && (
-          <footer className="pagination">
-            <span>{list.data.totalItems} clientes</span>
-            <div>
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((x) => x - 1)}
-                aria-label="Página anterior"
-              >
-                <ChevronLeft />
-              </button>
-              <span>
-                {page} de {list.data.totalPages}
-              </span>
-              <button
-                disabled={page === list.data.totalPages}
-                onClick={() => setPage((x) => x + 1)}
-                aria-label="Página siguiente"
-              >
-                <ChevronRight />
-              </button>
-            </div>
-          </footer>
+        {list.data && (
+          <Pagination
+            page={page}
+            pageSize={list.data.pageSize}
+            totalPages={list.data.totalPages}
+            totalItems={list.data.totalItems}
+            itemLabel="clientes"
+            onChange={setPage}
+          />
         )}
       </section>
       {mode && (
@@ -502,6 +567,7 @@ export function CustomersPage() {
               onClick={() => {
                 setMode(null);
                 setSelected(null);
+                setOpenStatusEditor(false);
               }}
               aria-label="Cerrar"
             >
@@ -519,13 +585,18 @@ export function CustomersPage() {
                   statuses={crmStatuses}
                   canUpdate={canUpdate}
                   canDelete={canDelete}
+                  startChangingStatus={openStatusEditor}
                   changing={state.isPending}
                   change={(id) => state.mutate(id)}
                   edit={() => {
+                    setOpenStatusEditor(false);
                     setForm(formFrom(detail.data!));
                     setMode("edit");
                   }}
-                  remove={() => setConfirmDelete(true)}
+                  remove={() => {
+                    setDeleteTargetName(detail.data!.name);
+                    setConfirmDelete(true);
+                  }}
                 />
               )
             )}
@@ -535,11 +606,14 @@ export function CustomersPage() {
       <ConfirmDialog
         open={confirmDelete}
         title="Eliminar cliente"
-        description={`Se desactivará a ${detail.data?.name || "este cliente"}. Esta acción puede estar restringida por el backend.`}
+        description={`Se desactivará a ${deleteTargetName || detail.data?.name || "este cliente"}. Esta acción puede estar restringida por el backend.`}
         confirmLabel="Eliminar"
         busy={remove.isPending}
         onConfirm={() => remove.mutate()}
-        onCancel={() => setConfirmDelete(false)}
+        onCancel={() => {
+          setConfirmDelete(false);
+          setDeleteTargetName("");
+        }}
       />
     </main>
   );
@@ -551,6 +625,7 @@ function CustomerDetail({
   statuses,
   canUpdate,
   canDelete,
+  startChangingStatus,
   changing,
   change,
   edit,
@@ -561,12 +636,13 @@ function CustomerDetail({
   statuses: CustomerStatusDto[];
   canUpdate: boolean;
   canDelete: boolean;
+  startChangingStatus: boolean;
   changing: boolean;
   change: (id: number) => void;
   edit: () => void;
   remove: () => void;
 }) {
-  const [changingStatus, setChangingStatus] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(startChangingStatus);
   const applyStatus = (id: number) => {
     change(id);
     setChangingStatus(false);
