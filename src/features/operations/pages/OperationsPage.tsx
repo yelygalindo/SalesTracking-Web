@@ -7,7 +7,18 @@ import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { operationsApi } from "../api/operationsApi";
 import { TrackingMap } from "../components/TrackingMap";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const inputDate = (date: Date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+const today = () => inputDate(new Date());
+const yesterday = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return inputDate(date);
+};
 const dateTime = (value?: string | null) =>
   value
     ? new Date(value).toLocaleString("es-BO", {
@@ -44,7 +55,7 @@ export function OperationsPage() {
   const { can, user } = useAuthorization();
   const canChooseSeller = can("sellers.read");
   const [tab, setTab] = useState<"active" | "history">("active");
-  const [from, setFrom] = useState(today());
+  const [from, setFrom] = useState(yesterday());
   const [to, setTo] = useState(today());
   const [sellerId, setSellerId] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -34,12 +34,12 @@ export function RemindersPage() {
   const [from, setFrom] = useState(initialFrom);
   const [to, setTo] = useState(initialTo);
   const [status, setStatus] = useState<"all" | "pending" | "completed">(
-    "pending",
+    "completed",
   );
   const [filters, setFilters] = useState<ReminderFilters>(() => ({
     from: initialFrom(),
     to: initialTo(),
-    completed: false,
+    completed: true,
   }));
   const query = useQuery({
     queryKey: ["reminders", filters],

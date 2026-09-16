@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Plus, X } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
 import { AppError } from "@/lib/api/apiError";
@@ -174,6 +174,50 @@ export function ProjectsPage() {
     key: K,
     value: ProjectInput[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
+
+  if (editing)
+    return (
+      <main className="customers-content entity-form-page">
+        <header className="entity-form-header">
+          <button
+            className="back-button"
+            type="button"
+            onClick={() => {
+              setEditing(false);
+              if (creating) {
+                setCreating(false);
+                setSelected(null);
+              }
+            }}
+          >
+            <ArrowLeft /> Volver a proyectos
+          </button>
+          <div>
+            <p className="overline">Proyectos</p>
+            <h1>{creating ? "Nuevo proyecto" : "Editar proyecto"}</h1>
+            <p>
+              Completa la información comercial, planificación, avance y
+              ubicación del proyecto.
+            </p>
+          </div>
+        </header>
+        <section className="entity-form-card">
+          <ProjectForm
+            form={form}
+            field={field}
+            submit={(event) => {
+              event.preventDefault();
+              save.mutate();
+            }}
+            sellers={sellers.data || []}
+            customers={customers.data?.customers || []}
+            error={save.error}
+            busy={save.isPending}
+          />
+        </section>
+      </main>
+    );
+
   return (
     <main className="customers-content">
       <header className="customers-heading">
@@ -184,8 +228,15 @@ export function ProjectsPage() {
         </div>
         <div className="heading-actions">
         {canExport && (
-          <button className="secondary-button" disabled={exporter.isPending} onClick={() => exporter.mutate()}>
-            <Download />{exporter.isPending ? "Exportando…" : "Exportar a Excel"}
+          <button
+            className="excel-export-button"
+            disabled={exporter.isPending}
+            onClick={() => exporter.mutate()}
+          >
+            <span className="excel-export-icon" aria-hidden="true">
+              <FileSpreadsheet />
+            </span>
+            {exporter.isPending ? "Exportando…" : "Exportar a Excel"}
           </button>
         )}
         {canCreate && (
@@ -336,6 +387,7 @@ export function ProjectsPage() {
                 sellers={sellers.data || []}
                 customers={customers.data?.customers || []}
                 error={save.error}
+                busy={save.isPending}
               />
             ) : detail.isLoading ? (
               <p>Cargando…</p>
@@ -378,6 +430,7 @@ function ProjectForm({
   sellers,
   customers,
   error,
+  busy,
 }: {
   form: ProjectInput;
   field: <K extends keyof ProjectInput>(key: K, value: ProjectInput[K]) => void;
@@ -385,6 +438,7 @@ function ProjectForm({
   sellers: { externalId: string; displayName: string }[];
   customers: { externalId: string; name: string }[];
   error: unknown;
+  busy: boolean;
 }) {
   const progress = Math.max(0, Math.min(100, form.progressPercentage ?? 0));
   return (
@@ -524,7 +578,9 @@ function ProjectForm({
         }}
       />
       {Boolean(error) && <p className="form-error">{message(error)}</p>}
-      <button className="action-primary">Guardar obra</button>
+      <button className="action-primary" disabled={busy}>
+        {busy ? "Guardando…" : "Guardar proyecto"}
+      </button>
     </form>
   );
 }

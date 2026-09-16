@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
+  FileSpreadsheet,
   Mail,
   MapPin,
   Pencil,
@@ -260,6 +260,49 @@ export function CustomersPage() {
     key: K,
     value: CustomerInputDto[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
+
+  if (mode === "create" || mode === "edit")
+    return (
+      <main className="customers-content entity-form-page">
+        <header className="entity-form-header">
+          <button
+            className="back-button"
+            type="button"
+            onClick={() => {
+              setMode(mode === "edit" && selected ? "view" : null);
+              if (mode === "create") setSelected(null);
+            }}
+          >
+            <ChevronLeft /> Volver a clientes
+          </button>
+          <div>
+            <p className="overline">Clientes</p>
+            <h1>{mode === "create" ? "Nuevo cliente" : "Editar cliente"}</h1>
+            <p>
+              Organiza los datos comerciales, la asignación y la ubicación en
+              un solo lugar.
+            </p>
+          </div>
+        </header>
+        <section className="entity-form-card">
+          <CustomerForm
+            form={form}
+            field={field}
+            submit={(event) => {
+              event.preventDefault();
+              save.mutate();
+            }}
+            busy={save.isPending}
+            error={save.error}
+            creating={mode === "create"}
+            statuses={crmStatuses}
+            extras={extras}
+            setExtras={setExtras}
+          />
+        </section>
+      </main>
+    );
+
   return (
     <main className="customers-content">
       <header className="customers-heading">
@@ -270,8 +313,15 @@ export function CustomersPage() {
         </div>
         <div className="heading-actions">
         {canExport && (
-          <button className="secondary-button" disabled={exporter.isPending} onClick={() => exporter.mutate()}>
-            <Download />{exporter.isPending ? "Exportando…" : "Exportar a Excel"}
+          <button
+            className="excel-export-button"
+            disabled={exporter.isPending}
+            onClick={() => exporter.mutate()}
+          >
+            <span className="excel-export-icon" aria-hidden="true">
+              <FileSpreadsheet />
+            </span>
+            {exporter.isPending ? "Exportando…" : "Exportar a Excel"}
           </button>
         )}
         {canCreate && (
@@ -446,9 +496,7 @@ export function CustomersPage() {
       </section>
       {mode && (
         <div className="customer-overlay">
-          <aside
-            className={`customer-panel ${mode === "view" ? "customer-panel-wide" : ""}`}
-          >
+          <aside className="customer-panel customer-panel-wide">
             <button
               className="panel-close"
               onClick={() => {
@@ -459,22 +507,7 @@ export function CustomersPage() {
             >
               <X />
             </button>
-            {mode === "create" || mode === "edit" ? (
-              <CustomerForm
-                form={form}
-                field={field}
-                submit={(e) => {
-                  e.preventDefault();
-                  save.mutate();
-                }}
-                busy={save.isPending}
-                error={save.error}
-                creating={mode === "create"}
-                statuses={crmStatuses}
-                extras={extras}
-                setExtras={setExtras}
-              />
-            ) : detail.isLoading ? (
+            {detail.isLoading ? (
               <p>Cargando…</p>
             ) : detail.isError ? (
               <p className="form-error">{message(detail.error)}</p>
