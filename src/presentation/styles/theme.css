@@ -1,0 +1,73 @@
+html { background:var(--ut-background); }
+body { color:var(--ut-text); background:var(--ut-background); }
+button,input,select,textarea { font:inherit; }
+button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
+button:not(:disabled),a { cursor:pointer; }
+button:disabled { cursor:not-allowed; opacity:.55; }
+:focus-visible { outline:2px solid var(--ut-primary); outline-offset:2px; }
+
+.app-shell-root,.dashboard,.simple-auth-page,.status-page { background:var(--ut-background); }
+.app-navigation,.dashboard-sidebar { background:var(--ut-sidebar); }
+.app-navigation nav a,.dashboard-sidebar nav a { position:relative; color:rgb(255 255 255 / 68%); }
+.app-navigation nav a:hover,.dashboard-sidebar nav a:hover { color:white; background:rgb(255 255 255 / 7%); }
+.app-navigation nav a.active,.dashboard-sidebar nav a.active { color:white; background:rgb(37 99 235 / 18%); box-shadow:inset 3px 0 var(--ut-accent); }
+.app-topbar,.topbar { border-color:var(--ut-border); background:var(--ut-surface); }
+.app-workspace { background:var(--ut-background); }
+
+.shared-page-header h1,.customers-heading h1,.heading-row h1,.customer-panel h2,.project-panel h2 { color:var(--ut-text); }
+.shared-page-header p,.customers-heading p,.heading-row p { color:var(--ut-text-secondary); }
+.overline { color:var(--ut-accent); }
+
+.metric-card,.activity-card,.customer-table-card,.admin-card,.catalog-form,.reminder-agenda,.customer-summary-card,.customer-map-card { border-color:var(--ut-border); border-radius:var(--ut-radius-lg); background:var(--ut-surface); box-shadow:var(--ut-shadow-sm); }
+.metric-card:hover,.customer-table-card:hover { box-shadow:var(--ut-shadow-md); }
+.metric-card strong { color:var(--ut-text); }
+.metric-card p,.metric-card small { color:var(--ut-text-secondary); }
+.metric-icon.orange { color:var(--ut-accent); background:var(--ut-accent-soft); }
+.metric-icon.blue { color:var(--ut-primary); background:var(--ut-primary-soft); }
+
+.action-primary,.primary-button { color:white; background:var(--ut-primary); box-shadow:0 5px 14px rgb(37 99 235 / 18%); }
+.action-primary:hover,.primary-button:hover { background:#1d4ed8; }
+.danger-button { color:white; background:var(--ut-error); }
+.row-action { color:var(--ut-primary); }
+.row-action:hover { color:#1d4ed8; background:var(--ut-primary-soft); border-radius:var(--ut-radius-sm); }
+
+input,select,textarea,.customer-toolbar input,.customer-toolbar select,.status-field select { color:var(--ut-text); border-color:var(--ut-border); background:var(--ut-surface); }
+input::placeholder,textarea::placeholder { color:#94a3b8; }
+input:focus,select:focus,textarea:focus,.customer-form input:focus,.customer-toolbar input:focus { border-color:var(--ut-primary); outline:none; box-shadow:var(--ut-focus); }
+.customer-form label,.status-field,.reminder-filters label { color:#334155; }
+
+.customer-table-card th { color:var(--ut-text-secondary); background:var(--ut-surface-soft); }
+.customer-table-card td { color:#334155; border-color:var(--ut-border); }
+.customer-table-card tr:hover td { background:#fbfdff; }
+.table-message,.activity-empty,.data-state { color:var(--ut-text-secondary); }
+.data-state.error,.form-error { color:#b91c1c; }
+
+.activity-tabs { border-color:var(--ut-border); background:transparent; }
+.activity-tabs button { color:var(--ut-text-secondary); }
+.activity-tabs button.active { color:var(--ut-primary); border-color:var(--ut-primary); }
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.project-info) button:nth-child(1),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.activity-list) button:nth-child(2),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.attachments-section) button:nth-child(3),
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+div>.sub-tabs) button:nth-child(4) { color:var(--ut-primary); background:var(--ut-primary-soft); box-shadow:inset 0 -3px var(--ut-primary); }
+.sub-tabs button { color:var(--ut-text-secondary); background:#f1f5f9; }
+.sub-tabs button:focus { color:var(--ut-primary); background:var(--ut-primary-soft); box-shadow:inset 0 -2px var(--ut-primary); }
+
+.status-pill { color:#92400e; background:var(--ut-warning-soft); }
+.status-pill.active,.reminder-status.done { color:#047857; background:var(--ut-success-soft); }
+.status-pill.inactive { color:#475569; background:#f1f5f9; }
+.reminder-status.overdue,.activity em.overdue { color:#b91c1c; background:var(--ut-error-soft); }
+.reminder-status.pending { color:#92400e; background:var(--ut-warning-soft); }
+
+.dashboard-empty { min-height:120px; }
+.dashboard-empty span { color:var(--ut-text-secondary); background:#f1f5f9; }
+.dashboard-section-header,.customer-detail-header { border-color:var(--ut-border); }
+.project-progress-list progress,.progress-control progress { accent-color:var(--ut-primary); }
+.profile-roles span { color:#1d4ed8; background:var(--ut-primary-soft); }
+.toast { color:#047857; background:var(--ut-success-soft); }.toast.error { color:#b91c1c; background:var(--ut-error-soft); }
+
+@media(max-width:700px){
+  .shared-page-header { align-items:flex-start; flex-direction:column; }
+  .action-primary,.primary-button { min-height:42px; }
+  .customer-row-actions { align-items:stretch; flex-direction:column; }
+  .customer-row-actions button { width:100%; text-align:left; }
+}
