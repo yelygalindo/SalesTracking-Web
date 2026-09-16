@@ -1,0 +1,51 @@
+.reminder-filters {
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.reminder-search {
+  height: 42px;
+  white-space: nowrap;
+}
+
+.reminder-search svg {
+  width: 17px;
+}
+
+.applied-reminder-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0 4px;
+  color: #64748b;
+  font-size: .78rem;
+}
+
+.applied-reminder-filters > span:first-child {
+  font-weight: 700;
+}
+
+.applied-reminder-filters strong {
+  padding: 4px 9px;
+  border-radius: 99px;
+  color: #92400e;
+  background: #fff7ed;
+}
+
+.applied-reminder-filters small {
+  margin-left: auto;
+  color: #64748b;
+}
+
+@media (max-width: 700px) {
+  .reminder-filters {
+    align-items: stretch;
+  }
+
+  .applied-reminder-filters small {
+    width: 100%;
+    margin-left: 0;
+  }
+}

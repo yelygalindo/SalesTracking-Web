@@ -1,29 +1,530 @@
-import { useState, type FormEvent } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, X } from 'lucide-react'
-import { usePermission } from '@/hooks/usePermission'
-import { customerService } from '@/features/customers/services/customerService'
-import { AppError } from '@/lib/api/apiError'
-import { LocationPicker } from '@/components/maps/LocationPickerModern'
-import { notify } from '@/components/feedback/toast'
-import { updateProjectProgress } from '@/lib/api/optimisticUpdates'
-import { ProjectDetailView } from '../components/ProjectDetailView'
-import { projectService } from '../services/projectService'
-import type { ProjectDetail, ProjectInput } from '../api/projectDtos'
+import { useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Download, Plus, X } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
+import { customerService } from "@/features/customers/services/customerService";
+import { AppError } from "@/lib/api/apiError";
+import { LocationPicker } from "@/components/maps/LocationPickerModern";
+import { notify } from "@/components/feedback/toast";
+import { updateProjectProgress } from "@/lib/api/optimisticUpdates";
+import { Pagination } from "@/components/data/Pagination";
+import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import { translateValue } from "@/lib/i18n/labels";
+import { exportExcel } from "@/lib/export/exportExcel";
+import { ProjectDetailView } from "../components/ProjectDetailView";
+import { projectService } from "../services/projectService";
+import type { ProjectDetail, ProjectInput, ProjectSummary } from "../api/projectDtos";
 
-const empty:ProjectInput={name:'',description:null,customerExternalId:null,sellerExternalId:null,estimatedAmount:null,startDateUtc:null,expectedCloseDateUtc:null,progressPercentage:0,actualCloseDateUtc:null,address:null,latitude:null,longitude:null}
-const message=(error:unknown)=>error instanceof AppError?error.message:'No fue posible completar la operación.'
-const toForm=(project:ProjectDetail):ProjectInput=>({name:project.name,description:project.description,customerExternalId:project.customerExternalId,sellerExternalId:project.sellerExternalId,estimatedAmount:project.estimatedAmount,startDateUtc:project.startDateUtc,expectedCloseDateUtc:project.expectedCloseDateUtc,progressPercentage:project.progressPercentage,actualCloseDateUtc:project.actualCloseDateUtc,address:project.address,latitude:project.latitude,longitude:project.longitude})
+const empty: ProjectInput = {
+  name: "",
+  description: null,
+  customerExternalId: null,
+  sellerExternalId: null,
+  estimatedAmount: null,
+  startDateUtc: null,
+  expectedCloseDateUtc: null,
+  progressPercentage: 0,
+  actualCloseDateUtc: null,
+  address: null,
+  latitude: null,
+  longitude: null,
+};
+const message = (error: unknown) =>
+  error instanceof AppError
+    ? error.message
+    : "No fue posible completar la operación.";
+const toForm = (project: ProjectDetail): ProjectInput => ({
+  name: project.name,
+  description: project.description,
+  customerExternalId: project.customerExternalId,
+  sellerExternalId: project.sellerExternalId,
+  estimatedAmount: project.estimatedAmount,
+  startDateUtc: project.startDateUtc,
+  expectedCloseDateUtc: project.expectedCloseDateUtc,
+  progressPercentage: project.progressPercentage,
+  actualCloseDateUtc: project.actualCloseDateUtc,
+  address: project.address,
+  latitude: project.latitude,
+  longitude: project.longitude,
+});
 
-export function ProjectsPage(){
- const cache=useQueryClient(),canCreate=usePermission('projects.create'),canUpdate=usePermission('projects.update'),canDelete=usePermission('projects.delete'),canStatus=usePermission('projects.change-status')
- const[status,setStatus]=useState(''),[page,setPage]=useState(1),[selected,setSelected]=useState<string|null>(null),[editing,setEditing]=useState(false),[creating,setCreating]=useState(false),[form,setForm]=useState(empty)
- const list=useQuery({queryKey:['projects',status,page],queryFn:()=>projectService.list(status,page)}),statuses=useQuery({queryKey:['project-statuses'],queryFn:projectService.statuses}),detail=useQuery({queryKey:['project',selected],queryFn:()=>projectService.detail(selected!),enabled:!!selected}),sellers=useQuery({queryKey:['sellers'],queryFn:customerService.sellers}),customers=useQuery({queryKey:['customers-options'],queryFn:()=>customerService.list({page:1,pageSize:100})})
- const invalidate=async()=>{await cache.invalidateQueries({queryKey:['projects']});await cache.invalidateQueries({queryKey:['project',selected]});await cache.invalidateQueries({queryKey:['dashboard']})}
- const save=useMutation({mutationFn:async()=>creating?projectService.create(form):projectService.update(detail.data!,form),onMutate:()=>{if(selected)cache.setQueriesData({queryKey:['projects']},data=>updateProjectProgress(data as never,selected,form.progressPercentage??0)as never)},onSuccess:async()=>{notify(`La obra “${form.name}” se guardó correctamente.`);setCreating(false);setEditing(false);setSelected(null);await invalidate()}})
- const change=useMutation({mutationFn:(value:number)=>projectService.changeStatus(selected!,value),onSuccess:async()=>{notify('Estado actualizado.');await invalidate()}}),remove=useMutation({mutationFn:()=>projectService.remove(selected!),onSuccess:async()=>{notify('Obra eliminada.');setSelected(null);await invalidate()}})
- const field=<K extends keyof ProjectInput>(key:K,value:ProjectInput[K])=>setForm(current=>({...current,[key]:value}))
- return <main className="customers-content"><header className="customers-heading"><div><p className="overline">Gestión comercial</p><h1>Proyectos</h1><p>Seguimiento de obras y oportunidades.</p></div>{canCreate&&<button className="action-primary" onClick={()=>{setCreating(true);setEditing(true);setSelected(null);setForm(empty)}}><Plus/>Nuevo proyecto</button>}</header><div className="customer-toolbar"><select value={status} onChange={event=>{setStatus(event.target.value);setPage(1)}}><option value="">Todos los estados</option>{statuses.data?.map(item=><option key={item.value} value={item.label}>{item.label}</option>)}</select></div><section className="customer-table-card">{list.isLoading?<p className="table-message">Cargando proyectos…</p>:list.isError?<p className="table-message error">{message(list.error)}</p>:!list.data?.items.length?<p className="table-message">No se encontraron proyectos.</p>:<div className="table-scroll"><table><thead><tr><th>Proyecto</th><th>Cliente</th><th>Responsable</th><th>Avance</th><th>Estado</th><th/></tr></thead><tbody>{list.data.items.map(project=><tr key={project.externalId}><td><strong>{project.name}</strong><small>{project.description||'Sin descripción'}</small></td><td>{project.customerName||'Sin cliente'}</td><td>{project.sellerName||'Sin asignar'}</td><td>{project.progressPercentage}%</td><td><span className="status-pill">{project.status}</span></td><td><button className="row-action" onClick={()=>setSelected(project.externalId)}>Ver detalle</button></td></tr>)}</tbody></table></div>}</section>{(creating||selected)&&<div className="customer-overlay"><aside className="project-panel"><button className="panel-close" onClick={()=>{setCreating(false);setEditing(false);setSelected(null)}} aria-label="Cerrar"><X/></button>{editing?<ProjectForm form={form} field={field} submit={event=>{event.preventDefault();save.mutate()}} sellers={sellers.data||[]} customers={customers.data?.customers||[]} error={save.error}/>:detail.isLoading?<p>Cargando…</p>:detail.isError?<p className="form-error">{message(detail.error)}</p>:detail.data&&<ProjectDetailView project={detail.data} statuses={statuses.data||[]} canUpdate={canUpdate} canDelete={canDelete} canStatus={canStatus} onEdit={()=>{setForm(toForm(detail.data!));setEditing(true)}} onDelete={()=>confirm('¿Eliminar este proyecto?')&&remove.mutate()} onStatusChange={value=>change.mutate(value)}/>}</aside></div>}</main>
+export function ProjectsPage() {
+  const { hasRole, can } = useAuthorization();
+  const canChooseSeller = !hasRole("seller") && can("sellers.read");
+  const canExport = hasRole("admin") || hasRole("administrator") || hasRole("super-admin");
+  const cache = useQueryClient(),
+    canCreate = usePermission("projects.create"),
+    canUpdate = usePermission("projects.update"),
+    canDelete = usePermission("projects.delete"),
+    canStatus = usePermission("projects.change-status");
+  const [status, setStatus] = useState(""),
+    [sellerId, setSellerId] = useState(""),
+    [page, setPage] = useState(1),
+    [selected, setSelected] = useState<string | null>(null),
+    [editing, setEditing] = useState(false),
+    [creating, setCreating] = useState(false),
+    [form, setForm] = useState(empty);
+  const list = useQuery({
+      queryKey: ["projects", status, sellerId, page],
+      queryFn: () =>
+        projectService.list({
+          status: status || undefined,
+          sellerId: canChooseSeller && sellerId ? sellerId : undefined,
+          page,
+          pageSize: 20,
+        }),
+    }),
+    statuses = useQuery({
+      queryKey: ["project-statuses"],
+      queryFn: projectService.statuses,
+    }),
+    detail = useQuery({
+      queryKey: ["project", selected],
+      queryFn: () => projectService.detail(selected!),
+      enabled: !!selected,
+    }),
+    sellers = useQuery({
+      queryKey: ["sellers"],
+      queryFn: customerService.sellers,
+      enabled: canChooseSeller,
+    }),
+    customers = useQuery({
+      queryKey: ["customers-options"],
+      queryFn: () => customerService.list({ page: 1, pageSize: 100 }),
+    });
+  const invalidate = async () => {
+    await cache.invalidateQueries({ queryKey: ["projects"] });
+    await cache.invalidateQueries({ queryKey: ["project", selected] });
+    await cache.invalidateQueries({ queryKey: ["dashboard"] });
+  };
+  const save = useMutation({
+    mutationFn: async () =>
+      creating
+        ? projectService.create(form)
+        : projectService.update(detail.data!, form),
+    onMutate: () => {
+      if (selected)
+        cache.setQueriesData(
+          { queryKey: ["projects"] },
+          (data) =>
+            updateProjectProgress(
+              data as never,
+              selected,
+              form.progressPercentage ?? 0,
+            ) as never,
+        );
+    },
+    onSuccess: async () => {
+      notify(`La obra “${form.name}” se guardó correctamente.`);
+      setCreating(false);
+      setEditing(false);
+      setSelected(null);
+      await invalidate();
+    },
+  });
+  const change = useMutation({
+      mutationFn: (value: number) =>
+        projectService.changeStatus(selected!, value),
+      onSuccess: async () => {
+        notify("Estado actualizado.");
+        await invalidate();
+      },
+    }),
+    remove = useMutation({
+      mutationFn: () => projectService.remove(selected!),
+      onSuccess: async () => {
+        notify("Obra eliminada.");
+        setSelected(null);
+        await invalidate();
+      },
+    });
+  const exporter = useMutation({
+    mutationFn: async () => {
+      const rows: ProjectSummary[] = [];
+      let exportPage = 1;
+      let totalPages = 1;
+      do {
+        const result = await projectService.list({
+          status: status || undefined,
+          sellerId: canChooseSeller && sellerId ? sellerId : undefined,
+          page: exportPage,
+          pageSize: 100,
+        });
+        rows.push(...result.items);
+        totalPages = result.pagination.totalPages;
+        exportPage += 1;
+      } while (exportPage <= totalPages);
+      exportExcel(
+        `obras-${new Date().toISOString().slice(0, 10)}.xls`,
+        [
+          { label: "Obra", value: (row) => row.name },
+          { label: "Cliente", value: (row) => row.customerName || "" },
+          { label: "Responsable", value: (row) => row.sellerName || "" },
+          { label: "Estado", value: (row) => translateValue(row.status) },
+          { label: "Avance", value: (row) => `${row.progressPercentage}%` },
+          { label: "Fecha estimada", value: (row) => row.expectedCloseDateUtc ? formatProjectDate(row.expectedCloseDateUtc) : "" },
+          { label: "Dirección", value: (row) => row.address || "" },
+        ],
+        rows,
+      );
+    },
+    onError: (error) => notify(message(error), "error"),
+  });
+  const field = <K extends keyof ProjectInput>(
+    key: K,
+    value: ProjectInput[K],
+  ) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <main className="customers-content">
+      <header className="customers-heading">
+        <div>
+          <p className="overline">Gestión comercial</p>
+          <h1>Proyectos</h1>
+          <p>Seguimiento de obras y oportunidades.</p>
+        </div>
+        <div className="heading-actions">
+        {canExport && (
+          <button className="secondary-button" disabled={exporter.isPending} onClick={() => exporter.mutate()}>
+            <Download />{exporter.isPending ? "Exportando…" : "Exportar a Excel"}
+          </button>
+        )}
+        {canCreate && (
+          <button
+            className="action-primary"
+            onClick={() => {
+              setCreating(true);
+              setEditing(true);
+              setSelected(null);
+              setForm(empty);
+            }}
+          >
+            <Plus />
+            Nuevo proyecto
+          </button>
+        )}
+        </div>
+      </header>
+      <div className="customer-toolbar">
+        <select
+          value={status}
+          onChange={(event) => {
+            setStatus(event.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">Todos los estados</option>
+          {statuses.data?.map((item) => (
+            <option key={item.value} value={item.label}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+        {canChooseSeller && sellers.data && sellers.data.length > 1 && (
+          <select
+            aria-label="Filtrar por responsable"
+            value={sellerId}
+            onChange={(event) => {
+              setSellerId(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Todos los responsables</option>
+            {sellers.data.map((seller) => (
+              <option key={seller.externalId} value={seller.externalId}>
+                {seller.displayName}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+      <section className="customer-table-card">
+        {list.isLoading ? (
+          <p className="table-message">Cargando proyectos…</p>
+        ) : list.isError ? (
+          <p className="table-message error">{message(list.error)}</p>
+        ) : !list.data?.items.length ? (
+          <p className="table-message">No se encontraron proyectos.</p>
+        ) : (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Proyecto</th>
+                  <th>Cliente</th>
+                  <th>Responsable</th>
+                  <th>Avance</th>
+                  <th>Estado</th>
+                  <th>Fecha estimada</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {list.data.items.map((project) => (
+                  <tr key={project.externalId}>
+                    <td>
+                      <strong>{project.name}</strong>
+                      {project.description && (
+                        <small>{project.description}</small>
+                      )}
+                    </td>
+                    <td>{project.customerName || "Sin cliente"}</td>
+                    <td>{project.sellerName || "Sin asignar"}</td>
+                    <td>
+                      <div className="project-list-progress">
+                        <span>{project.progressPercentage}%</span>
+                        <progress
+                          max="100"
+                          value={project.progressPercentage}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <span className="status-pill">
+                        {translateValue(project.status)}
+                      </span>
+                    </td>
+                    <td>
+                      {project.expectedCloseDateUtc
+                        ? formatProjectDate(project.expectedCloseDateUtc)
+                        : "Sin fecha"}
+                    </td>
+                    <td>
+                      <button
+                        className="row-action"
+                        onClick={() => setSelected(project.externalId)}
+                      >
+                        Ver detalle
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {list.data && list.data.pagination.totalPages > 1 && (
+          <Pagination
+            page={page}
+            totalPages={list.data.pagination.totalPages}
+            totalItems={list.data.pagination.totalItems}
+            onChange={setPage}
+          />
+        )}
+      </section>
+      {(creating || selected) && (
+        <div className="customer-overlay">
+          <aside className="project-panel">
+            <button
+              className="panel-close"
+              onClick={() => {
+                setCreating(false);
+                setEditing(false);
+                setSelected(null);
+              }}
+              aria-label="Cerrar"
+            >
+              <X />
+            </button>
+            {editing ? (
+              <ProjectForm
+                form={form}
+                field={field}
+                submit={(event) => {
+                  event.preventDefault();
+                  save.mutate();
+                }}
+                sellers={sellers.data || []}
+                customers={customers.data?.customers || []}
+                error={save.error}
+              />
+            ) : detail.isLoading ? (
+              <p>Cargando…</p>
+            ) : detail.isError ? (
+              <p className="form-error">{message(detail.error)}</p>
+            ) : (
+              detail.data && (
+                <ProjectDetailView
+                  project={detail.data}
+                  statuses={statuses.data || []}
+                  canUpdate={canUpdate}
+                  canDelete={canDelete}
+                  canStatus={canStatus}
+                  onEdit={() => {
+                    setForm(toForm(detail.data!));
+                    setEditing(true);
+                  }}
+                  onDelete={() =>
+                    confirm("¿Eliminar este proyecto?") && remove.mutate()
+                  }
+                  onStatusChange={(value) => change.mutate(value)}
+                />
+              )
+            )}
+          </aside>
+        </div>
+      )}
+    </main>
+  );
 }
+const formatProjectDate = (value: string) =>
+  new Intl.DateTimeFormat("es-BO", { dateStyle: "medium" }).format(
+    new Date(value),
+  );
 
-function ProjectForm({form,field,submit,sellers,customers,error}:{form:ProjectInput;field:<K extends keyof ProjectInput>(key:K,value:ProjectInput[K])=>void;submit:(event:FormEvent)=>void;sellers:{externalId:string;displayName:string}[];customers:{externalId:string;name:string}[];error:unknown}){const progress=Math.max(0,Math.min(100,form.progressPercentage??0));return <form className="customer-form" onSubmit={submit}><h2>Datos de la obra</h2><label>Nombre *<input required value={form.name} onChange={event=>field('name',event.target.value)}/></label><label>Descripción<textarea value={form.description||''} onChange={event=>field('description',event.target.value)}/></label><label>Cliente<select value={form.customerExternalId||''} onChange={event=>field('customerExternalId',event.target.value)}><option value="">Sin cliente</option>{customers.map(item=><option key={item.externalId} value={item.externalId}>{item.name}</option>)}</select></label><label>Responsable<select value={form.sellerExternalId||''} onChange={event=>field('sellerExternalId',event.target.value)}><option value="">Asignación automática</option>{sellers.map(item=><option key={item.externalId} value={item.externalId}>{item.displayName}</option>)}</select></label><label>Monto estimado<input type="number" value={form.estimatedAmount??''} onChange={event=>field('estimatedAmount',event.target.value?Number(event.target.value):null)}/></label><label>Fecha de inicio<input type="datetime-local" value={form.startDateUtc?.slice(0,16)||''} onChange={event=>field('startDateUtc',event.target.value?new Date(event.target.value).toISOString():null)}/></label><label>Cierre estimado<input type="datetime-local" value={form.expectedCloseDateUtc?.slice(0,16)||''} onChange={event=>field('expectedCloseDateUtc',event.target.value?new Date(event.target.value).toISOString():null)}/></label><fieldset className="progress-control"><legend>Actualizar avance</legend><button type="button" onClick={()=>field('progressPercentage',Math.max(0,progress-5))}>−5</button><input aria-label="Porcentaje de avance" type="number" min="0" max="100" value={progress} onChange={event=>field('progressPercentage',Math.max(0,Math.min(100,Number(event.target.value))))}/><span>%</span><button type="button" onClick={()=>field('progressPercentage',Math.min(100,progress+5))}>+5</button><progress max="100" value={progress}/></fieldset><label>Dirección<input value={form.address||''} onChange={event=>field('address',event.target.value)}/></label><LocationPicker latitude={form.latitude} longitude={form.longitude} onChange={(latitude,longitude)=>{field('latitude',latitude);field('longitude',longitude)}}/>{Boolean(error)&&<p className="form-error">{message(error)}</p>}<button className="action-primary">Guardar obra</button></form>}
+function ProjectForm({
+  form,
+  field,
+  submit,
+  sellers,
+  customers,
+  error,
+}: {
+  form: ProjectInput;
+  field: <K extends keyof ProjectInput>(key: K, value: ProjectInput[K]) => void;
+  submit: (event: FormEvent) => void;
+  sellers: { externalId: string; displayName: string }[];
+  customers: { externalId: string; name: string }[];
+  error: unknown;
+}) {
+  const progress = Math.max(0, Math.min(100, form.progressPercentage ?? 0));
+  return (
+    <form className="customer-form" onSubmit={submit}>
+      <h2>Datos de la obra</h2>
+      <label>
+        Nombre *
+        <input
+          required
+          value={form.name}
+          onChange={(event) => field("name", event.target.value)}
+        />
+      </label>
+      <label>
+        Descripción
+        <textarea
+          value={form.description || ""}
+          onChange={(event) => field("description", event.target.value)}
+        />
+      </label>
+      <label>
+        Cliente
+        <select
+          value={form.customerExternalId || ""}
+          onChange={(event) => field("customerExternalId", event.target.value)}
+        >
+          <option value="">Sin cliente</option>
+          {customers.map((item) => (
+            <option key={item.externalId} value={item.externalId}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Responsable
+        <select
+          value={form.sellerExternalId || ""}
+          onChange={(event) => field("sellerExternalId", event.target.value)}
+        >
+          <option value="">Asignación automática</option>
+          {sellers.map((item) => (
+            <option key={item.externalId} value={item.externalId}>
+              {item.displayName}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Monto estimado
+        <input
+          type="number"
+          value={form.estimatedAmount ?? ""}
+          onChange={(event) =>
+            field(
+              "estimatedAmount",
+              event.target.value ? Number(event.target.value) : null,
+            )
+          }
+        />
+      </label>
+      <label>
+        Fecha de inicio
+        <input
+          type="datetime-local"
+          value={form.startDateUtc?.slice(0, 16) || ""}
+          onChange={(event) =>
+            field(
+              "startDateUtc",
+              event.target.value
+                ? new Date(event.target.value).toISOString()
+                : null,
+            )
+          }
+        />
+      </label>
+      <label>
+        Cierre estimado
+        <input
+          type="datetime-local"
+          value={form.expectedCloseDateUtc?.slice(0, 16) || ""}
+          onChange={(event) =>
+            field(
+              "expectedCloseDateUtc",
+              event.target.value
+                ? new Date(event.target.value).toISOString()
+                : null,
+            )
+          }
+        />
+      </label>
+      <fieldset className="progress-control">
+        <legend>Actualizar avance</legend>
+        <button
+          type="button"
+          onClick={() => field("progressPercentage", Math.max(0, progress - 5))}
+        >
+          −5
+        </button>
+        <input
+          aria-label="Porcentaje de avance"
+          type="number"
+          min="0"
+          max="100"
+          value={progress}
+          onChange={(event) =>
+            field(
+              "progressPercentage",
+              Math.max(0, Math.min(100, Number(event.target.value))),
+            )
+          }
+        />
+        <span>%</span>
+        <button
+          type="button"
+          onClick={() =>
+            field("progressPercentage", Math.min(100, progress + 5))
+          }
+        >
+          +5
+        </button>
+        <progress max="100" value={progress} />
+      </fieldset>
+      <label>
+        Dirección
+        <input
+          value={form.address || ""}
+          onChange={(event) => field("address", event.target.value)}
+        />
+      </label>
+      <LocationPicker
+        latitude={form.latitude}
+        longitude={form.longitude}
+        onChange={(latitude, longitude) => {
+          field("latitude", latitude);
+          field("longitude", longitude);
+        }}
+      />
+      {Boolean(error) && <p className="form-error">{message(error)}</p>}
+      <button className="action-primary">Guardar obra</button>
+    </form>
+  );
+}

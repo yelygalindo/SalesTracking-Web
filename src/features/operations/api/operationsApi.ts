@@ -1,2 +1,86 @@
-import{apiClient}from'@/lib/api/apiClient';export interface Seller{externalId:string;displayName:string;email:string}export interface Point{externalId:string;workdayExternalId:string|null;capturedAtUtc:string;latitude:number;longitude:number;speedMetersPerSecond:number|null}export interface Visit{externalId:string;targetType:string;target:{externalId:string;name:string}|null;customer:{externalId:string;name:string}|null;checkIn:{atUtc:string;latitude:number;longitude:number};checkOut:{atUtc:string}|null;result:string|null}export interface RouteData{seller:{externalId:string;name:string};fromUtc:string;toUtc:string;pointCount:number;routePoints:Point[];visits:Visit[]}export interface VisitRecord{externalId:string;projectExternalId:string|null;projectName:string|null;customerExternalId:string|null;customerName:string|null;visitedAtUtc:string;checkOutAtUtc:string|null;notes:string|null;result:string|null;sellerExternalId:string;sellerName:string}
-const range=(date:string)=>{const from=new Date(`${date}T00:00:00`),to=new Date(from);to.setDate(to.getDate()+1);return{from,to}};export const operationsApi={sellers:async()=>(await apiClient.get<Seller[]>('/api/sellers')).data,route:async(sellerExternalId:string,date:string)=>{const{from,to}=range(date);return(await apiClient.get<RouteData>('/api/seller-routes',{params:{sellerExternalId,fromUtc:from.toISOString(),toUtc:to.toISOString()}})).data},visits:async(sellerExternalId:string,date:string)=>{const{from,to}=range(date);return(await apiClient.get<VisitRecord[]>('/api/visits',{params:{sellerExternalId:sellerExternalId||undefined,from:from.toISOString(),to:to.toISOString()}})).data},workdays:async(date:string)=>{const sellers=await operationsApi.sellers();const results=await Promise.allSettled(sellers.map(s=>operationsApi.route(s.externalId,date)));return results.flatMap((r,i)=>{if(r.status==='rejected'||!r.value.routePoints.length)return[];const points=[...r.value.routePoints].sort((a,b)=>a.capturedAtUtc.localeCompare(b.capturedAtUtc)),start=points[0],end=points.at(-1)!;return[{seller:sellers[i],workdayExternalId:start.workdayExternalId,start:start.capturedAtUtc,end:end.capturedAtUtc,durationMs:new Date(end.capturedAtUtc).getTime()-new Date(start.capturedAtUtc).getTime(),pointCount:points.length,visitCount:r.value.visits.length}]})}}
+import { apiClient } from "@/lib/api/apiClient";
+
+export interface SellerOption {
+  externalId: string;
+  displayName: string;
+  email?: string;
+}
+export interface WorkdayVisit {
+  externalId: string;
+  customerName?: string | null;
+  projectName?: string | null;
+  startedAtUtc?: string | null;
+  endedAtUtc?: string | null;
+  durationMinutes?: number | null;
+  note?: string | null;
+}
+export interface WorkdayLocation {
+  externalId?: string;
+  capturedAtUtc: string;
+  latitude: number;
+  longitude: number;
+}
+export interface Workday {
+  id: string;
+  sellerExternalId?: string | null;
+  sellerName?: string | null;
+  status: string;
+  startedAtUtc: string;
+  endedAtUtc?: string | null;
+  note?: string | null;
+  visitCount?: number;
+  locationCount?: number;
+  visits?: WorkdayVisit[];
+}
+export interface ActiveSeller {
+  sellerExternalId: string;
+  sellerName: string;
+  status: string;
+  startedAtUtc: string;
+  lastLocation?: WorkdayLocation | null;
+  lastUpdatedAtUtc?: string | null;
+  currentVisit?: { name?: string | null; startedAtUtc?: string | null } | null;
+}
+export interface WorkdayFilters {
+  from: string;
+  to: string;
+  sellerExternalId?: string;
+}
+
+const asList = <T>(value: T[] | { items: T[] }): T[] =>
+  Array.isArray(value) ? value : value.items;
+
+export const operationsApi = {
+  sellers: async () =>
+    (await apiClient.get<SellerOption[]>("/api/sellers")).data,
+  activeSellers: async () =>
+    asList(
+      (
+        await apiClient.get<ActiveSeller[] | { items: ActiveSeller[] }>(
+          "/api/tracking/active-sellers",
+        )
+      ).data,
+    ),
+  workdays: async (filters: WorkdayFilters) =>
+    asList(
+      (
+        await apiClient.get<Workday[] | { items: Workday[] }>("/api/workdays", {
+          params: {
+            from: filters.from,
+            to: filters.to,
+            sellerExternalId: filters.sellerExternalId || undefined,
+          },
+        })
+      ).data,
+    ),
+  workday: async (workdayId: string) =>
+    (await apiClient.get<Workday>(`/api/workdays/${workdayId}`)).data,
+  locations: async (workdayId: string) =>
+    asList(
+      (
+        await apiClient.get<WorkdayLocation[] | { items: WorkdayLocation[] }>(
+          `/api/workdays/${workdayId}/locations`,
+        )
+      ).data,
+    ),
+};

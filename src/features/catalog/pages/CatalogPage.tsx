@@ -1,5 +1,357 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import{useState,type FormEvent}from'react';import{useMutation,useQuery,useQueryClient}from'@tanstack/react-query';import{Boxes,LogOut,Plus}from'lucide-react';import{Link}from'react-router-dom';import{Brand}from'@/presentation/components/Brand';import{useAuth}from'@/features/auth/hooks/useAuth';import{productsApi,unitsApi,type Product,type ProductInput,type Unit,type UnitInput}from'../api/catalogApi';
-const emptyU:UnitInput={name:'',symbol:'',description:null,allowsDecimals:false,isActive:true};const emptyP:ProductInput={code:'',name:'',description:null,externalUnitId:'',price:0,isActive:true}
-export function CatalogPage(){const{user,logout}=useAuth();const cache=useQueryClient();const[tab,setTab]=useState<'products'|'units'>('products');const[edit,setEdit]=useState<Product|Unit|null>(null);const[pf,setPf]=useState(emptyP);const[uf,setUf]=useState(emptyU);const units=useQuery({queryKey:['units'],queryFn:()=>unitsApi.list()});const products=useQuery({queryKey:['products'],queryFn:()=>productsApi.list()});const save=useMutation({mutationFn:async()=>{if(tab==='products'){if(!pf.code.trim()||!pf.name.trim()||!pf.externalUnitId||pf.price<0)throw Error('Completa código, nombre, unidad y un precio válido.');edit?await productsApi.update(edit.externalId,pf):await productsApi.create(pf)}else{if(!uf.name.trim()||!uf.symbol.trim())throw Error('Nombre y símbolo son requeridos.');edit?await unitsApi.update(edit.externalId,uf):await unitsApi.create(uf)}},onSuccess:async()=>{setEdit(null);await cache.invalidateQueries({queryKey:[tab]})}});const del=async(x:Product|Unit)=>{if(confirm(`¿Eliminar ${x.name}? Esta acción no se puede deshacer.`)){await(tab==='products'?productsApi.remove(x.externalId):unitsApi.remove(x.externalId));await cache.invalidateQueries({queryKey:[tab]})}};if(!user)return null;const rows=tab==='products'?products.data?.items:units.data?.items;return <div className="dashboard"><aside className="dashboard-sidebar"><Brand inverse/><nav><Link to="/">Resumen</Link><Link to="/customers">Clientes</Link><Link to="/projects">Obras</Link><Link className="active" to="/catalog"><Boxes/>Productos</Link></nav><button className="logout" onClick={()=>void logout()}><LogOut/>Cerrar sesión</button></aside><section className="dashboard-body"><main className="customers-content"><header className="customers-heading"><div><p className="overline">Catálogo</p><h1>Productos y unidades</h1></div><button className="action-primary" onClick={()=>{setEdit(null);tab==='products'?setPf(emptyP):setUf(emptyU)}}><Plus/>Nuevo</button></header><nav className="activity-tabs"><button className={tab==='products'?'active':''} onClick={()=>{setTab('products');setEdit(null)}}>Productos</button><button className={tab==='units'?'active':''} onClick={()=>{setTab('units');setEdit(null)}}>Unidades</button></nav><div className="catalog-grid"><section className="customer-table-card"><table><thead><tr><th>Nombre</th><th>{tab==='products'?'Código / Precio':'Símbolo'}</th><th>Estado</th><th/></tr></thead><tbody>{rows?.map(x=><tr key={x.externalId}><td><strong>{x.name}</strong></td><td>{'code'in x?`${x.code} · ${x.price}`:x.symbol}</td><td>{x.isActive?'Activo':'Inactivo'}</td><td><button className="row-action" onClick={()=>{setEdit(x);if('code'in x)setPf({...x});else setUf({...x})}}>Editar</button><button className="row-action danger-text" onClick={()=>void del(x)}>Eliminar</button></td></tr>)}</tbody></table></section><CatalogForm tab={tab} pf={pf} uf={uf} setPf={setPf} setUf={setUf} units={units.data?.items||[]} submit={e=>{e.preventDefault();save.mutate()}} error={save.error}/></div></main></section></div>}
-function CatalogForm({tab,pf,uf,setPf,setUf,units,submit,error}:{tab:'products'|'units';pf:ProductInput;uf:UnitInput;setPf:(x:ProductInput)=>void;setUf:(x:UnitInput)=>void;units:Unit[];submit:(e:FormEvent)=>void;error:Error|null}){return <form className="customer-form catalog-form" onSubmit={submit}><h2>{tab==='products'?'Producto':'Unidad'}</h2>{tab==='products'?<><label>Código *<input required value={pf.code} onChange={e=>setPf({...pf,code:e.target.value})}/></label><label>Nombre *<input required value={pf.name} onChange={e=>setPf({...pf,name:e.target.value})}/></label><label>Unidad *<select required value={pf.externalUnitId} onChange={e=>setPf({...pf,externalUnitId:e.target.value})}><option value="">Seleccionar</option>{units.map(x=><option key={x.externalId} value={x.externalId}>{x.name} ({x.symbol})</option>)}</select></label><label>Precio *<input required min="0" type="number" step="0.01" value={pf.price} onChange={e=>setPf({...pf,price:Number(e.target.value)})}/></label></>:<><label>Nombre *<input required value={uf.name} onChange={e=>setUf({...uf,name:e.target.value})}/></label><label>Símbolo *<input required value={uf.symbol} onChange={e=>setUf({...uf,symbol:e.target.value})}/></label><label><input type="checkbox" checked={uf.allowsDecimals} onChange={e=>setUf({...uf,allowsDecimals:e.target.checked})}/> Permite decimales</label></>}<label><input type="checkbox" checked={tab==='products'?pf.isActive:uf.isActive} onChange={e=>tab==='products'?setPf({...pf,isActive:e.target.checked}):setUf({...uf,isActive:e.target.checked})}/> Activo</label>{error&&<p className="form-error">{error.message}</p>}<button className="action-primary">Guardar</button></form>}
+import { useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { usePermission } from "@/hooks/usePermission";
+import { PageHeader } from "@/components/layout/AppShell";
+import { DataState } from "@/components/data/DataState";
+import {
+  productsApi,
+  unitsApi,
+  type Product,
+  type ProductInput,
+  type Unit,
+  type UnitInput,
+} from "../api/catalogApi";
+
+const emptyUnit: UnitInput = {
+  name: "",
+  symbol: "",
+  description: null,
+  allowsDecimals: false,
+  isActive: true,
+};
+const emptyProduct: ProductInput = {
+  name: "",
+  description: null,
+  externalUnitId: "",
+  price: 0,
+  isActive: true,
+};
+
+export function CatalogPage() {
+  const { user } = useAuth(),
+    cache = useQueryClient();
+  const isSeller =
+    user?.roles.some((role) => role.toLowerCase() === "seller") ?? false;
+  const canCreateProduct = usePermission("products.create"),
+    canUpdateProduct = usePermission("products.update"),
+    canDeleteProduct = usePermission("products.delete");
+  const hasUnitsRead = usePermission("units.read"),
+    canCreateUnit = usePermission("units.create"),
+    canUpdateUnit = usePermission("units.update"),
+    canDeleteUnit = usePermission("units.delete");
+  const canReadUnits = !isSeller && hasUnitsRead;
+  const [tab, setTab] = useState<"products" | "units">("products"),
+    [edit, setEdit] = useState<Product | Unit | null>(null),
+    [showForm, setShowForm] = useState(false);
+  const [productForm, setProductForm] = useState(emptyProduct),
+    [unitForm, setUnitForm] = useState(emptyUnit);
+  const units = useQuery({
+    queryKey: ["units"],
+    queryFn: () => unitsApi.list(),
+    enabled:
+      canReadUnits || (!isSeller && (canCreateProduct || canUpdateProduct)),
+  });
+  const products = useQuery({
+    queryKey: ["products"],
+    queryFn: () => productsApi.list(),
+  });
+  const canCreate = tab === "products" ? canCreateProduct : canCreateUnit,
+    canUpdate = tab === "products" ? canUpdateProduct : canUpdateUnit,
+    canDelete = tab === "products" ? canDeleteProduct : canDeleteUnit;
+  const save = useMutation({
+    mutationFn: async () => {
+      if (tab === "products") {
+        if (
+          !productForm.name.trim() ||
+          !productForm.externalUnitId ||
+          productForm.price < 0
+        )
+          throw Error("Completa nombre, unidad y un precio válido.");
+        if (edit) await productsApi.update(edit.externalId, productForm);
+        else await productsApi.create(productForm);
+      } else {
+        if (!unitForm.name.trim() || !unitForm.symbol.trim())
+          throw Error("Nombre y símbolo son requeridos.");
+        if (edit) await unitsApi.update(edit.externalId, unitForm);
+        else await unitsApi.create(unitForm);
+      }
+    },
+    onSuccess: async () => {
+      setEdit(null);
+      setShowForm(false);
+      await cache.invalidateQueries({ queryKey: [tab] });
+    },
+  });
+  const remove = async (item: Product | Unit) => {
+    if (confirm(`¿Eliminar ${item.name}? Esta acción no se puede deshacer.`)) {
+      await (tab === "products"
+        ? productsApi.remove(item.externalId)
+        : unitsApi.remove(item.externalId));
+      await cache.invalidateQueries({ queryKey: [tab] });
+    }
+  };
+  const rows = tab === "products" ? products.data?.items : units.data?.items;
+  const openCreate = () => {
+    setEdit(null);
+    setShowForm(true);
+    if (tab === "products") setProductForm(emptyProduct);
+    else setUnitForm(emptyUnit);
+  };
+  const openEdit = (item: Product | Unit) => {
+    setEdit(item);
+    setShowForm(true);
+    if ("code" in item)
+      setProductForm({
+        name: item.name,
+        description: item.description,
+        externalUnitId: item.externalUnitId,
+        price: item.price,
+        isActive: item.isActive,
+      });
+    else setUnitForm({ ...item });
+  };
+  return (
+    <main className="customers-content">
+      <PageHeader
+        eyebrow="Catálogo"
+        title={isSeller ? "Productos" : "Productos y unidades"}
+        description={
+          isSeller
+            ? "Consulta los productos disponibles."
+            : "Administra el catálogo comercial y sus unidades de medida."
+        }
+        action={
+          canCreate &&
+          !isSeller && (
+            <button className="action-primary" onClick={openCreate}>
+              <Plus />
+              Nuevo {tab === "products" ? "producto" : "unidad"}
+            </button>
+          )
+        }
+      />
+      {canReadUnits && (
+        <nav className="activity-tabs">
+          <button
+            className={tab === "products" ? "active" : ""}
+            onClick={() => {
+              setTab("products");
+              setShowForm(false);
+            }}
+          >
+            Productos
+          </button>
+          <button
+            className={tab === "units" ? "active" : ""}
+            onClick={() => {
+              setTab("units");
+              setShowForm(false);
+            }}
+          >
+            Unidades
+          </button>
+        </nav>
+      )}
+      {isSeller && (
+        <p className="assignment-note">
+          Vista de consulta. Tu rol no permite crear ni modificar productos o
+          unidades.
+        </p>
+      )}
+      <div className={showForm ? "catalog-grid" : ""}>
+        <section className="customer-table-card">
+          <DataState
+            loading={tab === "products" ? products.isLoading : units.isLoading}
+            error={tab === "products" ? products.error : units.error}
+            isEmpty={!rows?.length}
+            empty="No hay registros disponibles."
+          >
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>
+                      {tab === "products" ? "Código / Precio" : "Símbolo"}
+                    </th>
+                    <th>Estado</th>
+                    {(canUpdate || canDelete) && !isSeller && <th>Acciones</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows?.map((item) => (
+                    <tr key={item.externalId}>
+                      <td>
+                        <strong>{item.name}</strong>
+                      </td>
+                      <td>
+                        {"code" in item
+                          ? `${item.code} · ${item.price}`
+                          : item.symbol}
+                      </td>
+                      <td>{item.isActive ? "Activo" : "Inactivo"}</td>
+                      {(canUpdate || canDelete) && !isSeller && (
+                        <td>
+                          {canUpdate && (
+                            <button
+                              className="row-action"
+                              onClick={() => openEdit(item)}
+                            >
+                              Editar
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              className="row-action danger-text"
+                              onClick={() => void remove(item)}
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DataState>
+        </section>
+        {showForm && !isSeller && (
+          <CatalogForm
+            tab={tab}
+            product={productForm}
+            unit={unitForm}
+            setProduct={setProductForm}
+            setUnit={setUnitForm}
+            units={units.data?.items || []}
+            submit={(event) => {
+              event.preventDefault();
+              save.mutate();
+            }}
+            error={save.error}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+function CatalogForm({
+  tab,
+  product,
+  unit,
+  setProduct,
+  setUnit,
+  units,
+  submit,
+  error,
+}: {
+  tab: "products" | "units";
+  product: ProductInput;
+  unit: UnitInput;
+  setProduct: (value: ProductInput) => void;
+  setUnit: (value: UnitInput) => void;
+  units: Unit[];
+  submit: (event: FormEvent) => void;
+  error: Error | null;
+}) {
+  return (
+    <form className="customer-form catalog-form" onSubmit={submit}>
+      <h2>{tab === "products" ? "Producto" : "Unidad"}</h2>
+      {tab === "products" ? (
+        <>
+          <label>
+            Nombre *
+            <input
+              required
+              value={product.name}
+              onChange={(event) =>
+                setProduct({ ...product, name: event.target.value })
+              }
+            />
+          </label>
+          <label>
+            Unidad *
+            <select
+              required
+              value={product.externalUnitId}
+              onChange={(event) =>
+                setProduct({ ...product, externalUnitId: event.target.value })
+              }
+            >
+              <option value="">Seleccionar</option>
+              {units.map((item) => (
+                <option key={item.externalId} value={item.externalId}>
+                  {item.name} ({item.symbol})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Precio *
+            <input
+              required
+              min="0"
+              type="number"
+              step="0.01"
+              value={product.price}
+              onChange={(event) =>
+                setProduct({ ...product, price: Number(event.target.value) })
+              }
+            />
+          </label>
+        </>
+      ) : (
+        <>
+          <label>
+            Nombre *
+            <input
+              required
+              value={unit.name}
+              onChange={(event) =>
+                setUnit({ ...unit, name: event.target.value })
+              }
+            />
+          </label>
+          <label>
+            Símbolo *
+            <input
+              required
+              value={unit.symbol}
+              onChange={(event) =>
+                setUnit({ ...unit, symbol: event.target.value })
+              }
+            />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={unit.allowsDecimals}
+              onChange={(event) =>
+                setUnit({ ...unit, allowsDecimals: event.target.checked })
+              }
+            />{" "}
+            Permite decimales
+          </label>
+        </>
+      )}
+      <label>
+        <input
+          type="checkbox"
+          checked={tab === "products" ? product.isActive : unit.isActive}
+          onChange={(event) =>
+            tab === "products"
+              ? setProduct({ ...product, isActive: event.target.checked })
+              : setUnit({ ...unit, isActive: event.target.checked })
+          }
+        />{" "}
+        Activo
+      </label>
+      {error && <p className="form-error">{error.message}</p>}
+      <button className="action-primary">Guardar</button>
+    </form>
+  );
+}

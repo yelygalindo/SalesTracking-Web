@@ -1,28 +1,524 @@
-import { useQuery } from '@tanstack/react-query'
-import { BellPlus, Building2, CalendarClock, CheckCircle2, ClipboardCheck, FileText, MapPin, PackageCheck, Pencil, Route, Users } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { PageHeader } from '@/components/layout/AppShell'
-import { DataState } from '@/components/data/DataState'
-import { dashboardApi, type DashboardData } from '../api/dashboardApi'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Building2,
+  CalendarClock,
+  ClipboardCheck,
+  PackageCheck,
+  Route,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { DataState } from "@/components/data/DataState";
+import { PageHeader } from "@/components/layout/AppShell";
+import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import { projectApi } from "@/features/projects/api/projectApi";
+import {
+  dashboardApi,
+  type DashboardData,
+  type DashboardMetrics,
+} from "../api/dashboardApi";
+import { DashboardProjectsMap } from "../components/DashboardProjectsMap";
+import { presentActivityType } from "../presentation/activityPresentation";
 
-const friendlyEvent=(type:string,title:string)=>{const value=`${type} ${title}`.toLowerCase();if(value.includes('check-in')||value.includes('checkin')||value.includes('visitstarted'))return{label:'Visita iniciada',Icon:MapPin,tone:'orange'};if(value.includes('check-out')||value.includes('checkout')||value.includes('visitcompleted'))return{label:'Visita finalizada',Icon:Route,tone:'green'};if(value.includes('attachment')||value.includes('archivo'))return{label:'Archivo agregado',Icon:FileText,tone:'blue'};if(value.includes('note')||value.includes('nota'))return{label:'Nota agregada',Icon:Pencil,tone:'blue'};if(value.includes('reminder')&&value.includes('complet'))return{label:'Recordatorio completado',Icon:CheckCircle2,tone:'green'};if(value.includes('reminder'))return{label:'Recordatorio creado',Icon:BellPlus,tone:'orange'};return{label:'Cliente actualizado',Icon:Pencil,tone:'blue'}}
-const dateTime=(value:string)=>{const date=new Date(value),today=new Date();const day=date.toLocaleDateString('en-CA')===today.toLocaleDateString('en-CA')?'Hoy':date.toLocaleDateString('es-BO',{day:'numeric',month:'short'});return `${day} · ${date.toLocaleTimeString('es-BO',{hour:'numeric',minute:'2-digit'})}`}
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
+  const day =
+    date.toDateString() === new Date().toDateString()
+      ? "Hoy"
+      : date.toLocaleDateString("es-BO", { day: "numeric", month: "short" });
+  return {
+    day,
+    time: date.toLocaleTimeString("es-BO", {
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+  };
+};
+const metricDefinitions: Array<{
+  key: keyof DashboardMetrics;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { key: "activeCustomers", label: "Clientes activos", Icon: Users },
+  { key: "activeProjects", label: "Proyectos activos", Icon: Building2 },
+  {
+    key: "pendingDeliveries",
+    label: "Entregas pendientes",
+    Icon: ClipboardCheck,
+  },
+  { key: "overdueDeliveries", label: "Entregas vencidas", Icon: CalendarClock },
+  {
+    key: "completedDeliveriesThisMonth",
+    label: "Entregas del mes",
+    Icon: PackageCheck,
+  },
+  { key: "todayFollowUps", label: "Seguimientos de hoy", Icon: CalendarClock },
+];
 
-export function DashboardPage(){
- const {user}=useAuth(),query=useQuery({queryKey:['dashboard'],queryFn:dashboardApi.get,refetchInterval:60000}),metrics=query.data?.metrics
- const cards=metrics?[{label:'Clientes activos',value:metrics.activeCustomers,icon:Users},{label:'Proyectos activos',value:metrics.activeProjects,icon:Building2},{label:'Entregas pendientes',value:metrics.pendingDeliveries,icon:ClipboardCheck},{label:'Entregas vencidas',value:metrics.overdueDeliveries,icon:CalendarClock},{label:'Entregas del mes',value:metrics.completedDeliveriesThisMonth,icon:PackageCheck}]:[]
- return <main className="dashboard-content"><PageHeader eyebrow="Operación comercial" title={`Buenos días, ${user?.fullName.split(' ')[0]||'equipo'}`} description="Resumen actualizado de la operación."/><DataState loading={query.isLoading} error={query.error} isEmpty={!query.data} empty="No hay información disponible.">{query.data&&<><section className="real-metrics">{cards.map(({label,value,icon:Icon})=><article className="metric-card" key={label}><span className="metric-icon orange"><Icon/></span><div><p>{label}</p><strong>{value}</strong></div></article>)}</section><DashboardSections data={query.data}/></>}</DataState></main>
+export function DashboardPage() {
+  const { user, can } = useAuthorization();
+  const canChooseSeller = can("sellers.read");
+  const [statusId, setStatusId] = useState("");
+  const [sellerId, setSellerId] = useState("");
+  const query = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: dashboardApi.get,
+    refetchInterval: 60_000,
+  });
+  const map = useQuery({
+    queryKey: ["dashboard-map", statusId, sellerId],
+    queryFn: () =>
+      dashboardApi.mapItems({
+        statusId: statusId ? Number(statusId) : undefined,
+        sellerExternalId: canChooseSeller ? sellerId || undefined : undefined,
+      }),
+    refetchInterval: 60_000,
+  });
+  const statuses = useQuery({
+    queryKey: ["project-statuses"],
+    queryFn: projectApi.statuses,
+  });
+  const sellers = useQuery({
+    queryKey: ["dashboard-sellers"],
+    queryFn: dashboardApi.sellers,
+    enabled: canChooseSeller,
+  });
+  const cards = metricDefinitions.filter(
+    ({ key }) => typeof query.data?.metrics[key] === "number",
+  );
+  return (
+    <main className="dashboard-content">
+      <PageHeader
+        eyebrow="Operación comercial"
+        title={`Buenos días, ${user?.fullName.split(" ")[0] || "equipo"}`}
+        description="Resumen actualizado de la operación."
+      />
+      <DataState
+        loading={query.isLoading}
+        error={query.error}
+        isEmpty={!query.data}
+        empty="No hay información disponible."
+      >
+        {query.data && (
+          <>
+            <section
+              className="real-metrics"
+              aria-label="Indicadores operacionales"
+            >
+              {cards.map(({ key, label, Icon }) => (
+                <article className="metric-card" key={key}>
+                  <span className="metric-icon orange">
+                    <Icon />
+                  </span>
+                  <div>
+                    <p>{label}</p>
+                    <strong>{query.data.metrics[key]}</strong>
+                  </div>
+                </article>
+              ))}
+            </section>
+            <DashboardSections
+              data={query.data}
+              map={{
+                items: map.data ?? [],
+                loading: map.isLoading,
+                error: map.error,
+                statusId,
+                sellerId,
+                setStatusId,
+                setSellerId,
+                statuses: statuses.data ?? [],
+                sellers: sellers.data ?? [],
+                canChooseSeller,
+              }}
+              permissions={{
+                reports: can("reports.read"),
+                deliveries: can("deliveries.read"),
+                customers: can("customers.read"),
+                projects: can("projects.read"),
+              }}
+            />
+          </>
+        )}
+      </DataState>
+    </main>
+  );
 }
 
-function SectionHeader({title,to,label}:{title:string;to:string;label:string}){return <header className="dashboard-section-header"><h2>{title}</h2><Link to={to}>{label} →</Link></header>}
-function Empty({icon:Icon,title,text}:{icon:typeof PackageCheck;title:string;text:string}){return <div className="dashboard-empty"><span><Icon/></span><strong>{title}</strong><p>{text}</p></div>}
+function SectionHeader({
+  title,
+  to,
+  label,
+}: {
+  title: string;
+  to?: string;
+  label: string;
+}) {
+  return (
+    <header className="dashboard-section-header">
+      <h2>{title}</h2>
+      {to && (
+        <Link to={to}>
+          {label} <span aria-hidden="true">→</span>
+        </Link>
+      )}
+    </header>
+  );
+}
+function Empty({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text?: string;
+}) {
+  return (
+    <div className="dashboard-empty">
+      <span>
+        <Icon />
+      </span>
+      <strong>{title}</strong>
+      {text && <p>{text}</p>}
+    </div>
+  );
+}
+interface DashboardPermissions {
+  reports: boolean;
+  deliveries: boolean;
+  customers: boolean;
+  projects: boolean;
+}
+interface DashboardMapState {
+  items: DashboardData["projectItems"];
+  loading: boolean;
+  error: Error | null;
+  statusId: string;
+  sellerId: string;
+  setStatusId: (value: string) => void;
+  setSellerId: (value: string) => void;
+  statuses: Array<{ value: number; label: string }>;
+  sellers: Array<{ externalId: string; displayName: string }>;
+  canChooseSeller: boolean;
+}
 
-function DashboardSections({data}:{data:DashboardData}){
- return <section className="dashboard-real-grid operational-grid">
-  <article className="activity-card dashboard-panel"><SectionHeader title="Actividad reciente" to="/reports" label="Ver toda"/>{data.recentActivity.length?<div className="dashboard-timeline">{data.recentActivity.slice(0,6).map((item,index)=>{const{label,Icon,tone}=friendlyEvent(item.eventTypeName,item.title);return <div className="dashboard-event" key={`${item.projectExternalId}-${item.occurredAtUtc}-${index}`}><span className={`dashboard-event-icon ${tone}`}><Icon/></span><div><strong>{label}</strong><small><Link to={`/projects?selected=${encodeURIComponent(item.projectExternalId)}`}>{item.projectName}</Link> · {item.userName||'Sistema'}</small><time title={new Date(item.occurredAtUtc).toLocaleString('es-BO')}>{dateTime(item.occurredAtUtc)}</time></div></div>})}</div>:<Empty icon={Route} title="Todavía no hay actividad" text="Los movimientos comerciales aparecerán aquí."/>}</article>
-  <article className="activity-card dashboard-panel"><SectionHeader title="Entregas urgentes" to="/deliveries" label="Ver todas"/>{data.urgentDeliveries.length?<div className="dashboard-list">{data.urgentDeliveries.map(item=><Link className="dashboard-list-row" to={`/deliveries?selected=${encodeURIComponent(item.deliveryExternalId)}`} key={item.deliveryExternalId}><span className={`list-icon ${item.isOverdue?'danger':'warning'}`}><PackageCheck/></span><div><strong>{item.projectName}</strong><small>{new Date(item.committedDateUtc).toLocaleDateString('es-BO',{dateStyle:'medium'})}</small></div><em className={item.isOverdue?'overdue':''}>{item.statusName}</em></Link>)}</div>:<Empty icon={PackageCheck} title="No hay entregas urgentes" text="Todo está al día por ahora."/>}</article>
-  <article className="activity-card dashboard-panel"><SectionHeader title="Próximos seguimientos" to="/reminders" label="Ver todos"/>{data.upcomingFollowUps.length?<div className="dashboard-list">{data.upcomingFollowUps.map(item=><Link className="dashboard-list-row" to={`/customers?selected=${encodeURIComponent(item.customerExternalId)}`} key={item.reminderExternalId}><span className="list-icon warning"><CalendarClock/></span><div><strong>{item.text}</strong><small>{item.customerName} · {item.assignedToName}</small><time>{dateTime(item.reminderAtUtc)}</time></div></Link>)}</div>:<Empty icon={CalendarClock} title="No tienes seguimientos pendientes" text="Los próximos recordatorios aparecerán aquí."/>}</article>
-  <article className="activity-card dashboard-panel"><SectionHeader title="Avance de proyectos" to="/projects" label="Ver todos"/>{data.projectLocations.length?<div className="project-progress-list">{data.projectLocations.slice(0,5).map(item=><Link to={`/projects?selected=${encodeURIComponent(item.projectExternalId)}`} key={item.projectExternalId}><div><strong>{item.name}</strong><span>{item.progressPercentage}%</span></div><small>{item.customerName||item.address||'Sin cliente asociado'}</small><progress max="100" value={item.progressPercentage}/></Link>)}</div>:<Empty icon={Building2} title="No hay proyectos activos" text="El avance de tus obras aparecerá aquí."/>}</article>
- </section>
+function DashboardSections({
+  data,
+  permissions,
+  map,
+}: {
+  data: DashboardData;
+  permissions: DashboardPermissions;
+  map: DashboardMapState;
+}) {
+  return (
+    <>
+      <section className="dashboard-primary-layout">
+        <article className="dashboard-map-panel">
+          <header className="dashboard-map-header">
+            <div>
+              <h2>Mapa de obras</h2>
+              <p>Proyectos con ubicación registrada.</p>
+            </div>
+            <div className="dashboard-map-filters">
+              <label>
+                Estado
+                <select
+                  value={map.statusId}
+                  onChange={(event) => map.setStatusId(event.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {map.statuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {map.canChooseSeller && (
+                <label>
+                  Vendedor
+                  <select
+                    value={map.sellerId}
+                    onChange={(event) => map.setSellerId(event.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {map.sellers.map((seller) => (
+                      <option key={seller.externalId} value={seller.externalId}>
+                        {seller.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          </header>
+          <DataState
+            loading={map.loading}
+            error={map.error}
+            isEmpty={!map.items.length}
+            empty="No hay obras con ubicación registrada."
+          >
+            <DashboardProjectsMap items={map.items} />
+          </DataState>
+        </article>
+        <div className="dashboard-side-stack">
+          <ActivityPanel data={data} permissions={permissions} />
+          <FollowUpsPanel data={data} permissions={permissions} />
+        </div>
+      </section>
+      <section className="dashboard-real-grid operational-grid dashboard-secondary-layout">
+        <DeliveriesPanel data={data} permissions={permissions} />
+        <ProgressPanel data={data} permissions={permissions} />
+      </section>
+    </>
+  );
+}
+
+function ActivityPanel({
+  data,
+  permissions,
+}: {
+  data: DashboardData;
+  permissions: DashboardPermissions;
+}) {
+  return (
+    <article className="activity-card dashboard-panel dashboard-activity-panel">
+      <SectionHeader
+        title="Actividad reciente"
+        to={permissions.reports ? "/reports" : undefined}
+        label="Ver toda"
+      />
+      {data.recentActivity.length ? (
+        <div className="dashboard-timeline">
+          {data.recentActivity.slice(0, 5).map((item, index) => {
+            const { label, Icon, tone } = presentActivityType(
+              item.eventTypeName,
+            );
+            const occurred = formatDateTime(item.occurredAtUtc);
+            const description = item.title?.trim();
+            return (
+              <div
+                className="dashboard-event"
+                key={`${item.projectExternalId}-${item.occurredAtUtc}-${index}`}
+              >
+                <span className={`dashboard-event-icon ${tone}`}>
+                  <Icon />
+                </span>
+                <div className="dashboard-event-content">
+                  <strong>{label}</strong>
+                  <small>
+                    {permissions.projects ? (
+                      <Link
+                        to={`/projects?selected=${encodeURIComponent(item.projectExternalId)}`}
+                      >
+                        {item.projectName}
+                      </Link>
+                    ) : (
+                      item.projectName
+                    )}
+                    {item.userName && <> · {item.userName}</>}
+                  </small>
+                  {description && description !== item.eventTypeName && (
+                    <p>{description}</p>
+                  )}
+                  <time>
+                    {occurred.day} · <span>{occurred.time}</span>
+                  </time>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Empty
+          icon={Route}
+          title="Todavía no hay actividad"
+          text="Los movimientos comerciales aparecerán aquí."
+        />
+      )}
+    </article>
+  );
+}
+
+function FollowUpsPanel({
+  data,
+  permissions,
+}: {
+  data: DashboardData;
+  permissions: DashboardPermissions;
+}) {
+  return (
+    <article className="activity-card dashboard-panel">
+      <SectionHeader
+        title="Próximos seguimientos"
+        to={permissions.customers ? "/reminders" : undefined}
+        label="Ver todos"
+      />
+      {data.upcomingFollowUps.length ? (
+        <div className="dashboard-list">
+          {data.upcomingFollowUps.slice(0, 4).map((item) => {
+            const reminder = formatDateTime(item.reminderAtUtc);
+            const content = (
+              <>
+                <span className="list-icon warning">
+                  <CalendarClock />
+                </span>
+                <div>
+                  <strong>{item.projectName || item.customerName}</strong>
+                  <p>{item.text}</p>
+                  <small>{item.assignedToName}</small>
+                  <time>
+                    {reminder.day} · <span>{reminder.time}</span>
+                  </time>
+                </div>
+              </>
+            );
+            return permissions.customers ? (
+              <Link
+                className="dashboard-list-row"
+                to={`/customers?selected=${encodeURIComponent(item.customerExternalId)}`}
+                key={item.reminderExternalId}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div className="dashboard-list-row" key={item.reminderExternalId}>
+                {content}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Empty icon={CalendarClock} title="No hay seguimientos próximos" />
+      )}
+    </article>
+  );
+}
+
+function DeliveriesPanel({
+  data,
+  permissions,
+}: {
+  data: DashboardData;
+  permissions: DashboardPermissions;
+}) {
+  return (
+    <article className="activity-card dashboard-panel">
+      <SectionHeader
+        title="Entregas urgentes"
+        to={permissions.deliveries ? "/deliveries" : undefined}
+        label="Ver todas"
+      />
+      {data.urgentDeliveries.length ? (
+        <div className="dashboard-list">
+          {data.urgentDeliveries.map((item) => {
+            const content = (
+              <>
+                <span
+                  className={`list-icon ${item.isOverdue ? "danger" : "warning"}`}
+                >
+                  <PackageCheck />
+                </span>
+                <div>
+                  <strong>{item.productName || item.projectName}</strong>
+                  {item.productName && (
+                    <small>
+                      {item.projectName}
+                      {item.customerName ? ` · ${item.customerName}` : ""}
+                    </small>
+                  )}
+                  <time>
+                    {new Date(item.committedDateUtc).toLocaleDateString(
+                      "es-BO",
+                      { dateStyle: "medium" },
+                    )}
+                  </time>
+                </div>
+                <em className={item.isOverdue ? "overdue" : ""}>
+                  {item.statusName}
+                </em>
+              </>
+            );
+            return permissions.deliveries ? (
+              <Link
+                className="dashboard-list-row"
+                to={`/deliveries?selected=${encodeURIComponent(item.deliveryExternalId)}`}
+                key={item.deliveryExternalId}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div className="dashboard-list-row" key={item.deliveryExternalId}>
+                {content}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Empty
+          icon={PackageCheck}
+          title="No hay entregas urgentes. Todo está al día."
+        />
+      )}
+    </article>
+  );
+}
+
+function ProgressPanel({
+  data,
+  permissions,
+}: {
+  data: DashboardData;
+  permissions: DashboardPermissions;
+}) {
+  return (
+    <article className="activity-card dashboard-panel">
+      <SectionHeader
+        title="Avance de proyectos"
+        to={permissions.projects ? "/projects" : undefined}
+        label="Ver todos"
+      />
+      {data.projectItems.length ? (
+        <div className="project-progress-list">
+          {data.projectItems.slice(0, 5).map((item) => {
+            const progress = Math.min(
+              100,
+              Math.max(0, item.progressPercentage),
+            );
+            const content = (
+              <>
+                <div>
+                  <strong>{item.name}</strong>
+                  <span>{progress}%</span>
+                </div>
+                {item.customerName && <small>{item.customerName}</small>}
+                <progress max="100" value={progress} />
+              </>
+            );
+            return permissions.projects ? (
+              <Link
+                to={`/projects?selected=${encodeURIComponent(item.projectExternalId)}`}
+                key={item.projectExternalId}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                className="project-progress-row"
+                key={item.projectExternalId}
+              >
+                {content}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Empty icon={Building2} title="No hay proyectos activos" />
+      )}
+    </article>
+  );
 }

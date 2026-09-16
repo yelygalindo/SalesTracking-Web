@@ -1,0 +1,142 @@
+.customer-toolbar > select {
+  min-width: 180px;
+}
+.customer-title-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.customer-title-line h2 {
+  margin-right: 4px;
+}
+.customer-contact-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 12px;
+}
+.customer-contact-line a,
+.customer-contact-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #617087;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+.customer-contact-line svg,
+.customer-address svg {
+  width: 15px;
+  height: 15px;
+}
+.customer-status-action {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e1e6ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.customer-status-action label {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+  color: #526176;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.customer-status-action select {
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #dfe4ec;
+  border-radius: 9px;
+}
+.customer-status-action button {
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  color: #526176;
+  background: #eef2f6;
+}
+.customer-address {
+  grid-column: 1/-1;
+}
+.customer-address dd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.customer-form select,
+.customer-form textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #dfe4ec;
+  border-radius: 10px;
+  background: #fff;
+}
+.customer-form select {
+  height: 44px;
+  padding-block: 0;
+}
+.customer-form-extras {
+  display: grid;
+  gap: 14px;
+  margin: 4px 0;
+  padding: 16px;
+  border: 1px solid #e2e7ee;
+  border-radius: 12px;
+}
+.customer-form-extras legend {
+  padding: 0 6px;
+  color: #273950;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+.reminder-group {
+  display: grid;
+  gap: 10px;
+}
+.reminder-group + .reminder-group {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e5eaf0;
+}
+.reminder-group > h3 {
+  margin: 0;
+  color: #526176;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.reminder-group.completed article {
+  opacity: 0.76;
+}
+.customer-activity time,
+.crm-timeline time {
+  white-space: nowrap;
+}
+.status-pill.contacted,
+.status-pill.contactado {
+  color: #285f9d;
+  background: #eaf2fc;
+}
+@media (max-width: 760px) {
+  .customer-contact-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .customer-title-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .customer-status-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .customer-toolbar > select {
+    min-width: 0;
+  }
+}

@@ -1,3 +1,10 @@
-import type { PropsWithChildren, ReactNode } from 'react'
-import { usePermission } from '@/hooks/usePermission'
-export function PermissionGuard({ permission, fallback = null, children }: PropsWithChildren<{ permission: string; fallback?: ReactNode }>) { return usePermission(permission) ? children : fallback }
+import type { PropsWithChildren, ReactNode } from "react";
+import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+
+export function PermissionGuard({
+  permission,
+  fallback = null,
+  children,
+}: PropsWithChildren<{ permission: string; fallback?: ReactNode }>) {
+  return useAuthorization().can(permission) ? children : fallback;
+}

@@ -24,4 +24,12 @@ describe('auth interceptor', () => {
     await expect(apiClient.get('/protected')).rejects.toMatchObject({ code: 'unauthorized' })
     expect(publicMock.history.post).toHaveLength(1); expect(apiMock.history.get).toHaveLength(1); expect(store.get()).toBeNull(); expect(onFailure).toHaveBeenCalledOnce()
   })
+  it('normaliza un 403 sin renovar ni cerrar la sesión', async () => {
+    const store = new TokenStore(new MemoryStorage()); store.replace({ accessToken: 'valid', refreshToken: 'keep-me', expiresAtUtc: '2027-01-01' })
+    const onFailure = vi.fn(); const { apiClient, publicClient } = createApiClients(store, onFailure)
+    const apiMock = new MockAdapter(apiClient); const publicMock = new MockAdapter(publicClient)
+    apiMock.onGet('/forbidden').reply(403, { message: 'No tienes permiso.' })
+    await expect(apiClient.get('/forbidden')).rejects.toMatchObject({ code: 'forbidden', status: 403 })
+    expect(publicMock.history.post).toHaveLength(0); expect(store.get()?.refreshToken).toBe('keep-me'); expect(onFailure).not.toHaveBeenCalled()
+  })
 })

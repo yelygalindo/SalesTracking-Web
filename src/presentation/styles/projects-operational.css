@@ -1,0 +1,138 @@
+.project-list-progress {
+  display: grid;
+  min-width: 110px;
+  gap: 5px;
+}
+.project-list-progress span {
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.project-list-progress progress {
+  width: 100%;
+  height: 7px;
+  accent-color: var(--ut-primary);
+}
+.project-products > header {
+  margin-bottom: 8px;
+}
+.project-products > header p,
+.project-products > header h3 {
+  margin: 0 0 5px;
+}
+.project-products article > svg {
+  flex: none;
+}
+.project-products dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 9px 0 0;
+}
+.project-products dl div {
+  display: grid;
+  gap: 3px;
+}
+.project-products dt {
+  color: var(--ut-text-secondary);
+  font-size: 0.7rem;
+}
+.project-products dd {
+  margin: 0;
+  color: var(--ut-text);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+.project-attachments > header h3,
+.project-attachments > header p {
+  margin: 0 0 5px;
+}
+.project-attachments .attachment-filters {
+  width: max-content;
+  margin-bottom: 18px;
+}
+.project-gallery footer {
+  flex-wrap: wrap;
+}
+.project-gallery footer button,
+.attachment-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ut-primary);
+  background: #f1f5f9;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+.project-gallery footer svg,
+.attachment-action svg {
+  width: 14px;
+  height: 14px;
+}
+.image-preview-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.attachment-lightbox {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  background: rgb(6 14 27 / 88%);
+}
+.attachment-lightbox > img {
+  max-width: min(1100px, 92vw);
+  max-height: 76vh;
+  object-fit: contain;
+}
+.attachment-lightbox > footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(1100px, 92vw);
+  padding: 14px 0;
+  color: white;
+}
+.attachment-lightbox > footer span {
+  color: #cbd5e1;
+}
+.attachment-lightbox > footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: white;
+}
+.lightbox-close {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: white;
+  background: rgb(255 255 255 / 14%);
+}
+@media (max-width: 600px) {
+  .attachment-lightbox {
+    padding: 18px;
+  }
+  .attachment-lightbox > footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .attachment-lightbox > footer a {
+    margin-left: 0;
+  }
+}
