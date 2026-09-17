@@ -1004,12 +1004,154 @@ button {
   align-items: start;
   margin-top: 4px;
 }
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 4px 0 18px;
+  padding-bottom: 2px;
+}
+.admin-tabs button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 13px;
+  border: 1px solid #e1e6ed;
+  border-radius: 10px;
+  color: #59677b;
+  background: white;
+  font-weight: 700;
+}
+.admin-tabs button.active {
+  border-color: #f56a1c;
+  color: #d9510c;
+  background: #fff5ed;
+}
+.admin-tabs svg {
+  width: 17px;
+  height: 17px;
+}
 .admin-card {
   overflow: hidden;
   padding: 0;
   border: 1px solid #e5eaf0;
   border-radius: 16px;
   background: white;
+}
+.admin-section-card {
+  width: min(100%, 720px);
+}
+.capacity-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 18px 20px 0;
+  padding: 13px 15px;
+  border: 1px solid #d8e9df;
+  border-radius: 11px;
+  color: #276749;
+  background: #f1faf5;
+}
+.capacity-summary.capacity-full {
+  border-color: #f3c9c5;
+  color: #a83e35;
+  background: #fff4f2;
+}
+.capacity-summary svg {
+  width: 20px;
+}
+.capacity-summary div {
+  display: grid;
+  gap: 3px;
+}
+.capacity-summary span {
+  color: #667085;
+  font-size: 12px;
+}
+.capacity-summary b {
+  white-space: nowrap;
+  font-size: 13px;
+}
+.admin-company-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.7fr) minmax(600px, 1.7fr);
+  gap: 16px;
+  align-items: start;
+}
+.company-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 16px 20px;
+}
+.company-filters label {
+  display: grid;
+  gap: 6px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 700;
+}
+.company-filters input,
+.company-filters select {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid #d9dfe7;
+  border-radius: 9px;
+  background: white;
+}
+.search-field {
+  position: relative;
+}
+.search-field svg {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 16px;
+  height: 16px;
+  color: #98a2b3;
+}
+.search-field input {
+  width: 100%;
+  padding-left: 34px;
+}
+.company-management .table-scroll {
+  padding: 0 20px;
+}
+.company-management td strong,
+.company-management td small {
+  display: block;
+}
+.company-management td small {
+  margin-top: 3px;
+  color: #778399;
+}
+.company-management .pagination {
+  padding: 16px 20px 20px;
+}
+.limit-editor {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.limit-editor input {
+  width: 70px;
+  height: 34px;
+  border: 1px solid #d9dfe7;
+  border-radius: 8px;
+}
+.limit-editor button {
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  color: #d9510c;
+  background: #fff0e5;
+  font-weight: 700;
+}
+.limit-editor button:disabled {
+  opacity: 0.45;
 }
 .admin-card h2 {
   margin: 0;
@@ -1199,6 +1341,16 @@ button {
 @media (max-width: 800px) {
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+  .admin-company-layout,
+  .company-filters {
+    grid-template-columns: 1fr;
+  }
+  .capacity-summary {
+    grid-template-columns: auto 1fr;
+  }
+  .capacity-summary b {
+    grid-column: 2;
   }
 }
 .sub-tabs {
