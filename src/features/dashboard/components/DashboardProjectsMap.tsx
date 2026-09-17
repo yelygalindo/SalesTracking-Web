@@ -2,7 +2,10 @@ import { useEffect, useMemo } from "react";
 import { divIcon, latLngBounds } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
-import type { DashboardProjectItem } from "../api/dashboardApi";
+import type {
+  DashboardProjectItem,
+  DashboardSeller,
+} from "../api/dashboardApi";
 import { translateValue } from "@/lib/i18n/labels";
 import { formatDateTime } from "@/lib/i18n/dateTime";
 
@@ -11,13 +14,8 @@ const isCoordinate = (value: number | null | undefined, limit: number) =>
   Number.isFinite(value) &&
   Math.abs(value) <= limit;
 
-const sellerColor = (externalId?: string | null) => {
-  if (!externalId) return 0;
-  let hash = 0;
-  for (const character of externalId)
-    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
-  return (hash % 8) + 1;
-};
+const normalizedName = (value?: string | null) =>
+  value?.trim().toLocaleLowerCase("es") ?? "";
 
 const initials = (name?: string | null) =>
   (name || "Sin asignar")
@@ -56,8 +54,10 @@ function ResponsiveMap() {
 
 export function DashboardProjectsMap({
   items,
+  sellers: sellerOptions = [],
 }: {
   items: DashboardProjectItem[];
+  sellers?: DashboardSeller[];
 }) {
   const projects = useMemo(
     () =>
@@ -69,18 +69,54 @@ export function DashboardProjectsMap({
       ),
     [items],
   );
+  const sellerIdByName = useMemo(
+    () =>
+      new Map(
+        sellerOptions.map((seller) => [
+          normalizedName(seller.displayName),
+          seller.externalId,
+        ]),
+      ),
+    [sellerOptions],
+  );
+  const sellerKey = (project: DashboardProjectItem) =>
+    project.sellerExternalId ||
+    sellerIdByName.get(normalizedName(project.sellerName)) ||
+    (project.sellerName ? `name:${normalizedName(project.sellerName)}` : "unassigned");
+  const colorBySeller = useMemo(() => {
+    const orderedKeys = sellerOptions
+      .map((seller) => seller.externalId)
+      .filter(Boolean);
+    projects.forEach((project) => {
+      const key =
+        project.sellerExternalId ||
+        sellerIdByName.get(normalizedName(project.sellerName)) ||
+        (project.sellerName
+          ? `name:${normalizedName(project.sellerName)}`
+          : "unassigned");
+      if (!orderedKeys.includes(key)) orderedKeys.push(key);
+    });
+    return new Map(
+      orderedKeys.map((key, index) => [key, key === "unassigned" ? 0 : (index % 12) + 1]),
+    );
+  }, [projects, sellerIdByName, sellerOptions]);
   const sellers = useMemo(() => {
     const grouped = new Map<
       string,
       { externalId: string | null; name: string; count: number }
     >();
     projects.forEach((project) => {
-      const key = project.sellerExternalId || "unassigned";
+      const key =
+        project.sellerExternalId ||
+        sellerIdByName.get(normalizedName(project.sellerName)) ||
+        (project.sellerName
+          ? `name:${normalizedName(project.sellerName)}`
+          : "unassigned");
       const current = grouped.get(key);
       if (current) current.count += 1;
       else
         grouped.set(key, {
-          externalId: project.sellerExternalId ?? null,
+          externalId: key === "unassigned" ? null : key,
           name: project.sellerName || "Sin asignar",
           count: 1,
         });
@@ -88,7 +124,7 @@ export function DashboardProjectsMap({
     return [...grouped.values()].sort((a, b) =>
       a.name.localeCompare(b.name, "es"),
     );
-  }, [projects]);
+  }, [projects, sellerIdByName]);
   if (!projects.length)
     return (
       <div className="dashboard-map-empty">
@@ -120,7 +156,7 @@ export function DashboardProjectsMap({
               position={[item.latitude!, item.longitude!]}
               icon={divIcon({
                 className: "dashboard-marker-wrap",
-                html: `<span class="dashboard-marker seller-color-${sellerColor(item.sellerExternalId)}"><b>${initials(item.sellerName)}</b></span>`,
+                html: `<span class="dashboard-marker seller-color-${colorBySeller.get(sellerKey(item)) ?? 0}"><b>${initials(item.sellerName)}</b></span>`,
                 iconSize: [30, 36],
                 iconAnchor: [15, 36],
               })}
@@ -160,7 +196,7 @@ export function DashboardProjectsMap({
         <div>
           {sellers.map((seller) => (
             <span key={seller.externalId || "unassigned"}>
-              <i className={`seller-color-${sellerColor(seller.externalId)}`} />
+              <i className={`seller-color-${colorBySeller.get(seller.externalId || "unassigned") ?? 0}`} />
               <b>{seller.name}</b>
               <small>{seller.count}</small>
             </span>

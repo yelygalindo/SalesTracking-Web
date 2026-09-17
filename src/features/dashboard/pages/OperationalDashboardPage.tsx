@@ -274,7 +274,7 @@ function DashboardSections({
               <p>{map.error.message}</p>
             </div>
           ) : map.items.length ? (
-            <DashboardProjectsMap items={map.items} />
+            <DashboardProjectsMap items={map.items} sellers={map.sellers} />
           ) : (
             <div className="dashboard-map-state">
               <Building2 />
