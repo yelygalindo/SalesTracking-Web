@@ -41,4 +41,10 @@ describe('dashboardApi', () => {
       '/api/dashboard/upcoming-follow-ups',
     ])
   })
+
+  it('conserva el identificador del vendedor en los puntos del mapa', async () => {
+    api.onGet('/api/dashboard/map-items').reply(200, [{ projectExternalId: 'p-1', name: 'Obra', sellerExternalId: 'seller-1', sellerName: 'Elma', latitude: -17.7, longitude: -63.1 }])
+    const result = await dashboardApi.mapItems()
+    expect(result[0].sellerExternalId).toBe('seller-1')
+  })
 })

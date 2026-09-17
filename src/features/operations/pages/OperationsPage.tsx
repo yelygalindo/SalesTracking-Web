@@ -328,6 +328,19 @@ function WorkdayDetail({
       ),
     [locations.data],
   );
+  const visitedProjects = useMemo(
+    () =>
+      (workday.data?.visits ?? [])
+        .filter((visit) => visit.targetType.toLowerCase() === "project")
+        .map((visit) => ({
+          externalId: visit.externalId,
+          name: visit.targetName || "Obra",
+          latitude: visit.checkInLatitude,
+          longitude: visit.checkInLongitude,
+          visitedAtUtc: visit.checkInAtUtc,
+        })),
+    [workday.data?.visits],
+  );
   return (
     <main className="customers-content operations-page">
       <button className="back-button" onClick={onBack}>
@@ -365,7 +378,11 @@ function WorkdayDetail({
                   isEmpty={!points.length}
                   empty="No se registraron ubicaciones durante esta jornada."
                 >
-                  <TrackingMap points={points} route />
+                  <TrackingMap
+                    points={points}
+                    route
+                    visitedProjects={visitedProjects}
+                  />
                 </DataState>
               </section>
               <aside className="workday-overview-aside">

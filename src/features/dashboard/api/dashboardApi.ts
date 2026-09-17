@@ -15,6 +15,7 @@ export interface DashboardProjectItem {
   type?: string;
   name: string;
   customerName: string | null;
+  sellerExternalId?: string | null;
   sellerName?: string | null;
   statusId?: number;
   statusName?: string | null;
@@ -130,6 +131,7 @@ export const dashboardApi = {
           ? item.seller
           : item.seller?.displayName || item.seller?.name) ??
         null,
+      sellerExternalId: item.sellerExternalId ?? null,
       statusId: item.statusId,
       statusName: item.statusName || item.status || null,
       progressPercentage: item.progressPercentage ?? 0,

@@ -631,3 +631,104 @@
   .dashboard-map-empty,
   .dashboard-map-state { height: 280px; }
 }
+
+.dashboard-project-map {
+  position: relative;
+}
+.dashboard-marker {
+  position: relative;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 3px 9px rgb(17 33 59 / 38%);
+  transform: rotate(-45deg);
+}
+.dashboard-marker b {
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transform: rotate(45deg);
+}
+.seller-color-0 { background: #758195; }
+.seller-color-1 { background: #2563eb; }
+.seller-color-2 { background: #e65d17; }
+.seller-color-3 { background: #7c3aed; }
+.seller-color-4 { background: #0f8a70; }
+.seller-color-5 { background: #c0266d; }
+.seller-color-6 { background: #b7791f; }
+.seller-color-7 { background: #0891b2; }
+.seller-color-8 { background: #4f6b3a; }
+.dashboard-map-legend {
+  position: absolute;
+  z-index: 500;
+  top: 12px;
+  right: 12px;
+  width: min(220px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid rgb(218 224 232 / 90%);
+  border-radius: 11px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 5px 18px rgb(17 33 59 / 14%);
+  backdrop-filter: blur(5px);
+}
+.dashboard-map-legend > strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #344054;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.dashboard-map-legend > div {
+  display: grid;
+  gap: 6px;
+}
+.dashboard-map-legend span {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+.dashboard-map-legend i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.dashboard-map-legend b {
+  overflow: hidden;
+  color: #425269;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-map-legend small {
+  min-width: 20px;
+  padding: 2px 5px;
+  border-radius: 99px;
+  color: #66758a;
+  background: #eef2f6;
+  font-size: 0.65rem;
+  font-style: normal;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .dashboard-map-legend {
+    top: auto;
+    right: 8px;
+    bottom: 22px;
+    left: 8px;
+    width: auto;
+    max-height: 96px;
+  }
+  .dashboard-map-legend > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

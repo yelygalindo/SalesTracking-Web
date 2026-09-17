@@ -288,8 +288,8 @@ function DashboardSections({
         </div>
       </section>
       <section className="dashboard-real-grid operational-grid dashboard-secondary-layout">
-        <DeliveriesPanel data={data} permissions={permissions} />
         <ProgressPanel data={data} permissions={permissions} />
+        <DeliveriesPanel data={data} permissions={permissions} />
       </section>
     </>
   );
