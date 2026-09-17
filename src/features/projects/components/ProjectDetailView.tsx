@@ -18,6 +18,8 @@ import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { notify } from "@/components/feedback/toast";
 import { translateValue } from "@/lib/i18n/labels";
 import { formatDate, formatDateTime } from "@/lib/i18n/dateTime";
+import { downloadBlob } from "@/lib/export/downloadBlob";
+import { deliveryApi } from "@/features/deliveries/api/deliveryApi";
 import type {
   Attachment,
   ProjectDetail,
@@ -640,6 +642,17 @@ function ProjectAttachments({
         ]);
       },
       onError: (error: Error) => notify(error.message, "error"),
+    }),
+    archive = useMutation({
+      mutationFn: () => projectService.downloadAttachmentsArchive(id),
+      onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
+      onError: (error: Error) => notify(error.message, "error"),
+    }),
+    deliveryArchive = useMutation({
+      mutationFn: () =>
+        deliveryApi.downloadGroupedArchive({ projectExternalId: id }),
+      onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
+      onError: (error: Error) => notify(error.message, "error"),
     });
   const files = useMemo(
     () =>
@@ -675,15 +688,21 @@ function ProjectAttachments({
           <p className="overline">Archivos del proyecto</p>
           <h3>Adjuntos</h3>
         </div>
-        {editable && (
-          <button
-            className="action-primary"
-            onClick={() => setUploadOpen(true)}
-          >
-            <Upload />
-            Subir archivo
+        <div className="project-attachment-actions">
+          {!!query.data?.length && (
+            <button className="secondary-action" disabled={archive.isPending} onClick={() => archive.mutate()}>
+              <Download /> {archive.isPending ? "Preparando…" : "Descargar ZIP"}
+            </button>
+          )}
+          <button className="secondary-action" disabled={deliveryArchive.isPending} onClick={() => deliveryArchive.mutate()}>
+            <Download /> {deliveryArchive.isPending ? "Preparando…" : "Comprobantes de entregas"}
           </button>
-        )}
+          {editable && (
+            <button className="action-primary" onClick={() => setUploadOpen(true)}>
+              <Upload /> Subir archivo
+            </button>
+          )}
+        </div>
       </header>
       <nav className="attachment-filters">
         {(

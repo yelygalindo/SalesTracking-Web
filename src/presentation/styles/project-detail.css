@@ -57,6 +57,20 @@
   background: #e8edf3;
   font-size: 0.68rem;
 }
+.project-attachment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.project-attachment-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.project-attachment-actions svg {
+  width: 16px;
+}
 .project-detail-tabs button.active .project-tab-count {
   color: white;
   background: var(--ut-primary);

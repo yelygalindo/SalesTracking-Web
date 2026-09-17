@@ -4,7 +4,10 @@ import {
   ArrowLeft,
   CalendarDays,
   ClipboardList,
+  Download,
+  FileText,
   PackageCheck,
+  Paperclip,
   Pencil,
   Plus,
   Trash2,
@@ -21,6 +24,7 @@ import { productsApi } from "@/features/catalog/api/catalogApi";
 import { AppError } from "@/lib/api/apiError";
 import { translateValue } from "@/lib/i18n/labels";
 import { formatDateTime } from "@/lib/i18n/dateTime";
+import { downloadBlob } from "@/lib/export/downloadBlob";
 import {
   deliveryApi,
   type Delivery,
@@ -44,6 +48,10 @@ const message = (error: unknown) =>
 
 const statusClass = (value: string) =>
   value.toLowerCase().replaceAll(" ", "-");
+const formatBytes = (value: number) =>
+  value < 1024 * 1024
+    ? `${Math.max(1, Math.round(value / 1024))} KB`
+    : `${(value / 1024 / 1024).toFixed(1)} MB`;
 
 export function DeliveriesPage() {
   const cache = useQueryClient();
@@ -555,6 +563,17 @@ function DeliveryDetail({
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [statusId, setStatusId] = useState(delivery.statusId);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [receiptFiles, setReceiptFiles] = useState<File[]>([]);
+  const [attachmentType, setAttachmentType] = useState("Receipt");
+  const [attachmentCaption, setAttachmentCaption] = useState("");
+  const attachments = useQuery({
+    queryKey: ["delivery-attachments", delivery.externalId],
+    queryFn: () => deliveryApi.attachments(delivery.externalId),
+  });
+  const attachmentOptions = useQuery({
+    queryKey: ["delivery-attachment-options"],
+    queryFn: deliveryApi.attachmentOptions,
+  });
 
   useEffect(() => setStatusId(delivery.statusId), [delivery.statusId]);
 
@@ -574,12 +593,55 @@ function DeliveryDetail({
 
   const confirmReceipt = useMutation({
     mutationFn: () => deliveryApi.receipt(delivery, quantities),
-    onSuccess: async () => {
-      notify("Recepción registrada correctamente.");
+    onSuccess: async (result) => {
+      if (receiptFiles.length && result.receiptExternalId) {
+        try {
+          const uploaded = await deliveryApi.uploadAttachments(
+            delivery.externalId,
+            result.receiptExternalId,
+            receiptFiles,
+            attachmentType,
+            attachmentCaption,
+          );
+          notify(
+            uploaded.message || "Comprobantes cargados correctamente.",
+            uploaded.failedFiles.length ? "error" : "success",
+          );
+        } catch (error) {
+          notify(
+            `La recepción fue registrada, pero no se pudieron cargar los comprobantes: ${message(error)}`,
+            "error",
+          );
+        }
+      } else notify("Recepción registrada correctamente.");
       setReceiptOpen(false);
       setQuantities({});
+      setReceiptFiles([]);
+      setAttachmentCaption("");
+      await attachments.refetch();
       await refresh();
     },
+    onError: (error) => notify(message(error), "error"),
+  });
+  const downloadAttachment = useMutation({
+    mutationFn: (item: { id: string; name: string }) =>
+      deliveryApi.downloadAttachment(delivery.externalId, item.id, item.name),
+    onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
+    onError: (error) => notify(message(error), "error"),
+  });
+  const removeAttachment = useMutation({
+    mutationFn: (id: string) =>
+      deliveryApi.deleteAttachment(delivery.externalId, id),
+    onSuccess: async () => {
+      notify("Comprobante eliminado correctamente.");
+      await attachments.refetch();
+      await refresh();
+    },
+    onError: (error) => notify(message(error), "error"),
+  });
+  const downloadArchive = useMutation({
+    mutationFn: () => deliveryApi.downloadArchive(delivery.externalId),
+    onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
     onError: (error) => notify(message(error), "error"),
   });
 
@@ -720,6 +782,59 @@ function DeliveryDetail({
               );
             })}
           </div>
+          <section className="delivery-receipt-evidence">
+            <header>
+              <Paperclip />
+              <div>
+                <strong>Comprobantes de recepción</strong>
+                <small>Opcional: agrega hasta 10 fotos o documentos PDF.</small>
+              </div>
+            </header>
+            <div className="delivery-evidence-fields">
+              <label>
+                Tipo
+                <select value={attachmentType} onChange={(event) => setAttachmentType(event.target.value)}>
+                  {(attachmentOptions.data?.attachmentTypes ?? [
+                    { value: "Receipt", label: "Comprobante", description: "" },
+                  ]).map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+                </select>
+              </label>
+              <label>
+                Descripción
+                <input value={attachmentCaption} placeholder="Ej. Material recibido en obra" onChange={(event) => setAttachmentCaption(event.target.value)} />
+              </label>
+              <label className="delivery-file-field">
+                Archivos
+                <input
+                  multiple
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={(event) => {
+                    const files = [...(event.target.files ?? [])];
+                    const maxFiles = attachmentOptions.data?.maxFilesPerReceipt ?? 10;
+                    const maxSize = attachmentOptions.data?.maxFileSizeBytes ?? 10 * 1024 * 1024;
+                    if (files.length > maxFiles) {
+                      notify(`Puedes adjuntar como máximo ${maxFiles} archivos.`, "error");
+                      event.target.value = "";
+                      return;
+                    }
+                    const oversized = files.find((file) => file.size > maxSize);
+                    if (oversized) {
+                      notify(`${oversized.name} supera el máximo de ${formatBytes(maxSize)}.`, "error");
+                      event.target.value = "";
+                      return;
+                    }
+                    setReceiptFiles(files);
+                  }}
+                />
+              </label>
+            </div>
+            {!!receiptFiles.length && (
+              <ul className="delivery-selected-files">
+                {receiptFiles.map((file) => <li key={`${file.name}-${file.size}`}><FileText /><span>{file.name}</span><small>{formatBytes(file.size)}</small></li>)}
+              </ul>
+            )}
+          </section>
           <footer>
             <button
               type="button"
@@ -727,6 +842,7 @@ function DeliveryDetail({
               onClick={() => {
                 setReceiptOpen(false);
                 setQuantities({});
+                setReceiptFiles([]);
               }}
             >
               Cancelar
@@ -742,6 +858,44 @@ function DeliveryDetail({
           </footer>
         </form>
       )}
+
+      <section className="delivery-detail-card delivery-attachments-card">
+        <header>
+          <div>
+            <h2>Comprobantes de entrega</h2>
+            <p>Fotos y documentos asociados a las recepciones.</p>
+          </div>
+          {!!attachments.data?.items.length && (
+            <button className="secondary-action" disabled={downloadArchive.isPending} onClick={() => downloadArchive.mutate()}>
+              <Download /> {downloadArchive.isPending ? "Preparando…" : "Descargar ZIP"}
+            </button>
+          )}
+        </header>
+        {attachments.isLoading ? (
+          <p className="delivery-attachment-empty">Cargando comprobantes…</p>
+        ) : attachments.isError ? (
+          <p className="form-error">No fue posible cargar los comprobantes.</p>
+        ) : !attachments.data?.items.length ? (
+          <p className="delivery-attachment-empty">Aún no hay comprobantes asociados a esta entrega.</p>
+        ) : (
+          <div className="delivery-attachment-grid">
+            {attachments.data.items.map((item) => (
+              <article key={item.externalId}>
+                <span className={item.contentType.startsWith("image/") ? "photo" : "document"}><FileText /></span>
+                <div>
+                  <strong>{item.caption || item.fileName}</strong>
+                  <small>{item.fileName} · {formatBytes(item.sizeBytes)}</small>
+                  <small>{item.uploadedByUserName} · {formatDateTime(item.createdAtUtc)}</small>
+                </div>
+                <footer>
+                  <button disabled={downloadAttachment.isPending} onClick={() => downloadAttachment.mutate({ id: item.externalId, name: item.fileName })}><Download /> Descargar</button>
+                  {canUpdate && <button className="danger-text" disabled={removeAttachment.isPending} onClick={() => confirm(`¿Eliminar ${item.fileName}?`) && removeAttachment.mutate(item.externalId)}>Eliminar</button>}
+                </footer>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="delivery-detail-card delivery-products-card">
         <header>

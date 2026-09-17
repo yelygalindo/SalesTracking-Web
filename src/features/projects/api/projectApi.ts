@@ -73,6 +73,22 @@ export const projectApi = {
         `/api/projects/${externalId}/attachments`,
       )
     ).data,
+  downloadAttachmentsArchive: async (externalId: string) => {
+    const response = await apiClient.get<Blob>(
+      `/api/projects/${externalId}/attachments/archive`,
+      { responseType: "blob" },
+    );
+    const disposition = String(response.headers["content-disposition"] ?? "");
+    const matched = disposition.match(
+      /filename\*?=(?:UTF-8''|["']?)([^"';]+)/i,
+    )?.[1];
+    return {
+      blob: response.data,
+      fileName: matched
+        ? decodeURIComponent(matched)
+        : `adjuntos-proyecto-${externalId}.zip`,
+    };
+  },
   attachmentOptions: async () =>
     (await apiClient.get<AttachmentOptions>("/api/project-attachments/options"))
       .data,

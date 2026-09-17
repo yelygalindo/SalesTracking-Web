@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-query";
 import {
   ChevronLeft,
+  Download,
   FileSpreadsheet,
   Mail,
   MapPin,
@@ -50,6 +51,8 @@ import { translateValue } from "@/lib/i18n/labels";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { exportExcel } from "@/lib/export/exportExcel";
 import { Pagination } from "@/components/data/Pagination";
+import { deliveryApi } from "@/features/deliveries/api/deliveryApi";
+import { downloadBlob } from "@/lib/export/downloadBlob";
 
 const emptyForm: CustomerInputDto = {
   name: "",
@@ -643,6 +646,18 @@ function CustomerDetail({
   remove: () => void;
 }) {
   const [changingStatus, setChangingStatus] = useState(startChangingStatus);
+  const canReadDeliveries = usePermission("deliveries.read");
+  const deliveryArchive = useMutation({
+    mutationFn: () =>
+      deliveryApi.downloadGroupedArchive({
+        customerExternalId: customer.externalId,
+      }),
+    onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
+    onError: (error) => notify(
+      error instanceof Error ? error.message : "No fue posible descargar los comprobantes.",
+      "error",
+    ),
+  });
   const applyStatus = (id: number) => {
     change(id);
     setChangingStatus(false);
@@ -679,6 +694,11 @@ function CustomerDetail({
           </div>
         </div>
         <div className="detail-actions">
+          {canReadDeliveries && (
+            <button className="secondary-button" disabled={deliveryArchive.isPending} onClick={() => deliveryArchive.mutate()}>
+              <Download /> {deliveryArchive.isPending ? "Preparando…" : "Comprobantes ZIP"}
+            </button>
+          )}
           {canUpdate && (
             <button
               className="secondary-button"
