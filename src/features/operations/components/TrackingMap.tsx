@@ -6,6 +6,7 @@ import {
   TileLayer,
 } from "react-leaflet";
 import type { WorkdayLocation } from "../api/operationsApi";
+import { formatDateTime } from "@/lib/i18n/dateTime";
 
 interface MarkerItem extends WorkdayLocation {
   label?: string;
@@ -57,7 +58,7 @@ export function TrackingMap({
                     : "Punto de ruta")}
               </strong>
               <br />
-              {new Date(point.capturedAtUtc).toLocaleString("es-BO")}
+              {formatDateTime(point.capturedAtUtc)}
             </Popup>
           </Marker>
         ))}

@@ -7,6 +7,8 @@ describe('translateValue', () => {
     expect(translateValue('contacted')).toBe('Contactado')
     expect(translateValue('on_hold')).toBe('En pausa')
     expect(translateValue('sent')).toBe('Enviado')
+    expect(translateValue('Partial')).toBe('Parcial')
+    expect(translateValue('Delivered')).toBe('Entregado')
   })
 
   it('conserva valores desconocidos', () => {

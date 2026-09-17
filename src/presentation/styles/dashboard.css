@@ -1,6 +1,155 @@
 .operational-grid {
   align-items: start;
 }
+
+/* Compact desktop dashboard */
+.dashboard-primary-layout {
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+.dashboard-map-panel {
+  align-self: start;
+  padding: 16px;
+}
+.dashboard-map-header {
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.dashboard-project-map,
+.dashboard-map-empty,
+.dashboard-map-state {
+  height: clamp(380px, 38vw, 430px);
+}
+.dashboard-map-empty,
+.dashboard-map-state {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #7f8b9d;
+  border-radius: 12px;
+  background: #f7f9fb;
+  text-align: center;
+}
+.dashboard-map-state > svg {
+  width: 28px;
+  height: 28px;
+}
+.dashboard-map-state p {
+  margin: 0;
+}
+.dashboard-map-state.error {
+  color: #b42318;
+  background: #fff7f6;
+}
+.dashboard-side-stack {
+  grid-template-rows: auto auto;
+  align-content: start;
+  gap: 16px;
+}
+.dashboard-side-stack > .dashboard-panel {
+  overflow: visible;
+}
+.dashboard-secondary-layout {
+  margin-top: 16px;
+}
+.dashboard-panel {
+  padding: 16px 18px;
+}
+.dashboard-section-header {
+  gap: 16px;
+  padding-bottom: 10px;
+}
+.dashboard-empty,
+.dashboard-panel .dashboard-empty {
+  grid-template-columns: 30px minmax(0, 1fr);
+  min-height: 68px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.dashboard-empty span {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  border-radius: 9px;
+}
+.dashboard-empty svg {
+  width: 16px;
+}
+.dashboard-empty p {
+  grid-column: 2;
+  margin: -6px 0 0;
+}
+.dashboard-timeline {
+  padding: 6px 0 0 32px;
+}
+.dashboard-timeline::before {
+  top: 25px;
+  bottom: 22px;
+  left: 12px;
+}
+.dashboard-event {
+  min-height: 54px;
+  padding: 7px 0;
+}
+.dashboard-event-icon {
+  top: 10px;
+  left: -32px;
+}
+.dashboard-event-content p,
+.dashboard-list-row p,
+.dashboard-event small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-event small,
+.dashboard-event time {
+  margin-top: 2px;
+}
+.dashboard-list-row {
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 9px;
+  padding: 9px 0;
+}
+.dashboard-list-row small,
+.dashboard-list-row time {
+  margin-top: 2px;
+}
+.list-icon {
+  width: 30px;
+  height: 30px;
+}
+.project-progress-list > a,
+.project-progress-row {
+  padding: 8px 0;
+}
+.project-progress-list small {
+  margin: 3px 0 6px;
+}
+.project-progress-list progress {
+  height: 5px;
+}
+@media (max-width: 1000px) {
+  .dashboard-project-map,
+  .dashboard-map-empty,
+  .dashboard-map-state {
+    height: clamp(380px, 52vw, 430px);
+  }
+}
+@media (max-width: 700px) {
+  .dashboard-project-map {
+    height: 360px;
+  }
+  .dashboard-map-empty,
+  .dashboard-map-state {
+    height: 280px;
+  }
+}
 .dashboard-primary-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr);
@@ -448,4 +597,37 @@
   .dashboard-map-empty {
     min-height: 280px;
   }
+}
+
+/* Final compact sizing overrides */
+.dashboard-content > .shared-page-header { margin-bottom: 16px; }
+.dashboard-primary-layout { align-items: start; gap: 16px; margin-top: 16px; }
+.dashboard-map-panel { align-self: start; padding: 16px; }
+.dashboard-map-header { gap: 16px; margin-bottom: 10px; }
+.dashboard-project-map,
+.dashboard-map-empty,
+.dashboard-map-state { height: clamp(380px, 38vw, 430px); }
+.dashboard-map-empty { min-height: 0; }
+.dashboard-side-stack { grid-template-rows: auto auto; align-content: start; gap: 16px; }
+.dashboard-side-stack > .dashboard-panel { overflow: visible; }
+.dashboard-secondary-layout { margin-top: 16px; }
+.dashboard-panel { padding: 16px 18px; }
+.dashboard-section-header { gap: 16px; padding-bottom: 10px; }
+.dashboard-empty,
+.dashboard-panel .dashboard-empty { min-height: 68px; padding: 10px 12px; }
+.dashboard-event { min-height: 54px; padding: 7px 0; }
+.dashboard-list-row { gap: 9px; padding: 9px 0; }
+.project-progress-list > a,
+.project-progress-row { padding: 8px 0; }
+.project-progress-list small { margin: 3px 0 6px; }
+.project-progress-list progress { height: 5px; }
+@media (max-width: 1000px) {
+  .dashboard-project-map,
+  .dashboard-map-empty,
+  .dashboard-map-state { height: clamp(380px, 52vw, 430px); }
+}
+@media (max-width: 700px) {
+  .dashboard-project-map { height: 360px; }
+  .dashboard-map-empty,
+  .dashboard-map-state { height: 280px; }
 }

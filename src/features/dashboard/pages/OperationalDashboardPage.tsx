@@ -15,6 +15,12 @@ import { PageHeader } from "@/components/layout/AppShell";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { projectApi } from "@/features/projects/api/projectApi";
 import {
+  formatDate,
+  formatTime,
+  getDisplayTimeZone,
+  localDayKey,
+} from "@/lib/i18n/dateTime";
+import {
   dashboardApi,
   type DashboardData,
   type DashboardMetrics,
@@ -25,15 +31,16 @@ import { presentActivityType } from "../presentation/activityPresentation";
 const formatDateTime = (value: string) => {
   const date = new Date(value);
   const day =
-    date.toDateString() === new Date().toDateString()
+    localDayKey(date) === localDayKey(new Date())
       ? "Hoy"
-      : date.toLocaleDateString("es-BO", { day: "numeric", month: "short" });
+      : date.toLocaleDateString("es-BO", {
+          day: "numeric",
+          month: "short",
+          timeZone: getDisplayTimeZone(),
+        });
   return {
     day,
-    time: date.toLocaleTimeString("es-BO", {
-      hour: "numeric",
-      minute: "2-digit",
-    }),
+    time: formatTime(date),
   };
 };
 const metricDefinitions: Array<{
@@ -256,14 +263,24 @@ function DashboardSections({
               )}
             </div>
           </header>
-          <DataState
-            loading={map.loading}
-            error={map.error}
-            isEmpty={!map.items.length}
-            empty="No hay proyectos con ubicación registrada."
-          >
+          {map.loading ? (
+            <div className="dashboard-map-state">
+              <span className="spinner" />
+              <p>Cargando mapa…</p>
+            </div>
+          ) : map.error ? (
+            <div className="dashboard-map-state error">
+              <strong>No pudimos cargar el mapa</strong>
+              <p>{map.error.message}</p>
+            </div>
+          ) : map.items.length ? (
             <DashboardProjectsMap items={map.items} />
-          </DataState>
+          ) : (
+            <div className="dashboard-map-state">
+              <Building2 />
+              <strong>No hay proyectos con ubicación registrada.</strong>
+            </div>
+          )}
         </article>
         <div className="dashboard-side-stack">
           <ActivityPanel data={data} permissions={permissions} />
@@ -432,10 +449,7 @@ function DeliveriesPanel({
                     </small>
                   )}
                   <time>
-                    {new Date(item.committedDateUtc).toLocaleDateString(
-                      "es-BO",
-                      { dateStyle: "medium" },
-                    )}
+                    {formatDate(item.committedDateUtc)}
                   </time>
                 </div>
                 <em className={item.isOverdue ? "overdue" : ""}>

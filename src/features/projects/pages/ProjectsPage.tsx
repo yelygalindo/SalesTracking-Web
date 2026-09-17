@@ -167,7 +167,7 @@ export function ProjectsPage() {
         exportPage += 1;
       } while (exportPage <= totalPages);
       exportExcel(
-        `proyectos-${new Date().toISOString().slice(0, 10)}.xls`,
+        `proyectos-${new Date().toISOString().slice(0, 10)}.csv`,
         [
           { label: "Proyecto", value: (row) => row.name },
           { label: "Cliente", value: (row) => row.customerName || "" },
@@ -248,7 +248,7 @@ export function ProjectsPage() {
             <span className="excel-export-icon" aria-hidden="true">
               <FileSpreadsheet />
             </span>
-            {exporter.isPending ? "Exportando…" : "Exportar a Excel"}
+            {exporter.isPending ? "Exportando…" : "Exportar CSV"}
           </button>
         )}
         {canCreate && (

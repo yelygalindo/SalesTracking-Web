@@ -19,6 +19,8 @@ import { usePermission } from "@/hooks/usePermission";
 import { projectService } from "@/features/projects/services/projectService";
 import { productsApi } from "@/features/catalog/api/catalogApi";
 import { AppError } from "@/lib/api/apiError";
+import { translateValue } from "@/lib/i18n/labels";
+import { formatDateTime } from "@/lib/i18n/dateTime";
 import {
   deliveryApi,
   type Delivery,
@@ -39,12 +41,6 @@ const message = (error: unknown) =>
     : error instanceof Error
       ? error.message
       : "No fue posible completar la operación.";
-
-const formatDate = (value: string) =>
-  new Date(value).toLocaleString("es-BO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 
 const statusClass = (value: string) =>
   value.toLowerCase().replaceAll(" ", "-");
@@ -320,13 +316,13 @@ export function DeliveriesPage() {
                           {delivery.items.length === 1 ? "" : "s"}
                         </small>
                       </td>
-                      <td>{formatDate(delivery.committedDateUtc)}</td>
+                      <td>{formatDateTime(delivery.committedDateUtc)}</td>
                       <td>{delivery.sellerName || "Sin asignar"}</td>
                       <td>
                         <span
                           className={`status-pill ${statusClass(delivery.statusName)}`}
                         >
-                          {delivery.statusName}
+                          {translateValue(delivery.statusName)}
                         </span>
                       </td>
                       <td>
@@ -595,7 +591,7 @@ function DeliveryDetail({
           <div className="delivery-title-row">
             <h1>{delivery.projectName}</h1>
             <span className={`status-pill ${statusClass(delivery.statusName)}`}>
-              {delivery.statusName}
+              {translateValue(delivery.statusName)}
             </span>
           </div>
           <p>{delivery.notes || "Sin notas adicionales."}</p>
@@ -628,7 +624,7 @@ function DeliveryDetail({
           <CalendarDays />
           <div>
             <span>Fecha comprometida</span>
-            <strong>{formatDate(delivery.committedDateUtc)}</strong>
+            <strong>{formatDateTime(delivery.committedDateUtc)}</strong>
           </div>
         </article>
         <article>

@@ -3,6 +3,8 @@ import { divIcon, latLngBounds } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
 import type { DashboardProjectItem } from "../api/dashboardApi";
+import { translateValue } from "@/lib/i18n/labels";
+import { formatDateTime } from "@/lib/i18n/dateTime";
 
 const isCoordinate = (value: number | null | undefined, limit: number) =>
   typeof value === "number" &&
@@ -28,6 +30,18 @@ function Viewport({ items }: { items: DashboardProjectItem[] }) {
     else if (points.length > 1)
       map.fitBounds(latLngBounds(points), { padding: [30, 30], maxZoom: 15 });
   }, [items, map]);
+  return null;
+}
+
+function ResponsiveMap() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize(false));
+    observer.observe(container);
+    map.invalidateSize(false);
+    return () => observer.disconnect();
+  }, [map]);
   return null;
 }
 
@@ -65,6 +79,7 @@ export function DashboardProjectsMap({
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Viewport items={projects} />
+        <ResponsiveMap />
         {projects.map((item) => {
           const detailUrl =
             item.detailUrl ||
@@ -84,7 +99,7 @@ export function DashboardProjectsMap({
               <Popup className="dashboard-project-popup">
                 <div className="dashboard-popup-title">
                   <strong>{item.name}</strong>
-                  {item.statusName && <span>{item.statusName}</span>}
+                  {item.statusName && <span>{translateValue(item.statusName)}</span>}
                 </div>
                 {item.customerName && (
                   <p>
@@ -101,10 +116,7 @@ export function DashboardProjectsMap({
                 {next && (
                   <p>
                     <small>Próximo seguimiento</small>
-                    {new Date(next.reminderAtUtc).toLocaleString("es-BO", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
+                    {formatDateTime(next.reminderAtUtc)}
                     {next.text && <em>{next.text}</em>}
                   </p>
                 )}

@@ -4,6 +4,11 @@ import { ArrowLeft, Clock3, MapPin, Route, UserRoundCheck } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import {
+  localDayEndUtc,
+  localDayStartUtc,
+  formatDateTime,
+} from "@/lib/i18n/dateTime";
 import { operationsApi } from "../api/operationsApi";
 import { TrackingMap } from "../components/TrackingMap";
 
@@ -19,13 +24,7 @@ const yesterday = () => {
   date.setDate(date.getDate() - 1);
   return inputDate(date);
 };
-const dateTime = (value?: string | null) =>
-  value
-    ? new Date(value).toLocaleString("es-BO", {
-        dateStyle: "short",
-        timeStyle: "short",
-      })
-    : "—";
+const dateTime = formatDateTime;
 const duration = (start?: string | null, end?: string | null) => {
   if (!start) return "—";
   const minutes = Math.max(
@@ -54,10 +53,6 @@ const visitTargetLabel = (targetType: string) =>
   })[targetType.toLowerCase()] ?? targetType;
 const coordinates = (latitude: number, longitude: number) =>
   `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-const dayStart = (value: string) => new Date(`${value}T00:00:00`).toISOString();
-const dayEnd = (value: string) =>
-  new Date(`${value}T23:59:59.999`).toISOString();
-
 export function OperationsPage() {
   const { can, user } = useAuthorization();
   const canChooseSeller = can("sellers.read");
@@ -80,8 +75,8 @@ export function OperationsPage() {
     queryKey: ["workdays", from, to, sellerId],
     queryFn: () =>
       operationsApi.workdays({
-        from: dayStart(from),
-        to: dayEnd(to),
+        from: localDayStartUtc(from),
+        to: localDayEndUtc(to),
         sellerExternalId: canChooseSeller ? sellerId || undefined : undefined,
       }),
     enabled:
@@ -98,6 +93,9 @@ export function OperationsPage() {
       ) ?? [],
     [active.data],
   );
+  const selectedSellerName = sellers.data?.find(
+    (seller) => seller.externalId === sellerId,
+  )?.displayName;
   if (selectedId)
     return (
       <WorkdayDetail
@@ -241,6 +239,11 @@ export function OperationsPage() {
               </label>
             )}
           </div>
+          {selectedSellerName && (
+            <p className="assignment-note">
+              Mostrando jornadas de: <strong>{selectedSellerName}</strong>
+            </p>
+          )}
           <section className="customer-table-card">
             <DataState
               loading={history.isLoading}
@@ -360,7 +363,7 @@ function WorkdayDetail({
                   loading={locations.isLoading}
                   error={locations.error}
                   isEmpty={!points.length}
-                  empty="No hay puntos de ruta registrados."
+                  empty="No se registraron ubicaciones durante esta jornada."
                 >
                   <TrackingMap points={points} route />
                 </DataState>

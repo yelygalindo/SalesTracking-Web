@@ -17,6 +17,7 @@ import { LocationViewer } from "@/components/maps/LocationViewer";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { notify } from "@/components/feedback/toast";
 import { translateValue } from "@/lib/i18n/labels";
+import { formatDate, formatDateTime } from "@/lib/i18n/dateTime";
 import type {
   Attachment,
   ProjectDetail,
@@ -54,6 +55,24 @@ export function ProjectDetailView({
 }) {
   const [tab, setTab] = useState<MainTab>("summary"),
     [changingStatus, setChangingStatus] = useState(false);
+  const timeline = useQuery({
+    queryKey: ["project-timeline", project.externalId],
+    queryFn: () => projectService.timeline(project.externalId),
+  });
+  const attachments = useQuery({
+    queryKey: ["project-attachments", project.externalId],
+    queryFn: () => projectService.attachments(project.externalId),
+  });
+  const products = useQuery({
+    queryKey: ["project-materials", project.externalId],
+    queryFn: () => projectService.materials(project.externalId),
+  });
+  const tabs: Array<[MainTab, string, number | undefined]> = [
+    ["summary", "Resumen", undefined],
+    ["activity", "Actividad", timeline.data?.items.length],
+    ["attachments", "Archivos", attachments.data?.length],
+    ["products", "Productos", products.data?.length],
+  ];
   return (
     <div className="project-detail-page">
       <header className="project-detail-hero">
@@ -123,20 +142,16 @@ export function ProjectDetailView({
         </div>
       </header>
       <nav className="project-detail-tabs">
-        {(
-          [
-            ["summary", "Resumen"],
-            ["activity", "Actividad"],
-            ["attachments", "Adjuntos"],
-            ["products", "Productos"],
-          ] as [MainTab, string][]
-        ).map(([value, label]) => (
+        {tabs.map(([value, label, count]) => (
           <button
             className={tab === value ? "active" : ""}
             key={value}
             onClick={() => setTab(value)}
           >
             {label}
+            {count !== undefined && (
+              <span className="project-tab-count">{count}</span>
+            )}
           </button>
         ))}
       </nav>
@@ -906,12 +921,3 @@ const friendlyFileName = (contentType: string) =>
     : contentType.includes("pdf")
       ? "Documento PDF"
       : "Documento";
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("es-BO", { dateStyle: "medium" }).format(
-    new Date(value),
-  );
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("es-BO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
