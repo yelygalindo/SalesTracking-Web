@@ -2,12 +2,12 @@ import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "@/app/routes/ProtectedRoute";
 import { PublicOnlyRoute } from "@/app/routes/PublicOnlyRoute";
 import { PermissionRoute } from "@/app/routes/PermissionRoute";
+import { HomeRoute } from "@/app/routes/HomeRoute";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { UnauthorizedPage } from "@/features/auth/pages/UnauthorizedPage";
 import { NotFoundPage } from "@/features/auth/pages/NotFoundPage";
-import { DashboardPage } from "@/features/dashboard/pages/OperationalDashboardPage";
 import { CustomersPage } from "@/features/customers/pages/CustomersPage";
 import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
 import { CatalogPage } from "@/features/catalog/pages/CatalogPage";
@@ -35,10 +35,7 @@ export const router = createBrowserRouter([
       {
         element: <AppShell />,
         children: [
-          {
-            element: <PermissionRoute permission="dashboard.read" />,
-            children: [{ path: "/", element: <DashboardPage /> }],
-          },
+          { path: "/", element: <HomeRoute /> },
           {
             element: <PermissionRoute permission="customers.read" />,
             children: [{ path: "/customers", element: <CustomersPage /> }],

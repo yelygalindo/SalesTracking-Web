@@ -15,6 +15,9 @@ export function createAuthorization(
   const permissions = new Set((user?.permissions ?? []).map(normalize));
   const roles = new Set((user?.roles ?? []).map(normalize));
 
+  // Mantiene el frontend alineado con PermissionAuthorizationHandler del API.
+  if (roles.has("platform_admin")) permissions.add("companies.create");
+
   return {
     can: (permission) => permissions.has(normalize(permission)),
     canAny: (required) =>
