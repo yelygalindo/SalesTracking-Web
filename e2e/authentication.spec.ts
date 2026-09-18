@@ -2,6 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 const apiUrl = "http://127.0.0.1:5000";
 
+test.beforeEach(async ({ page }) => {
+  await page.route(`${apiUrl}/api/auth/refresh`, (route) =>
+    route.fulfill({ status: 401, contentType: "application/json", body: "{}" }),
+  );
+});
+
 async function mockPlatformAdminApi(page: Page) {
   await page.route(`${apiUrl}/api/auth/login`, async (route) => {
     await route.fulfill({

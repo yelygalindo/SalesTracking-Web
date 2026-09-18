@@ -12,9 +12,9 @@ class MemoryStorage implements StoragePort {
 describe('TokenStore', () => {
   it('sustituye access y refresh token en una única escritura', () => {
     const storage = new MemoryStorage(); const store = new TokenStore(storage)
-    store.replace({ accessToken: 'old-a', refreshToken: 'old-r', expiresAtUtc: '2026-01-01' })
-    store.replace({ accessToken: 'new-a', refreshToken: 'new-r', expiresAtUtc: '2027-01-01' })
-    expect(store.get()).toEqual({ accessToken: 'new-a', refreshToken: 'new-r', expiresAtUtc: '2027-01-01' })
+    store.replace({ accessToken: 'old-a' })
+    store.replace({ accessToken: 'new-a' })
+    expect(store.get()).toEqual({ accessToken: 'new-a' })
     expect(storage.values.size).toBe(1)
   })
   it('descarta almacenamiento corrupto', () => {

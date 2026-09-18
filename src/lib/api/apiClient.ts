@@ -10,8 +10,8 @@ let authFailureHandler: AuthFailureHandler = () => undefined
 export function setAuthFailureHandler(handler: AuthFailureHandler) { authFailureHandler = handler }
 
 export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHandler) {
-  const publicClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, headers: { Accept: 'application/json' } })
-  const apiClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, headers: { Accept: 'application/json' } })
+  const publicClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, withCredentials: true, headers: { Accept: 'application/json' } })
+  const apiClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, withCredentials: true, headers: { Accept: 'application/json' } })
   let refreshPromise: Promise<RefreshTokenResponseDto> | null = null
 
   publicClient.interceptors.response.use(response => response, error => Promise.reject(normalizeApi(error)))
@@ -22,11 +22,10 @@ export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHa
   })
   apiClient.interceptors.response.use(response => response, async (error: AxiosError) => {
     const original = error.config as RetriableConfig | undefined
-    const tokens = store.get()
-    if (error.response?.status !== 401 || !original || original._retry || original.url === '/api/auth/logout' || !tokens?.refreshToken) return Promise.reject(normalizeApi(error))
+    if (error.response?.status !== 401 || !original || original._retry || original.url === '/api/auth/logout' || original.url === '/api/auth/refresh') return Promise.reject(normalizeApi(error))
     original._retry = true
     try {
-      refreshPromise ??= finalize(publicClient.post<RefreshTokenResponseDto>('/api/auth/refresh-token', { refreshToken: tokens.refreshToken }).then(response => { store.replace(response.data); return response.data }))
+      refreshPromise ??= finalize(publicClient.post<RefreshTokenResponseDto>('/api/auth/refresh').then(response => { store.replace(response.data); return response.data }))
       const refreshed = await refreshPromise
       original.headers.Authorization = `Bearer ${refreshed.accessToken}`
       return apiClient(original)

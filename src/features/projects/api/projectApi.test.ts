@@ -43,4 +43,15 @@ describe("projectApi.setCover", () => {
       pageSize: 20,
     });
   });
+  it("valida y confirma una importación de proyectos", async () => {
+    api.onPost("/api/projects/imports/validate").reply(200, {
+      importId: "import-1", totalRows: 1, validRows: 1, warningRows: 0,
+      invalidRows: 0, expiresAtUtc: "2026-09-19T00:00:00Z", rows: [],
+    });
+    api.onPost("/api/projects/imports/import-1/commit").reply(200, { created: 1, failed: 0, items: [] });
+    await projectApi.validateImport([{ rowNumber: 2, name: "Obra Central" }]);
+    await projectApi.commitImport("import-1", { includeAllValidRows: true, includeWarningRows: false, selectedRows: [] });
+    expect(JSON.parse(api.history.post[0].data)).toEqual({ rows: [{ rowNumber: 2, name: "Obra Central" }] });
+    expect(JSON.parse(api.history.post[1].data)).toEqual({ includeAllValidRows: true, includeWarningRows: false, selectedRows: [] });
+  });
 });

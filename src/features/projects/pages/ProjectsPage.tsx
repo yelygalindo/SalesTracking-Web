@@ -13,6 +13,7 @@ import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { translateValue } from "@/lib/i18n/labels";
 import { exportExcel } from "@/lib/export/exportExcel";
 import { ProjectDetailView } from "../components/ProjectDetailView";
+import { ProjectSpreadsheetImport } from "../components/ProjectSpreadsheetImport";
 import { projectService } from "../services/projectService";
 import type { ProjectDetail, ProjectInput, ProjectSummary } from "../api/projectDtos";
 
@@ -57,6 +58,7 @@ export function ProjectsPage() {
     canCreate = usePermission("projects.create"),
     canUpdate = usePermission("projects.update"),
     canDelete = usePermission("projects.delete"),
+    canImport = usePermission("projects.import"),
     canStatus = usePermission("projects.change-status");
   const [status, setStatus] = useState(""),
     [sellerId, setSellerId] = useState(""),
@@ -77,7 +79,7 @@ export function ProjectsPage() {
         }),
     }),
     metrics = useQueries({
-      queries: [undefined, "Activo", "Completado"].map((metricStatus) => ({
+      queries: [undefined, "Active", "Completed"].map((metricStatus) => ({
         queryKey: ["project-metric", metricStatus ?? "all", sellerId],
         queryFn: () =>
           projectService.list({
@@ -242,6 +244,7 @@ export function ProjectsPage() {
           <p>Administra el avance y seguimiento de tus proyectos.</p>
         </div>
         <div className="heading-actions">
+        {canImport && <ProjectSpreadsheetImport onCommitted={invalidate} />}
         {canExport && (
           <button
             className="excel-export-button"

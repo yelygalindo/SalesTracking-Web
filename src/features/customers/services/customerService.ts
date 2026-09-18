@@ -25,6 +25,9 @@ function clean(input: CustomerInputDto): CustomerInputDto {
 }
 
 export const customerService = {
+  importTemplate: () => customerApi.importTemplate(),
+  validateImport: customerApi.validateImport,
+  commitImport: customerApi.commitImport,
   importCsv: (file: File) => customerApi.importCsv(file),
   exportCsv: () => customerApi.exportCsv(),
   list: (filters: CustomerFilters) => customerApi.list(filters),

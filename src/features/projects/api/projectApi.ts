@@ -15,6 +15,7 @@ import type {
   ProjectVisit,
   TimelineItem,
 } from "./projectDtos";
+import type { ImportCommitRequest, ImportCommitResult, ImportPreview, SpreadsheetRow } from "@/types/spreadsheetImport";
 const id = () => crypto.randomUUID();
 export interface ProjectFilters {
   status?: string;
@@ -24,6 +25,13 @@ export interface ProjectFilters {
   pageSize: number;
 }
 export const projectApi = {
+  importTemplate: async () =>
+    (await apiClient.get<Blob>("/api/projects/imports/template", { responseType: "blob" })).data,
+  validateImport: async (rows: SpreadsheetRow[]) => {
+    return (await apiClient.post<ImportPreview>("/api/projects/imports/validate", { rows })).data;
+  },
+  commitImport: async (importId: string, request: ImportCommitRequest) =>
+    (await apiClient.post<ImportCommitResult>(`/api/projects/imports/${importId}/commit`, request)).data,
   list: async (filters: ProjectFilters | string, legacyPage?: number) => {
     const params: ProjectFilters =
       typeof filters === "string"
