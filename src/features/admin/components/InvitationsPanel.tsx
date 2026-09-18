@@ -4,7 +4,7 @@ import {
   useQueryClient,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { History, X } from "lucide-react";
+import { X } from "lucide-react";
 import { DataState } from "@/components/data/DataState";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { notify } from "@/components/feedback/toast";
@@ -96,15 +96,6 @@ function ManagedInvitations({
   };
   return (
     <section className="admin-card invitation-management">
-      <header className="admin-card-header">
-        <span>
-          <History />
-        </span>
-        <div>
-          <h2>Invitaciones</h2>
-          <p>Estado e historial de invitaciones de tu empresa.</p>
-        </div>
-      </header>
       <DataState
         loading={query.isLoading}
         error={query.error}

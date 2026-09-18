@@ -27,12 +27,6 @@ const items = [
     end: true,
   },
   {
-    to: "/customers",
-    label: "Clientes",
-    icon: Users,
-    permissions: ["customers.read"],
-  },
-  {
     to: "/reminders",
     label: "Recordatorios",
     icon: CalendarClock,
@@ -59,6 +53,13 @@ const items = [
 ];
 const groups = [
   {
+    id: "customers", label: "Clientes", icon: Users, path: "/customers",
+    children: [
+      { to: "/customers", label: "Listado", permissions: ["customers.read"] },
+      { to: "/customers/import", label: "Importar", allPermissions: ["customers.read", "customers.import"] },
+    ],
+  },
+  {
     id: "catalog", label: "Productos", icon: Boxes, path: "/catalog",
     children: [
       { to: "/catalog?section=products", label: "Catálogo", permissions: ["products.read"] },
@@ -77,11 +78,11 @@ const groups = [
   {
     id: "admin", label: "Administración", icon: Settings, path: "/admin",
     children: [
-      { to: "/admin?section=invite", label: "Invitar usuario", permissions: ["invitations.create"] },
-      { to: "/admin?section=invitations", label: "Invitaciones", permissions: ["invitations.create"] },
-      { to: "/admin?section=users", label: "Usuarios", permissions: ["users.read"] },
-      { to: "/admin?section=settings", label: "Zona horaria", roles: ["admin", "super-admin", "superadmin"] },
-      { to: "/admin?section=companies", label: "Empresas", permissions: ["companies.create"] },
+      { to: "/admin/invite", label: "Invitar usuario", permissions: ["invitations.create"] },
+      { to: "/admin/invitations", label: "Invitaciones", permissions: ["invitations.create"] },
+      { to: "/admin/users", label: "Usuarios", permissions: ["users.read"] },
+      { to: "/admin/time-zone", label: "Zona horaria", roles: ["admin", "super-admin", "superadmin"] },
+      { to: "/admin/companies", label: "Empresas", permissions: ["companies.create"] },
     ],
   },
 ];
@@ -101,7 +102,7 @@ export function AppShell() {
     location = useLocation();
   useEffect(() => setOpen(false), [location.pathname, location.search]);
   useEffect(() => {
-    const activeGroup = groups.find((group) => location.pathname === group.path);
+    const activeGroup = groups.find((group) => location.pathname === group.path || location.pathname.startsWith(`${group.path}/`));
     if (activeGroup)
       setExpandedGroups((current) => current.includes(activeGroup.id) ? current : [...current, activeGroup.id]);
   }, [location.pathname]);
@@ -123,6 +124,40 @@ export function AppShell() {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+  const renderGroup = ({ id, label, icon: Icon, path, children }: (typeof allowedGroups)[number]) => {
+    const expanded = expandedGroups.includes(id);
+    const active = location.pathname === path || location.pathname.startsWith(`${path}/`);
+    return (
+      <div className={`nav-group ${active ? "active" : ""}`} key={id}>
+        <button
+          className="nav-group-trigger"
+          aria-expanded={expanded}
+          onClick={() => setExpandedGroups((current) =>
+            current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+          )}
+        >
+          <Icon />
+          <span>{label}</span>
+          <ChevronDown className="nav-group-chevron" />
+        </button>
+        {expanded && (
+          <div className="nav-submenu">
+            {children.map((child) => (
+              <NavLink
+                className={() => child.to.includes("?")
+                  ? `${location.pathname}${location.search}` === child.to ? "active" : ""
+                  : location.pathname === child.to ? "active" : ""}
+                key={child.to}
+                to={child.to}
+              >
+                <span>{child.label}</span>
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
   return (
     <div className="app-shell-root">
       <button
@@ -148,44 +183,14 @@ export function AppShell() {
         </div>
         <p className="nav-label">Operación</p>
         <nav>
-          {allowed.map(({ to, label, icon: Icon, end }) => (
-            <NavLink end={end} key={to} to={to}>
-              <Icon />
-              <span>{label}</span>
-            </NavLink>
+          {allowed.filter((item) => item.to === "/").map(({ to, label, icon: Icon, end }) => (
+            <NavLink end={end} key={to} to={to}><Icon /><span>{label}</span></NavLink>
           ))}
-          {allowedGroups.map(({ id, label, icon: Icon, path, children }) => {
-            const expanded = expandedGroups.includes(id);
-            const active = location.pathname === path;
-            return (
-              <div className={`nav-group ${active ? "active" : ""}`} key={id}>
-                <button
-                  className="nav-group-trigger"
-                  aria-expanded={expanded}
-                  onClick={() => setExpandedGroups((current) =>
-                    current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
-                  )}
-                >
-                  <Icon />
-                  <span>{label}</span>
-                  <ChevronDown className="nav-group-chevron" />
-                </button>
-                {expanded && (
-                  <div className="nav-submenu">
-                    {children.map((child) => (
-                      <NavLink
-                        className={() => `${location.pathname}${location.search}` === child.to ? "active" : ""}
-                        key={child.to}
-                        to={child.to}
-                      >
-                        <span>{child.label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {allowedGroups.filter((group) => group.id === "customers").map(renderGroup)}
+          {allowed.filter((item) => item.to !== "/").map(({ to, label, icon: Icon, end }) => (
+            <NavLink end={end} key={to} to={to}><Icon /><span>{label}</span></NavLink>
+          ))}
+          {allowedGroups.filter((group) => group.id !== "customers").map(renderGroup)}
         </nav>
         <button className="logout" onClick={() => void logout()}>
           <LogOut />

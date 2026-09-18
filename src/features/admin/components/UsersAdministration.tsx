@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import { DataState } from "@/components/data/DataState";
 import { Pagination } from "@/components/data/Pagination";
 import { notify } from "@/components/feedback/toast";
@@ -50,15 +50,6 @@ export function UsersAdministration() {
   });
   return (
     <section className="admin-card invitation-management">
-      <header className="admin-card-header">
-        <span>
-          <Users />
-        </span>
-        <div>
-          <h2>Usuarios</h2>
-          <p>Administra estados y roles dentro de tu empresa.</p>
-        </div>
-      </header>
       <form
         className="company-filters"
         onSubmit={(e) => {

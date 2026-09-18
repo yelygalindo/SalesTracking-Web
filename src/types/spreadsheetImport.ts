@@ -1,12 +1,12 @@
 export type SpreadsheetRow = Record<string, unknown> & { rowNumber: number };
+export interface ImportIssue { field: string; code: string; message: string }
 
 export interface ImportPreviewRow {
   rowNumber: number;
   status: "valid" | "warning" | "invalid";
   data: SpreadsheetRow;
-  errors?: Array<string | { message: string }>;
-  warnings?: Array<string | { message: string }>;
-  messages?: Array<string | { message: string }>;
+  errors: ImportIssue[];
+  warnings: ImportIssue[];
 }
 
 export interface ImportPreview {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3 } from "lucide-react";
 import { FormField } from "@/components/forms/FormField";
 import { notify } from "@/components/feedback/toast";
 import { getDisplayTimeZone, setCompanyTimeZone } from "@/lib/i18n/dateTime";
@@ -27,17 +26,6 @@ export function TimeZonePanel() {
   });
   return (
     <section className="admin-card admin-section-card">
-      <header className="admin-card-header">
-        <span>
-          <Clock3 />
-        </span>
-        <div>
-          <h2>Zona horaria</h2>
-          <p>
-            Define cómo se muestran las fechas y horas para toda la empresa.
-          </p>
-        </div>
-      </header>
       <form
         className="customer-form admin-form"
         onSubmit={(event) => {
@@ -71,12 +59,14 @@ export function TimeZonePanel() {
           </p>
         )}
         {update.error && <p className="form-error">{update.error.message}</p>}
-        <button
-          className="action-primary"
-          disabled={update.isPending || !timeZoneId.trim()}
-        >
-          {update.isPending ? "Guardando…" : "Guardar zona horaria"}
-        </button>
+        <div className="admin-form-actions">
+          <button
+            className="action-primary"
+            disabled={update.isPending || !timeZoneId.trim()}
+          >
+            {update.isPending ? "Guardando…" : "Guardar cambios"}
+          </button>
+        </div>
       </form>
     </section>
   );

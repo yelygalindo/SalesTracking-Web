@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { CellValue } from "read-excel-file/browser";
 import { Download, FileCheck2, Upload, X } from "lucide-react";
 import { notify } from "@/components/feedback/toast";
 import { downloadBlob } from "@/lib/export/downloadBlob";
@@ -11,17 +10,12 @@ import type {
   ImportPreviewRow,
   SpreadsheetRow,
 } from "@/types/spreadsheetImport";
-
-type Field = {
-  key: string;
-  label: string;
-  transform?: (value: CellValue | null) => unknown;
-};
+import { readSpreadsheet, type SpreadsheetField } from "@/lib/import/readSpreadsheet";
 
 type Props = {
   entityLabel: string;
   templateName: string;
-  fields: Field[];
+  fields: SpreadsheetField[];
   downloadTemplate: () => Promise<Blob>;
   validateRows: (rows: SpreadsheetRow[]) => Promise<ImportPreview>;
   commit: (importId: string, request: ImportCommitRequest) => Promise<ImportCommitResult>;
@@ -29,7 +23,6 @@ type Props = {
 };
 
 const maxRows = 1000;
-const normalizeHeader = (value: CellValue | null) => String(value ?? "").trim().toLowerCase();
 const issueText = (value: string | { message: string }) =>
   typeof value === "string" ? value : value.message;
 
@@ -80,27 +73,7 @@ export function SpreadsheetImportDialog(props: Props) {
       return;
     }
     try {
-      const { readSheet } = await import("read-excel-file/browser");
-      const sheet = await readSheet(file);
-      if (sheet.length < 2) throw new Error("La plantilla no contiene filas para importar.");
-      const headers = sheet[0].map(normalizeHeader);
-      const indexes = props.fields.map((field) => headers.indexOf(field.key.toLowerCase()));
-      const missing = props.fields.filter((_, index) => indexes[index] < 0);
-      if (missing.length) throw new Error(`Faltan columnas: ${missing.map((field) => field.label).join(", ")}.`);
-      const dataRows = sheet
-        .slice(1)
-        .map((cells, index) => ({ cells, rowNumber: index + 2 }))
-        .filter(({ cells }) => cells.some((cell) => cell !== null && cell !== ""));
-      if (!dataRows.length) throw new Error("La plantilla no contiene filas para importar.");
-      if (dataRows.length > maxRows) throw new Error(`El archivo no puede superar ${maxRows} filas.`);
-      const rows = dataRows.map(({ cells, rowNumber }) => {
-        const row: SpreadsheetRow = { rowNumber };
-        props.fields.forEach((field, fieldIndex) => {
-          const value = cells[indexes[fieldIndex]] ?? null;
-          row[field.key] = field.transform ? field.transform(value) : value;
-        });
-        return row;
-      });
+      const rows = await readSpreadsheet(file, props.fields, maxRows);
       validate.mutate(rows);
     } catch (error) {
       notify(error instanceof Error ? error.message : "No fue posible leer el archivo.", "error");
@@ -168,7 +141,7 @@ export function SpreadsheetImportDialog(props: Props) {
 }
 
 function ImportRow({ row, selected, onToggle }: { row: ImportPreviewRow; selected?: boolean; onToggle?: () => void }) {
-  const issues = [...(row.errors ?? []), ...(row.warnings ?? []), ...(row.messages ?? [])];
+  const issues = [...row.errors, ...row.warnings];
   return (
     <label className="import-row">
       {onToggle && <input type="checkbox" checked={selected} onChange={onToggle} />}

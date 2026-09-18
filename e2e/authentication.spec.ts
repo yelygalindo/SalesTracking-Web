@@ -68,13 +68,13 @@ test("platform_admin inicia sesión y entra a Administración", async ({
   await page.locator("#password").fill("secret-password");
   await page.getByRole("button", { name: /Iniciar sesi/ }).click();
 
-  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page).toHaveURL(/\/admin\/companies$/);
   await expect(
-    page.getByRole("heading", { name: "Administración" }),
+    page.getByRole("heading", { name: "Empresas", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Administración" }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Empresas" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Empresas" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Resumen" })).toHaveCount(0);
 });

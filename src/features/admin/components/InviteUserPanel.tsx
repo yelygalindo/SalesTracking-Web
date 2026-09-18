@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MailPlus, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { FormField } from "@/components/forms/FormField";
 import { notify } from "@/components/feedback/toast";
 import { adminApi } from "../api/adminApi";
@@ -31,15 +31,6 @@ export function InviteUserPanel() {
   const noCapacity = capacity.data?.availableSlots === 0;
   return (
     <section className="admin-card admin-section-card">
-      <header className="admin-card-header">
-        <span>
-          <MailPlus />
-        </span>
-        <div>
-          <h2>Invitar usuario</h2>
-          <p>Envía un acceso y asigna el rol inicial.</p>
-        </div>
-      </header>
       {capacity.data && (
         <div
           className={`capacity-summary ${noCapacity ? "capacity-full" : ""}`}

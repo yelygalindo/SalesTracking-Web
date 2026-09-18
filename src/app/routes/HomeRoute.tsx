@@ -8,7 +8,7 @@ export function HomeRoute() {
 
   if (can("dashboard.read")) return <DashboardPage />;
   if (can("platform-dashboard.read")) return <PlatformDashboardPage />;
-  if (can("companies.create")) return <Navigate to="/admin" replace />;
+  if (can("companies.create")) return <Navigate to="/admin/companies" replace />;
 
   return <Navigate to="/unauthorized" replace />;
 }

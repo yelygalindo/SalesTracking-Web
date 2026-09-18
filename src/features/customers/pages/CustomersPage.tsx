@@ -31,7 +31,6 @@ import { translateValue } from "@/lib/i18n/labels";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { Pagination } from "@/components/data/Pagination";
 import { CustomerCsvActions } from "@/features/customers/components/CustomerCsvActions";
-import { CustomerSpreadsheetImport } from "@/features/customers/components/CustomerSpreadsheetImport";
 
 const emptyForm: CustomerInputDto = {
   name: "",
@@ -79,7 +78,6 @@ export function CustomersPage() {
     linked = params.get("selected");
   const { hasRole, can } = useAuthorization();
   const canExport = can("customers.export");
-  const canImport = can("customers.import");
   const canViewTeam =
     hasRole("supervisor") ||
     hasRole("admin") ||
@@ -304,9 +302,8 @@ export function CustomersPage() {
           <p>Administra tu cartera de clientes y prospectos.</p>
         </div>
         <div className="heading-actions">
-          {canImport && <CustomerSpreadsheetImport onCommitted={refresh} />}
           <CustomerCsvActions
-            canImport={canImport}
+            canImport={false}
             canExport={canExport}
             onImported={refresh}
           />

@@ -5,34 +5,6 @@
   align-items: start;
   margin-top: 4px;
 }
-.admin-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  margin: 4px 0 18px;
-  padding-bottom: 2px;
-}
-.admin-tabs button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  gap: 8px;
-  align-items: center;
-  padding: 9px 13px;
-  border: 1px solid #e1e6ed;
-  border-radius: 10px;
-  color: #59677b;
-  background: white;
-  font-weight: 700;
-}
-.admin-tabs button.active {
-  border-color: #f56a1c;
-  color: #d9510c;
-  background: #fff5ed;
-}
-.admin-tabs svg {
-  width: 17px;
-  height: 17px;
-}
 .admin-card {
   overflow: hidden;
   padding: 0;
@@ -203,6 +175,14 @@
   margin: 0;
   padding: 20px;
 }
+.admin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+.admin-form-actions .action-primary {
+  width: auto;
+}
 .admin-results {
   padding: 0 20px 20px;
   border-top: 1px solid #edf0f4;
@@ -320,4 +300,3 @@
   margin-top: 4px;
   font-size: 0.78rem;
 }
-

@@ -31,7 +31,7 @@ describe("HomeRoute", () => {
         <MemoryRouter initialEntries={["/"]}>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
-            <Route path="/admin" element={<p>Empresas</p>} />
+            <Route path="/admin/companies" element={<p>Empresas</p>} />
           </Routes>
         </MemoryRouter>
       </AuthContext.Provider>,
