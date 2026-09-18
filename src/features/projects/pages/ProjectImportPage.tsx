@@ -17,6 +17,7 @@ import {
   readSpreadsheet,
   type SpreadsheetField,
 } from "@/lib/import/readSpreadsheet";
+import { normalizeOptionalSellerExternalId } from "@/lib/import/normalizeImportRows";
 import type {
   ImportCommitResult,
   ImportPreview,
@@ -37,7 +38,11 @@ const fields: SpreadsheetField[] = [
   { key: "name", label: "name", transform: text },
   { key: "description", label: "description", transform: text },
   { key: "customerExternalId", label: "customerExternalId", transform: text },
-  { key: "sellerExternalId", label: "sellerExternalId", transform: text },
+  {
+    key: "sellerExternalId",
+    label: "sellerExternalId",
+    transform: normalizeOptionalSellerExternalId,
+  },
   { key: "estimatedAmount", label: "estimatedAmount" },
   { key: "startDateUtc", label: "startDateUtc", transform: utc },
   {
@@ -211,7 +216,8 @@ export function ProjectImportPage() {
                 <h2>Cargar archivo</h2>
                 <p>
                   Selecciona o arrastra una plantilla `.xlsx` con un máximo de
-                  1000 registros.
+                  1000 registros. El vendedor es opcional; si lo informas, usa
+                  su identificador externo (externalId) y no su nombre visible.
                 </p>
               </header>
               <input

@@ -14,7 +14,13 @@ import type {
   UpdateCustomerDto,
 } from "./customerDtos";
 import { translateValue } from "@/lib/i18n/labels";
-import type { ImportCommitRequest, ImportCommitResult, ImportPreview, SpreadsheetRow } from "@/types/spreadsheetImport";
+import { normalizeImportRows } from "@/lib/import/normalizeImportRows";
+import type {
+  ImportCommitRequest,
+  ImportCommitResult,
+  ImportPreview,
+  SpreadsheetRow,
+} from "@/types/spreadsheetImport";
 
 export interface CustomerFilters {
   search?: string;
@@ -37,13 +43,27 @@ const statusValues: Record<string, string> = {
 
 export const customerApi = {
   async importTemplate() {
-    return (await apiClient.get<Blob>("/api/customers/imports/template", { responseType: "blob" })).data;
+    return (
+      await apiClient.get<Blob>("/api/customers/imports/template", {
+        responseType: "blob",
+        headers: { "Cache-Control": "no-cache" },
+      })
+    ).data;
   },
   async validateImport(rows: SpreadsheetRow[]) {
-    return (await apiClient.post<ImportPreview>("/api/customers/imports/validate", { rows })).data;
+    return (
+      await apiClient.post<ImportPreview>("/api/customers/imports/validate", {
+        rows: normalizeImportRows(rows),
+      })
+    ).data;
   },
   async commitImport(importId: string, request: ImportCommitRequest) {
-    return (await apiClient.post<ImportCommitResult>(`/api/customers/imports/${importId}/commit`, request)).data;
+    return (
+      await apiClient.post<ImportCommitResult>(
+        `/api/customers/imports/${importId}/commit`,
+        request,
+      )
+    ).data;
   },
   async importCsv(file: File) {
     const data = new FormData();

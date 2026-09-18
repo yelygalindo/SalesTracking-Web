@@ -15,7 +15,13 @@ import type {
   ProjectVisit,
   TimelineItem,
 } from "./projectDtos";
-import type { ImportCommitRequest, ImportCommitResult, ImportPreview, SpreadsheetRow } from "@/types/spreadsheetImport";
+import type {
+  ImportCommitRequest,
+  ImportCommitResult,
+  ImportPreview,
+  SpreadsheetRow,
+} from "@/types/spreadsheetImport";
+import { normalizeImportRows } from "@/lib/import/normalizeImportRows";
 const id = () => crypto.randomUUID();
 export interface ProjectFilters {
   status?: string;
@@ -26,12 +32,26 @@ export interface ProjectFilters {
 }
 export const projectApi = {
   importTemplate: async () =>
-    (await apiClient.get<Blob>("/api/projects/imports/template", { responseType: "blob" })).data,
+    (
+      await apiClient.get<Blob>("/api/projects/imports/template", {
+        responseType: "blob",
+        headers: { "Cache-Control": "no-cache" },
+      })
+    ).data,
   validateImport: async (rows: SpreadsheetRow[]) => {
-    return (await apiClient.post<ImportPreview>("/api/projects/imports/validate", { rows })).data;
+    return (
+      await apiClient.post<ImportPreview>("/api/projects/imports/validate", {
+        rows: normalizeImportRows(rows),
+      })
+    ).data;
   },
   commitImport: async (importId: string, request: ImportCommitRequest) =>
-    (await apiClient.post<ImportCommitResult>(`/api/projects/imports/${importId}/commit`, request)).data,
+    (
+      await apiClient.post<ImportCommitResult>(
+        `/api/projects/imports/${importId}/commit`,
+        request,
+      )
+    ).data,
   list: async (filters: ProjectFilters | string, legacyPage?: number) => {
     const params: ProjectFilters =
       typeof filters === "string"

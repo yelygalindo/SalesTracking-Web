@@ -6,7 +6,7 @@ const clean = (x: ProjectInput): ProjectInput => ({
   description: x.description?.trim() || null,
   address: x.address?.trim() || null,
   customerExternalId: x.customerExternalId || null,
-  sellerExternalId: x.sellerExternalId || null,
+  sellerExternalId: x.sellerExternalId?.trim() || null,
 });
 export const projectService = {
   ...projectApi,
