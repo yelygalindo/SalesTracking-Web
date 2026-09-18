@@ -1,7 +1,7 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
 import { PageHeader } from "@/components/layout/AppShell";
@@ -32,7 +32,7 @@ const emptyProduct: ProductInput = {
 };
 
 export function CatalogPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { section } = useParams();
   const { user } = useAuth(),
     cache = useQueryClient();
   const isSeller =
@@ -45,19 +45,12 @@ export function CatalogPage() {
     canUpdateUnit = usePermission("units.update"),
     canDeleteUnit = usePermission("units.delete");
   const canReadUnits = !isSeller && hasUnitsRead;
-  const requestedTab = searchParams.get("section");
-  const [tab, setTab] = useState<"products" | "units">(requestedTab === "units" ? "units" : "products"),
-    [edit, setEdit] = useState<Product | Unit | null>(null),
+  const tab: "products" | "units" = section === "units" ? "units" : "products";
+  const [edit, setEdit] = useState<Product | Unit | null>(null),
     [showForm, setShowForm] = useState(false),
     [deleteTarget, setDeleteTarget] = useState<Product | Unit | null>(null);
   const [productForm, setProductForm] = useState(emptyProduct),
     [unitForm, setUnitForm] = useState(emptyUnit);
-  useEffect(() => {
-    const nextTab = searchParams.get("section") === "units" ? "units" : "products";
-    setTab(nextTab);
-    setEdit(null);
-    setShowForm(false);
-  }, [searchParams]);
   const units = useQuery({
     queryKey: ["units"],
     queryFn: () => unitsApi.list(),
@@ -123,15 +116,24 @@ export function CatalogPage() {
       });
     else setUnitForm({ ...item });
   };
+  if (!section) return <Navigate replace to="/catalog/products" />;
+  if (
+    !(["products", "units"] as const).includes(section as "products" | "units")
+  )
+    return <Navigate replace to="/unauthorized" />;
+  if (tab === "units" && !canReadUnits)
+    return <Navigate replace to="/unauthorized" />;
   return (
     <main className="customers-content">
       <PageHeader
         eyebrow="Catálogo"
-        title={isSeller ? "Productos" : "Productos y unidades"}
+        title={tab === "products" ? "Productos" : "Unidades"}
         description={
-          isSeller
-            ? "Consulta los productos disponibles."
-            : "Administra el catálogo comercial y sus unidades de medida."
+          tab === "units"
+            ? "Administra las unidades de medida disponibles para el catálogo."
+            : isSeller
+              ? "Consulta los productos disponibles."
+              : "Administra los productos disponibles en el catálogo comercial."
         }
         action={
           canCreate &&
@@ -143,30 +145,6 @@ export function CatalogPage() {
           )
         }
       />
-      {canReadUnits && (
-        <nav className="activity-tabs">
-          <button
-            className={tab === "products" ? "active" : ""}
-            onClick={() => {
-              setTab("products");
-              setSearchParams({ section: "products" });
-              setShowForm(false);
-            }}
-          >
-            Productos
-          </button>
-          <button
-            className={tab === "units" ? "active" : ""}
-            onClick={() => {
-              setTab("units");
-              setSearchParams({ section: "units" });
-              setShowForm(false);
-            }}
-          >
-            Unidades
-          </button>
-        </nav>
-      )}
       {isSeller && (
         <p className="assignment-note">
           Vista de consulta. Tu rol no permite crear ni modificar productos o
@@ -218,7 +196,7 @@ export function CatalogPage() {
                           {canDelete && (
                             <button
                               className="row-action danger-text"
-                      onClick={() => setDeleteTarget(item)}
+                              onClick={() => setDeleteTarget(item)}
                             >
                               Eliminar
                             </button>
@@ -357,9 +335,7 @@ function CatalogForm({
             />
             <span>
               <strong>Permitir cantidades decimales</strong>
-              <small>
-                Habilita valores como 1,5 o 2,75 para esta unidad.
-              </small>
+              <small>Habilita valores como 1,5 o 2,75 para esta unidad.</small>
             </span>
           </label>
         </>
@@ -378,9 +354,7 @@ function CatalogForm({
           <strong>
             {tab === "products" ? "Producto activo" : "Unidad activa"}
           </strong>
-          <small>
-            Estará disponible para utilizarse en nuevos registros.
-          </small>
+          <small>Estará disponible para utilizarse en nuevos registros.</small>
         </span>
       </label>
       {error && <p className="form-error">{error.message}</p>}

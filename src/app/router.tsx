@@ -11,6 +11,7 @@ import { NotFoundPage } from "@/features/auth/pages/NotFoundPage";
 import { CustomersPage } from "@/features/customers/pages/CustomersPage";
 import { CustomerImportPage } from "@/features/customers/pages/CustomerImportPage";
 import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
+import { ProjectImportPage } from "@/features/projects/pages/ProjectImportPage";
 import { CatalogPage } from "@/features/catalog/pages/CatalogPage";
 import { OperationsPage } from "@/features/operations/pages/OperationsPage";
 import { DeliveriesPage } from "@/features/deliveries/pages/DeliveriesPage";
@@ -43,7 +44,9 @@ export const router = createBrowserRouter([
           },
           {
             element: <PermissionRoute permission="customers.import" />,
-            children: [{ path: "/customers/import", element: <CustomerImportPage /> }],
+            children: [
+              { path: "/customers/import", element: <CustomerImportPage /> },
+            ],
           },
           {
             element: <PermissionRoute permission="customers.read" />,
@@ -54,12 +57,22 @@ export const router = createBrowserRouter([
             children: [{ path: "/projects", element: <ProjectsPage /> }],
           },
           {
+            element: <PermissionRoute permission="projects.import" />,
+            children: [
+              { path: "/projects/import", element: <ProjectImportPage /> },
+            ],
+          },
+          {
             element: <PermissionRoute permission="products.read" />,
-            children: [{ path: "/catalog", element: <CatalogPage /> }],
+            children: [
+              { path: "/catalog/:section?", element: <CatalogPage /> },
+            ],
           },
           {
             element: <PermissionRoute permission="visits.read" />,
-            children: [{ path: "/operations", element: <OperationsPage /> }],
+            children: [
+              { path: "/operations/:section?", element: <OperationsPage /> },
+            ],
           },
           {
             element: <PermissionRoute permission="deliveries.read" />,
@@ -67,7 +80,7 @@ export const router = createBrowserRouter([
           },
           {
             element: <PermissionRoute permission="reports.read" />,
-            children: [{ path: "/reports", element: <ReportsPage /> }],
+            children: [{ path: "/reports/:type?", element: <ReportsPage /> }],
           },
           {
             element: (

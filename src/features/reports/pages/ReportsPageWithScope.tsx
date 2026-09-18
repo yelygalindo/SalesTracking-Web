@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { DataState } from "@/components/data/DataState";
 import { PageHeader } from "@/components/layout/AppShell";
 import { notify } from "@/components/feedback/toast";
@@ -59,21 +59,17 @@ const humanKey = (value: string) =>
     .replace(/^./, (letter) => letter.toUpperCase());
 
 export function ReportsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { type: routeType } = useParams();
   const { hasRole, can } = useAuthorization();
   const isSeller = hasRole("seller");
   const canChooseSeller = !isSeller && can("sellers.read");
-  const requestedType = searchParams.get("type") as ReportType | null;
-  const [type, setType] = useState<ReportType>(requestedType && requestedType in labels ? requestedType : "customers");
+  const type: ReportType =
+    routeType && routeType in labels ? (routeType as ReportType) : "customers";
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [sellerId, setSellerId] = useState("");
   const [status, setStatus] = useState("");
   const [zoneId, setZoneId] = useState("");
-  useEffect(() => {
-    const nextType = searchParams.get("type") as ReportType | null;
-    if (nextType && nextType in labels) setType(nextType);
-  }, [searchParams]);
   const availableFilters = filtersByType[type];
   const sellers = useQuery({
     queryKey: ["sellers"],
@@ -118,11 +114,14 @@ export function ReportsPage() {
     onError: (error: Error) => notify(error.message, "error"),
   });
 
+  if (!routeType) return <Navigate replace to="/reports/customers" />;
+  if (!(routeType in labels)) return <Navigate replace to="/unauthorized" />;
+
   return (
     <main className="customers-content reports-page">
       <PageHeader
-        eyebrow="Gestión comercial"
-        title="Reportes"
+        eyebrow="Reportes"
+        title={labels[type]}
         description={
           isSeller
             ? "Consulta exclusivamente la información autorizada de tus clientes."
@@ -141,20 +140,6 @@ export function ReportsPage() {
           ) : undefined
         }
       />
-      <nav className="report-tabs" aria-label="Tipos de reporte">
-        {(Object.keys(labels) as ReportType[]).map((item) => (
-          <button
-            className={type === item ? "active" : ""}
-            key={item}
-            onClick={() => {
-              setType(item);
-              setSearchParams({ type: item });
-            }}
-          >
-            {labels[item]}
-          </button>
-        ))}
-      </nav>
       <section className="report-filters" aria-label="Filtros del reporte">
         {availableFilters.dates && (
           <>

@@ -1,5 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
@@ -13,9 +18,12 @@ import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { translateValue } from "@/lib/i18n/labels";
 import { exportExcel } from "@/lib/export/exportExcel";
 import { ProjectDetailView } from "../components/ProjectDetailView";
-import { ProjectSpreadsheetImport } from "../components/ProjectSpreadsheetImport";
 import { projectService } from "../services/projectService";
-import type { ProjectDetail, ProjectInput, ProjectSummary } from "../api/projectDtos";
+import type {
+  ProjectDetail,
+  ProjectInput,
+  ProjectSummary,
+} from "../api/projectDtos";
 
 const empty: ProjectInput = {
   name: "",
@@ -53,12 +61,12 @@ const toForm = (project: ProjectDetail): ProjectInput => ({
 export function ProjectsPage() {
   const { hasRole, can } = useAuthorization();
   const canChooseSeller = !hasRole("seller") && can("sellers.read");
-  const canExport = hasRole("admin") || hasRole("administrator") || hasRole("super-admin");
+  const canExport =
+    hasRole("admin") || hasRole("administrator") || hasRole("super-admin");
   const cache = useQueryClient(),
     canCreate = usePermission("projects.create"),
     canUpdate = usePermission("projects.update"),
     canDelete = usePermission("projects.delete"),
-    canImport = usePermission("projects.import"),
     canStatus = usePermission("projects.change-status");
   const [status, setStatus] = useState(""),
     [sellerId, setSellerId] = useState(""),
@@ -179,7 +187,13 @@ export function ProjectsPage() {
           { label: "Responsable", value: (row) => row.sellerName || "" },
           { label: "Estado", value: (row) => translateValue(row.status) },
           { label: "Avance", value: (row) => `${row.progressPercentage}%` },
-          { label: "Fecha estimada", value: (row) => row.expectedCloseDateUtc ? formatProjectDate(row.expectedCloseDateUtc) : "" },
+          {
+            label: "Fecha estimada",
+            value: (row) =>
+              row.expectedCloseDateUtc
+                ? formatProjectDate(row.expectedCloseDateUtc)
+                : "",
+          },
           { label: "Dirección", value: (row) => row.address || "" },
         ],
         rows,
@@ -244,33 +258,32 @@ export function ProjectsPage() {
           <p>Administra el avance y seguimiento de tus proyectos.</p>
         </div>
         <div className="heading-actions">
-        {canImport && <ProjectSpreadsheetImport onCommitted={invalidate} />}
-        {canExport && (
-          <button
-            className="excel-export-button"
-            disabled={exporter.isPending}
-            onClick={() => exporter.mutate()}
-          >
-            <span className="excel-export-icon" aria-hidden="true">
-              <FileSpreadsheet />
-            </span>
-            {exporter.isPending ? "Exportando…" : "Exportar CSV"}
-          </button>
-        )}
-        {canCreate && (
-          <button
-            className="action-primary"
-            onClick={() => {
-              setCreating(true);
-              setEditing(true);
-              setSelected(null);
-              setForm(empty);
-            }}
-          >
-            <Plus />
-            Nuevo proyecto
-          </button>
-        )}
+          {canExport && (
+            <button
+              className="excel-export-button"
+              disabled={exporter.isPending}
+              onClick={() => exporter.mutate()}
+            >
+              <span className="excel-export-icon" aria-hidden="true">
+                <FileSpreadsheet />
+              </span>
+              {exporter.isPending ? "Exportando…" : "Exportar CSV"}
+            </button>
+          )}
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => {
+                setCreating(true);
+                setEditing(true);
+                setSelected(null);
+                setForm(empty);
+              }}
+            >
+              <Plus />
+              Nuevo proyecto
+            </button>
+          )}
         </div>
       </header>
       <section className="customer-metrics" aria-label="Resumen de proyectos">
@@ -286,7 +299,9 @@ export function ProjectsPage() {
                 ? "…"
                 : metrics[index].isError
                   ? "—"
-                  : (metrics[index].data?.pagination.totalItems ?? 0).toLocaleString("es-BO")}
+                  : (
+                      metrics[index].data?.pagination.totalItems ?? 0
+                    ).toLocaleString("es-BO")}
             </strong>
           </article>
         ))}

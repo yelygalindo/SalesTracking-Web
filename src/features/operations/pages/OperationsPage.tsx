@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock3, MapPin, Route, UserRoundCheck } from "lucide-react";
+import { Navigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
@@ -54,9 +55,11 @@ const visitTargetLabel = (targetType: string) =>
 const coordinates = (latitude: number, longitude: number) =>
   `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 export function OperationsPage() {
+  const { section } = useParams();
   const { can, user } = useAuthorization();
   const canChooseSeller = can("sellers.read");
-  const [tab, setTab] = useState<"active" | "history">("active");
+  const tab: "active" | "history" =
+    section === "history" ? "history" : "active";
   const [from, setFrom] = useState(yesterday());
   const [to, setTo] = useState(today());
   const [sellerId, setSellerId] = useState("");
@@ -96,6 +99,11 @@ export function OperationsPage() {
   const selectedSellerName = sellers.data?.find(
     (seller) => seller.externalId === sellerId,
   )?.displayName;
+  if (!section) return <Navigate replace to="/operations/active" />;
+  if (
+    !(["active", "history"] as const).includes(section as "active" | "history")
+  )
+    return <Navigate replace to="/unauthorized" />;
   if (selectedId)
     return (
       <WorkdayDetail
@@ -107,7 +115,9 @@ export function OperationsPage() {
     <main className="customers-content operations-page">
       <PageHeader
         eyebrow="Operación"
-        title="Supervisión de vendedores"
+        title={
+          tab === "active" ? "Vendedores activos" : "Historial de jornadas"
+        }
         description="Consulta jornadas, visitas y ubicaciones registradas por el equipo autorizado."
       />
       {!canChooseSeller && (
@@ -115,20 +125,6 @@ export function OperationsPage() {
           Mostrando únicamente la actividad autorizada para {user?.fullName}.
         </p>
       )}
-      <nav className="activity-tabs" aria-label="Secciones de operación">
-        <button
-          className={tab === "active" ? "active" : ""}
-          onClick={() => setTab("active")}
-        >
-          Vendedores activos
-        </button>
-        <button
-          className={tab === "history" ? "active" : ""}
-          onClick={() => setTab("history")}
-        >
-          Historial de jornadas
-        </button>
-      </nav>
       {tab === "active" ? (
         <>
           <section className="operations-map-card">
@@ -364,9 +360,7 @@ function WorkdayDetail({
                 <header>
                   <div>
                     <h2>Ruta recorrida</h2>
-                    <p>
-                      Recorrido cronológico de las ubicaciones registradas.
-                    </p>
+                    <p>Recorrido cronológico de las ubicaciones registradas.</p>
                   </div>
                   <span className="operations-map-count">
                     {workday.data.locationCount} puntos
@@ -471,10 +465,7 @@ function WorkdayDetail({
                             </div>
                           </td>
                           <td>
-                            {duration(
-                              visit.checkInAtUtc,
-                              visit.checkOutAtUtc,
-                            )}
+                            {duration(visit.checkInAtUtc, visit.checkOutAtUtc)}
                           </td>
                           <td>
                             <div className="workday-visit-result">

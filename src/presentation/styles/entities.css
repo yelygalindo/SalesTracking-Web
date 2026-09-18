@@ -1,6 +1,5 @@
 .customers-content {
-    padding: 24px 18px;
-  }
+  padding: 24px 18px;
 }
 .catalog-grid,
 .operations-grid {
@@ -1516,4 +1515,3 @@
     grid-column: 1 !important;
   }
 }
-
