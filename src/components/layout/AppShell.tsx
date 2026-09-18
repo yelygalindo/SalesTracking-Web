@@ -22,7 +22,7 @@ const items = [
     to: "/",
     label: "Resumen",
     icon: LayoutDashboard,
-    permissions: ["dashboard.read"],
+    permissions: ["dashboard.read", "platform-dashboard.read"],
     end: true,
   },
   {
@@ -71,7 +71,7 @@ const items = [
     to: "/admin",
     label: "Administración",
     icon: Settings,
-    permissions: ["invitations.create", "companies.create"],
+    permissions: ["invitations.create", "companies.create", "users.read"],
   },
 ];
 const roleNames: Record<string, string> = {

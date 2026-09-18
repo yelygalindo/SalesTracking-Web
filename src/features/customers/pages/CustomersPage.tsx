@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
   type Dispatch,
   type FormEvent,
@@ -98,11 +99,10 @@ export function CustomersPage() {
   const cache = useQueryClient(),
     [params] = useSearchParams(),
     linked = params.get("selected");
-  const { hasRole } = useAuthorization();
-  const canExport =
-    hasRole("admin") ||
-    hasRole("administrator") ||
-    hasRole("super-admin");
+  const { hasRole, can } = useAuthorization();
+  const canExport = can("customers.export");
+  const canImport = can("customers.import");
+  const importInput = useRef<HTMLInputElement>(null);
   const canViewTeam =
     hasRole("supervisor") ||
     hasRole("admin") ||
@@ -251,6 +251,13 @@ export function CustomersPage() {
   });
   const exporter = useMutation({
     mutationFn: async () => {
+      const csv = await customerService.exportCsv();
+      downloadBlob(
+        csv,
+        `clientes-${new Date().toISOString().slice(0, 10)}.csv`,
+      );
+      return;
+      /* Legacy client-side export kept unreachable for compatibility. */
       const rows: CustomerSummaryDto[] = [];
       let exportPage = 1;
       let totalPages = 1;
@@ -278,6 +285,23 @@ export function CustomersPage() {
         ],
         rows,
       );
+    },
+    onError: (error) => notify(message(error), "error"),
+  });
+  const importer = useMutation({
+    mutationFn: customerService.importCsv,
+    onSuccess: async (result) => {
+      notify(
+        `Importación terminada: ${result.imported} exitosas y ${result.failed} con error.`,
+        result.failed ? "error" : undefined,
+      );
+      if (result.errors.length)
+        alert(
+          result.errors
+            .map((value) => `Fila ${value.row}: ${value.message}`)
+            .join("\n"),
+        );
+      await refresh();
     },
     onError: (error) => notify(message(error), "error"),
   });
@@ -326,8 +350,8 @@ export function CustomersPage() {
             <p className="overline">Clientes</p>
             <h1>{mode === "create" ? "Nuevo cliente" : "Editar cliente"}</h1>
             <p>
-              Organiza los datos comerciales, la asignación y la ubicación en
-              un solo lugar.
+              Organiza los datos comerciales, la asignación y la ubicación en un
+              solo lugar.
             </p>
           </div>
         </header>
@@ -359,31 +383,59 @@ export function CustomersPage() {
           <p>Administra tu cartera de clientes y prospectos.</p>
         </div>
         <div className="heading-actions">
-        {canExport && (
-          <button
-            className="excel-export-button"
-            disabled={exporter.isPending}
-            onClick={() => exporter.mutate()}
-          >
-            <span className="excel-export-icon" aria-hidden="true">
-              <FileSpreadsheet />
-            </span>
-            {exporter.isPending ? "Exportando…" : "Exportar CSV"}
-          </button>
-        )}
-        {canCreate && (
-          <button
-            className="action-primary"
-            onClick={() => {
-              setMode("create");
-              setSelected(null);
-              setForm(emptyForm);
-            }}
-          >
-            <Plus />
-            Nuevo cliente
-          </button>
-        )}
+          {canImport && (
+            <>
+              <input
+                ref={importInput}
+                hidden
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) {
+                    notify("El CSV no puede superar 5 MB.", "error");
+                    return;
+                  }
+                  importer.mutate(file);
+                  event.target.value = "";
+                }}
+              />
+              <button
+                className="excel-export-button"
+                disabled={importer.isPending}
+                onClick={() => importInput.current?.click()}
+              >
+                <Download />
+                {importer.isPending ? "Importando…" : "Importar CSV"}
+              </button>
+            </>
+          )}
+          {canExport && (
+            <button
+              className="excel-export-button"
+              disabled={exporter.isPending}
+              onClick={() => exporter.mutate()}
+            >
+              <span className="excel-export-icon" aria-hidden="true">
+                <FileSpreadsheet />
+              </span>
+              {exporter.isPending ? "Exportando…" : "Exportar CSV"}
+            </button>
+          )}
+          {canCreate && (
+            <button
+              className="action-primary"
+              onClick={() => {
+                setMode("create");
+                setSelected(null);
+                setForm(emptyForm);
+              }}
+            >
+              <Plus />
+              Nuevo cliente
+            </button>
+          )}
         </div>
       </header>
       {notice && <p className="customer-feedback">{notice}</p>}
@@ -505,7 +557,9 @@ export function CustomersPage() {
                             <div role="menu">
                               {canUpdate && (
                                 <>
-                                  <button onClick={() => openCustomer(c, "notes")}>
+                                  <button
+                                    onClick={() => openCustomer(c, "notes")}
+                                  >
                                     Agregar nota
                                   </button>
                                   <button
@@ -653,10 +707,13 @@ function CustomerDetail({
         customerExternalId: customer.externalId,
       }),
     onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
-    onError: (error) => notify(
-      error instanceof Error ? error.message : "No fue posible descargar los comprobantes.",
-      "error",
-    ),
+    onError: (error) =>
+      notify(
+        error instanceof Error
+          ? error.message
+          : "No fue posible descargar los comprobantes.",
+        "error",
+      ),
   });
   const applyStatus = (id: number) => {
     change(id);
@@ -695,8 +752,13 @@ function CustomerDetail({
         </div>
         <div className="detail-actions">
           {canReadDeliveries && (
-            <button className="secondary-button" disabled={deliveryArchive.isPending} onClick={() => deliveryArchive.mutate()}>
-              <Download /> {deliveryArchive.isPending ? "Preparando…" : "Comprobantes ZIP"}
+            <button
+              className="secondary-button"
+              disabled={deliveryArchive.isPending}
+              onClick={() => deliveryArchive.mutate()}
+            >
+              <Download />{" "}
+              {deliveryArchive.isPending ? "Preparando…" : "Comprobantes ZIP"}
             </button>
           )}
           {canUpdate && (

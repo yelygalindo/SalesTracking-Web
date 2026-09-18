@@ -22,6 +22,11 @@ export interface CustomerFilters {
   page: number;
   pageSize: number;
 }
+export interface CustomerImportResult {
+  imported: number;
+  failed: number;
+  errors: { row: number; message: string }[];
+}
 
 const statusValues: Record<string, string> = {
   Prospecto: "prospect",
@@ -30,6 +35,20 @@ const statusValues: Record<string, string> = {
 };
 
 export const customerApi = {
+  async importCsv(file: File) {
+    const data = new FormData();
+    data.append("file", file);
+    return (
+      await apiClient.post<CustomerImportResult>("/api/customers/import", data)
+    ).data;
+  },
+  async exportCsv() {
+    return (
+      await apiClient.get<Blob>("/api/customers/export", {
+        responseType: "blob",
+      })
+    ).data;
+  },
   async list(filters: CustomerFilters) {
     const params = {
       ...filters,

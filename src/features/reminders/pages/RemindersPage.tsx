@@ -53,6 +53,20 @@ export function RemindersPage() {
     },
     onError: (error: Error) => notify(error.message, "error"),
   });
+  const reschedule = useMutation({
+    mutationFn: ({
+      reminder,
+      value,
+    }: {
+      reminder: SellerReminder;
+      value: string;
+    }) => reminderApi.reschedule(reminder, new Date(value).toISOString()),
+    onSuccess: async () => {
+      notify("Recordatorio reprogramado.");
+      await cache.invalidateQueries({ queryKey: ["reminders"] });
+    },
+    onError: (error: Error) => notify(error.message, "error"),
+  });
   const invalidRange = Boolean(from && to && from > to);
   const statusLabel =
     filters.completed === undefined
@@ -170,12 +184,37 @@ export function RemindersPage() {
                   })}
                 </time>
                 {!item.completed && (
-                  <button
-                    disabled={complete.isPending}
-                    onClick={() => complete.mutate(item)}
-                  >
-                    Marcar completado
-                  </button>
+                  <div className="invitation-actions">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const value = prompt(
+                          "Nueva fecha y hora (AAAA-MM-DD HH:mm)",
+                        );
+                        if (!value) return;
+                        const date = new Date(value);
+                        if (
+                          Number.isNaN(date.getTime()) ||
+                          date <= new Date()
+                        ) {
+                          notify(
+                            "Selecciona una fecha futura válida.",
+                            "error",
+                          );
+                          return;
+                        }
+                        reschedule.mutate({ reminder: item, value });
+                      }}
+                    >
+                      Reprogramar
+                    </button>
+                    <button
+                      disabled={complete.isPending}
+                      onClick={() => complete.mutate(item)}
+                    >
+                      Marcar completado
+                    </button>
+                  </div>
                 )}
               </article>
             ))}

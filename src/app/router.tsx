@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
           {
             element: (
               <PermissionRoute
-                anyOf={["invitations.create", "companies.create"]}
+                anyOf={["invitations.create", "companies.create", "users.read"]}
               />
             ),
             children: [{ path: "/admin", element: <AdminPage /> }],

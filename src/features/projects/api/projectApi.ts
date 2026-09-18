@@ -154,6 +154,17 @@ export const projectApi = {
         { clientRequestId: crypto.randomUUID() },
       )
     ).data,
+  rescheduleReminder: async (
+    id: string,
+    reminderId: string,
+    reminderAtUtc: string,
+  ) =>
+    (
+      await apiClient.patch(
+        `/api/projects/${id}/reminders/${reminderId}/reschedule`,
+        { reminderAtUtc },
+      )
+    ).data,
   visits: async (id: string) =>
     (await apiClient.get<ProjectVisit[]>(`/api/projects/${id}/visits`)).data,
 };

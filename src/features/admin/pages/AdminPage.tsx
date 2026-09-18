@@ -34,8 +34,10 @@ import {
   type ManagedInvitation,
 } from "../api/adminApi";
 import { companyApi, type ManagedCompany } from "../api/companyApi";
+import { UsersAdministration } from "../components/UsersAdministration";
 
-type AdminSection = "invite" | "invitations" | "settings" | "companies";
+type AdminSection =
+  "invite" | "invitations" | "users" | "settings" | "companies";
 
 const roleLabel = (value: string) => translateValue(value);
 const eventLabels: Record<InvitationHistoryItem["type"], string> = {
@@ -50,6 +52,7 @@ export function AdminPage() {
   const { roles } = useAuthorization();
   const canInvite = usePermission("invitations.create");
   const canCompanies = usePermission("companies.create");
+  const canManageUsers = usePermission("users.read");
   const canConfigureTimeZone = roles.some((role) =>
     ["admin", "super-admin", "superadmin"].includes(role.toLowerCase()),
   );
@@ -68,11 +71,14 @@ export function AdminPage() {
       ...(canConfigureTimeZone
         ? [{ id: "settings" as const, label: "Zona horaria", icon: Clock3 }]
         : []),
+      ...(canManageUsers
+        ? [{ id: "users" as const, label: "Usuarios", icon: Users }]
+        : []),
       ...(canCompanies
         ? [{ id: "companies" as const, label: "Empresas", icon: Building2 }]
         : []),
     ],
-    [canCompanies, canConfigureTimeZone, canInvite],
+    [canCompanies, canConfigureTimeZone, canInvite, canManageUsers],
   );
   const [section, setSection] = useState<AdminSection>(
     sections[0]?.id ?? "invite",
@@ -113,6 +119,7 @@ export function AdminPage() {
           {section === "invitations" && canInvite && (
             <InvitationsPanel onHistory={setHistoryId} />
           )}
+          {section === "users" && canManageUsers && <UsersAdministration />}
           {section === "settings" && canConfigureTimeZone && <TimeZonePanel />}
           {section === "companies" && canCompanies && <CompaniesPanel />}
         </>

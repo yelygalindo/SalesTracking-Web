@@ -1153,6 +1153,22 @@ button {
 .limit-editor button:disabled {
   opacity: 0.45;
 }
+.admin-role-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.admin-role-list label {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 9px;
+  background: #f5f7fa;
+}
+.platform-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
 .admin-card h2 {
   margin: 0;
   font-size: 18px;

@@ -49,6 +49,24 @@ El pipeline CI valida lint, pruebas y build. CD publica la imagen
 `urbantrack-crm-web` en GitHub Container Registry; define la variable de repositorio
 `VITE_API_BASE_URL` antes del primer despliegue.
 
+## Pruebas y cobertura
+
+```powershell
+npm test
+npm run test:coverage
+npm run test:e2e
+```
+
+La cobertura usa Vitest con V8 y genera un resumen en consola, un reporte HTML en
+`coverage/index.html` y un resumen JSON. CI aplica umbrales globales mínimos para
+impedir que la cobertura existente disminuya. Estos umbrales deben incrementarse
+progresivamente al incorporar pruebas de páginas y flujos completos.
+
+Las pruebas E2E usan Playwright. Antes de ejecutarlas por primera vez instala
+Chromium con `npx playwright install chromium`. El servidor web de pruebas se
+inicia automáticamente y las llamadas críticas de autenticación se simulan para
+que los escenarios de permisos sean deterministas.
+
 ## Publicación beta en Railway
 
 Railway construye el `Dockerfile` raíz y valida `/health` antes de activar una versión.
