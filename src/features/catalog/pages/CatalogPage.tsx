@@ -5,6 +5,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
+import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import {
   productsApi,
   unitsApi,
@@ -44,7 +45,8 @@ export function CatalogPage() {
   const canReadUnits = !isSeller && hasUnitsRead;
   const [tab, setTab] = useState<"products" | "units">("products"),
     [edit, setEdit] = useState<Product | Unit | null>(null),
-    [showForm, setShowForm] = useState(false);
+    [showForm, setShowForm] = useState(false),
+    [deleteTarget, setDeleteTarget] = useState<Product | Unit | null>(null);
   const [productForm, setProductForm] = useState(emptyProduct),
     [unitForm, setUnitForm] = useState(emptyUnit);
   const units = useQuery({
@@ -84,13 +86,13 @@ export function CatalogPage() {
       await cache.invalidateQueries({ queryKey: [tab] });
     },
   });
-  const remove = async (item: Product | Unit) => {
-    if (confirm(`¿Eliminar ${item.name}? Esta acción no se puede deshacer.`)) {
-      await (tab === "products"
-        ? productsApi.remove(item.externalId)
-        : unitsApi.remove(item.externalId));
-      await cache.invalidateQueries({ queryKey: [tab] });
-    }
+  const remove = async () => {
+    if (!deleteTarget) return;
+    await (tab === "products"
+      ? productsApi.remove(deleteTarget.externalId)
+      : unitsApi.remove(deleteTarget.externalId));
+    setDeleteTarget(null);
+    await cache.invalidateQueries({ queryKey: [tab] });
   };
   const rows = tab === "products" ? products.data?.items : units.data?.items;
   const openCreate = () => {
@@ -205,7 +207,7 @@ export function CatalogPage() {
                           {canDelete && (
                             <button
                               className="row-action danger-text"
-                              onClick={() => void remove(item)}
+                      onClick={() => setDeleteTarget(item)}
                             >
                               Eliminar
                             </button>
@@ -235,6 +237,14 @@ export function CatalogPage() {
           />
         )}
       </div>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Eliminar registro"
+        description={`¿Eliminar ${deleteTarget?.name ?? "este registro"}? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void remove()}
+      />
     </main>
   );
 }

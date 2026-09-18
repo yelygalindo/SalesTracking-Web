@@ -6,6 +6,7 @@ import { customerService } from "@/features/customers/services/customerService";
 import { AppError } from "@/lib/api/apiError";
 import { LocationPicker } from "@/components/maps/LocationPickerModern";
 import { notify } from "@/components/feedback/toast";
+import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { updateProjectProgress } from "@/lib/api/optimisticUpdates";
 import { Pagination } from "@/components/data/Pagination";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
@@ -63,6 +64,7 @@ export function ProjectsPage() {
     [selected, setSelected] = useState<string | null>(null),
     [editing, setEditing] = useState(false),
     [creating, setCreating] = useState(false),
+    [confirmDelete, setConfirmDelete] = useState(false),
     [form, setForm] = useState(empty);
   const list = useQuery({
       queryKey: ["projects", status, sellerId, page],
@@ -146,6 +148,7 @@ export function ProjectsPage() {
       mutationFn: () => projectService.remove(selected!),
       onSuccess: async () => {
         notify("Proyecto eliminado.");
+        setConfirmDelete(false);
         setSelected(null);
         await invalidate();
       },
@@ -435,9 +438,7 @@ export function ProjectsPage() {
                     setForm(toForm(detail.data!));
                     setEditing(true);
                   }}
-                  onDelete={() =>
-                    confirm("¿Eliminar este proyecto?") && remove.mutate()
-                  }
+                  onDelete={() => setConfirmDelete(true)}
                   onStatusChange={(value) => change.mutate(value)}
                 />
               )
@@ -445,6 +446,15 @@ export function ProjectsPage() {
           </aside>
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Eliminar proyecto"
+        description="¿Eliminar este proyecto? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        busy={remove.isPending}
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => remove.mutate()}
+      />
     </main>
   );
 }

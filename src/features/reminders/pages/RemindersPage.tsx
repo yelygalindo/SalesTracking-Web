@@ -10,6 +10,7 @@ import {
   type ReminderFilters,
   type SellerReminder,
 } from "../api/reminderApi";
+import { RescheduleReminderDialog } from "../components/RescheduleReminderDialog";
 
 const isoDate = (date: Date) => date.toISOString().slice(0, 10);
 const initialFrom = () => {
@@ -36,6 +37,7 @@ export function RemindersPage() {
   const [status, setStatus] = useState<"all" | "pending" | "completed">(
     "completed",
   );
+  const [rescheduling, setRescheduling] = useState<SellerReminder | null>(null);
   const [filters, setFilters] = useState<ReminderFilters>(() => ({
     from: initialFrom(),
     to: initialTo(),
@@ -60,8 +62,9 @@ export function RemindersPage() {
     }: {
       reminder: SellerReminder;
       value: string;
-    }) => reminderApi.reschedule(reminder, new Date(value).toISOString()),
+    }) => reminderApi.reschedule(reminder, value),
     onSuccess: async () => {
+      setRescheduling(null);
       notify("Recordatorio reprogramado.");
       await cache.invalidateQueries({ queryKey: ["reminders"] });
     },
@@ -185,27 +188,7 @@ export function RemindersPage() {
                 </time>
                 {!item.completed && (
                   <div className="invitation-actions">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const value = prompt(
-                          "Nueva fecha y hora (AAAA-MM-DD HH:mm)",
-                        );
-                        if (!value) return;
-                        const date = new Date(value);
-                        if (
-                          Number.isNaN(date.getTime()) ||
-                          date <= new Date()
-                        ) {
-                          notify(
-                            "Selecciona una fecha futura válida.",
-                            "error",
-                          );
-                          return;
-                        }
-                        reschedule.mutate({ reminder: item, value });
-                      }}
-                    >
+                    <button type="button" onClick={() => setRescheduling(item)}>
                       Reprogramar
                     </button>
                     <button
@@ -220,6 +203,16 @@ export function RemindersPage() {
             ))}
           </section>
         </DataState>
+      )}
+      {rescheduling && (
+        <RescheduleReminderDialog
+          reminder={rescheduling}
+          busy={reschedule.isPending}
+          onClose={() => setRescheduling(null)}
+          onSave={(value) =>
+            reschedule.mutate({ reminder: rescheduling, value })
+          }
+        />
       )}
     </main>
   );

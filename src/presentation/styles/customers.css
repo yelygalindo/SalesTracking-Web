@@ -144,7 +144,10 @@
   background: linear-gradient(180deg, #ffffff, #f2fbf5);
   box-shadow: 0 5px 14px rgba(24, 112, 61, 0.1);
   font-weight: 750;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 .excel-export-button:hover:not(:disabled) {
   border-color: #57ad79;
@@ -422,4 +425,21 @@
   .customer-toolbar > select {
     min-width: 0;
   }
+}
+.csv-error-list {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  max-height: 340px;
+  margin-top: 16px;
+}
+.csv-error-list p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #667085;
+  background: #fff4f2;
+  font-size: 13px;
 }
