@@ -63,7 +63,7 @@ describe("projectApi.setCover", () => {
       selectedRows: [],
     });
     expect(JSON.parse(api.history.post[0].data)).toEqual({
-      rows: [{ rowNumber: 2, name: "Obra Central", sellerExternalId: null }],
+      rows: [{ rowNumber: 2, name: "Obra Central" }],
     });
     expect(JSON.parse(api.history.post[1].data)).toEqual({
       includeAllValidRows: true,

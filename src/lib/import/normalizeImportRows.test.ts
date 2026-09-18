@@ -19,4 +19,10 @@ describe("normalizeImportRows", () => {
       ]),
     ).toEqual([{ rowNumber: 2, sellerExternalId: "usr_01HSELLER" }]);
   });
+
+  it("no agrega sellerExternalId a las plantillas nuevas que ya no lo incluyen", () => {
+    expect(normalizeImportRows([{ rowNumber: 2, name: "Registro" }])).toEqual([
+      { rowNumber: 2, name: "Registro" },
+    ]);
+  });
 });

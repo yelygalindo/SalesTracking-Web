@@ -23,15 +23,13 @@ describe("customerService", () => {
     );
   });
   it("envía filtros al listar clientes", async () => {
-    mock
-      .onGet("/api/customers")
-      .reply(200, {
-        customers: [],
-        page: 2,
-        pageSize: 20,
-        totalItems: 0,
-        totalPages: 0,
-      });
+    mock.onGet("/api/customers").reply(200, {
+      customers: [],
+      page: 2,
+      pageSize: 20,
+      totalItems: 0,
+      totalPages: 0,
+    });
     await customerService.list({
       search: "ana",
       status: "active",
@@ -63,16 +61,14 @@ describe("customerService", () => {
     });
   });
   it("envía las filas y la selección de una importación validada", async () => {
-    mock
-      .onPost("/api/customers/imports/validate")
-      .reply(200, {
-        importId: "import-1",
-        totalRows: 1,
-        validRows: 1,
-        warningRows: 0,
-        invalidRows: 0,
-        rows: [],
-      });
+    mock.onPost("/api/customers/imports/validate").reply(200, {
+      importId: "import-1",
+      totalRows: 1,
+      validRows: 1,
+      warningRows: 0,
+      invalidRows: 0,
+      rows: [],
+    });
     mock
       .onPost("/api/customers/imports/import-1/commit")
       .reply(200, { created: 1, failed: 0, items: [] });
@@ -83,7 +79,7 @@ describe("customerService", () => {
       selectedRows: [2],
     });
     expect(JSON.parse(mock.history.post[0].data)).toEqual({
-      rows: [{ rowNumber: 2, name: "Ana", sellerExternalId: null }],
+      rows: [{ rowNumber: 2, name: "Ana" }],
     });
     expect(JSON.parse(mock.history.post[1].data).selectedRows).toEqual([2]);
   });

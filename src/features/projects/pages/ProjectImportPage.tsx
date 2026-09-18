@@ -17,7 +17,7 @@ import {
   readSpreadsheet,
   type SpreadsheetField,
 } from "@/lib/import/readSpreadsheet";
-import { normalizeOptionalSellerExternalId } from "@/lib/import/normalizeImportRows";
+import { normalizeSpreadsheetDate } from "@/lib/import/spreadsheetValues";
 import type {
   ImportCommitResult,
   ImportPreview,
@@ -28,30 +28,30 @@ import { projectService } from "../services/projectService";
 
 const text = (value: unknown) =>
   value === null || value === "" ? null : String(value).trim();
-const utc = (value: unknown) => {
-  if (value instanceof Date) return value.toISOString();
-  if (value === null || value === "") return null;
-  const parsed = new Date(String(value));
-  return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toISOString();
-};
 const fields: SpreadsheetField[] = [
   { key: "name", label: "name", transform: text },
   { key: "description", label: "description", transform: text },
   { key: "customerExternalId", label: "customerExternalId", transform: text },
-  {
-    key: "sellerExternalId",
-    label: "sellerExternalId",
-    transform: normalizeOptionalSellerExternalId,
-  },
   { key: "estimatedAmount", label: "estimatedAmount" },
-  { key: "startDateUtc", label: "startDateUtc", transform: utc },
   {
-    key: "expectedCloseDateUtc",
-    label: "expectedCloseDateUtc",
-    transform: utc,
+    key: "startDate",
+    label: "startDate",
+    aliases: ["startDateUtc"],
+    transform: normalizeSpreadsheetDate,
+  },
+  {
+    key: "expectedCloseDate",
+    label: "expectedCloseDate",
+    aliases: ["expectedCloseDateUtc"],
+    transform: normalizeSpreadsheetDate,
   },
   { key: "progressPercentage", label: "progressPercentage" },
-  { key: "actualCloseDateUtc", label: "actualCloseDateUtc", transform: utc },
+  {
+    key: "actualCloseDate",
+    label: "actualCloseDate",
+    aliases: ["actualCloseDateUtc"],
+    transform: normalizeSpreadsheetDate,
+  },
   { key: "address", label: "address", transform: text },
   { key: "latitude", label: "latitude" },
   { key: "longitude", label: "longitude" },
@@ -216,8 +216,7 @@ export function ProjectImportPage() {
                 <h2>Cargar archivo</h2>
                 <p>
                   Selecciona o arrastra una plantilla `.xlsx` con un máximo de
-                  1000 registros. El vendedor es opcional; si lo informas, usa
-                  su identificador externo (externalId) y no su nombre visible.
+                  1000 registros. Las fechas deben tener el formato YYYY-MM-DD.
                 </p>
               </header>
               <input
@@ -458,7 +457,6 @@ function ImportDataGrid({
             <th>Fila</th>
             <th>Proyecto</th>
             <th>Cliente</th>
-            <th>Vendedor</th>
             <th>Monto</th>
             <th>Inicio</th>
             <th>Avance</th>
@@ -485,9 +483,10 @@ function ImportDataGrid({
                   <strong>{String(row.data.name ?? "—")}</strong>
                 </td>
                 <td>{String(row.data.customerExternalId ?? "—")}</td>
-                <td>{String(row.data.sellerExternalId ?? "—")}</td>
                 <td>{String(row.data.estimatedAmount ?? "—")}</td>
-                <td>{displayDate(row.data.startDateUtc)}</td>
+                <td>
+                  {displayDate(row.data.startDate ?? row.data.startDateUtc)}
+                </td>
                 <td>
                   {row.data.progressPercentage == null
                     ? "—"

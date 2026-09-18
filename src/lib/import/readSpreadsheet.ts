@@ -4,6 +4,7 @@ import type { SpreadsheetRow } from "@/types/spreadsheetImport";
 export type SpreadsheetField = {
   key: string;
   label: string;
+  aliases?: string[];
   transform?: (value: CellValue | null) => unknown;
 };
 
@@ -21,9 +22,16 @@ export async function readSpreadsheet(
     throw new Error("La plantilla no contiene filas para importar.");
 
   const headers = sheet[0].map((value) =>
-    String(value ?? "").trim().toLowerCase(),
+    String(value ?? "")
+      .trim()
+      .toLowerCase(),
   );
-  const indexes = fields.map((field) => headers.indexOf(field.key.toLowerCase()));
+  const indexes = fields.map((field) => {
+    const acceptedHeaders = [field.key, ...(field.aliases ?? [])].map((value) =>
+      value.toLowerCase(),
+    );
+    return headers.findIndex((header) => acceptedHeaders.includes(header));
+  });
   const missing = fields.filter((_, index) => indexes[index] < 0);
   if (missing.length)
     throw new Error(
@@ -33,9 +41,7 @@ export async function readSpreadsheet(
   const sourceRows = sheet
     .slice(1)
     .map((cells, index) => ({ cells, rowNumber: index + 2 }))
-    .filter(({ cells }) =>
-      cells.some((cell) => cell !== null && cell !== ""),
-    );
+    .filter(({ cells }) => cells.some((cell) => cell !== null && cell !== ""));
   if (!sourceRows.length)
     throw new Error("La plantilla no contiene filas para importar.");
   if (sourceRows.length > maxRows)

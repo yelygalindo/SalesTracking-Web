@@ -17,7 +17,6 @@ import {
   readSpreadsheet,
   type SpreadsheetField,
 } from "@/lib/import/readSpreadsheet";
-import { normalizeOptionalSellerExternalId } from "@/lib/import/normalizeImportRows";
 import type {
   ImportCommitResult,
   ImportPreview,
@@ -33,11 +32,6 @@ const fields: SpreadsheetField[] = [
   { key: "companyName", label: "companyName", transform: text },
   { key: "phone", label: "phone", transform: text },
   { key: "email", label: "email", transform: text },
-  {
-    key: "sellerExternalId",
-    label: "sellerExternalId",
-    transform: normalizeOptionalSellerExternalId,
-  },
   { key: "address", label: "address", transform: text },
   { key: "latitude", label: "latitude" },
   { key: "longitude", label: "longitude" },
@@ -201,8 +195,7 @@ export function CustomerImportPage() {
                 <h2>Cargar archivo</h2>
                 <p>
                   Selecciona o arrastra una plantilla `.xlsx` con un máximo de
-                  1000 registros. El vendedor es opcional; si lo informas, usa
-                  su identificador externo (externalId) y no su nombre visible.
+                  1000 registros.
                 </p>
               </header>
               <input
@@ -445,7 +438,6 @@ function ImportDataGrid({
             <th>Empresa</th>
             <th>Teléfono</th>
             <th>Correo</th>
-            <th>Vendedor</th>
             <th>Estado</th>
             <th>Detalle</th>
           </tr>
@@ -471,7 +463,6 @@ function ImportDataGrid({
                 <td>{String(row.data.companyName ?? "—")}</td>
                 <td>{String(row.data.phone ?? "—")}</td>
                 <td>{String(row.data.email ?? "—")}</td>
-                <td>{String(row.data.sellerExternalId ?? "—")}</td>
                 <td>
                   <span className={`import-status ${row.status}`}>
                     {statusLabel(row.status)}

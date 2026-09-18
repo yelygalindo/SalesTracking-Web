@@ -17,8 +17,14 @@ export function normalizeOptionalSellerExternalId(
 }
 
 export function normalizeImportRows(rows: SpreadsheetRow[]): SpreadsheetRow[] {
-  return rows.map((row) => ({
-    ...row,
-    sellerExternalId: normalizeOptionalSellerExternalId(row.sellerExternalId),
-  }));
+  return rows.map((row) =>
+    "sellerExternalId" in row
+      ? {
+          ...row,
+          sellerExternalId: normalizeOptionalSellerExternalId(
+            row.sellerExternalId,
+          ),
+        }
+      : { ...row },
+  );
 }
