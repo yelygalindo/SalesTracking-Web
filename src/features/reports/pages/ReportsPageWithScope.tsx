@@ -1,7 +1,7 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { DataState } from "@/components/data/DataState";
 import { PageHeader } from "@/components/layout/AppShell";
 import { notify } from "@/components/feedback/toast";
@@ -59,15 +59,21 @@ const humanKey = (value: string) =>
     .replace(/^./, (letter) => letter.toUpperCase());
 
 export function ReportsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { hasRole, can } = useAuthorization();
   const isSeller = hasRole("seller");
   const canChooseSeller = !isSeller && can("sellers.read");
-  const [type, setType] = useState<ReportType>("customers");
+  const requestedType = searchParams.get("type") as ReportType | null;
+  const [type, setType] = useState<ReportType>(requestedType && requestedType in labels ? requestedType : "customers");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [sellerId, setSellerId] = useState("");
   const [status, setStatus] = useState("");
   const [zoneId, setZoneId] = useState("");
+  useEffect(() => {
+    const nextType = searchParams.get("type") as ReportType | null;
+    if (nextType && nextType in labels) setType(nextType);
+  }, [searchParams]);
   const availableFilters = filtersByType[type];
   const sellers = useQuery({
     queryKey: ["sellers"],
@@ -140,7 +146,10 @@ export function ReportsPage() {
           <button
             className={type === item ? "active" : ""}
             key={item}
-            onClick={() => setType(item)}
+            onClick={() => {
+              setType(item);
+              setSearchParams({ type: item });
+            }}
           >
             {labels[item]}
           </button>

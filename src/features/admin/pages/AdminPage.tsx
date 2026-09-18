@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Clock3, History, MailPlus, Users } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
+import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { UsersAdministration } from "../components/UsersAdministration";
@@ -16,6 +17,7 @@ type AdminSection =
   "invite" | "invitations" | "users" | "settings" | "companies";
 
 export function AdminPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { roles } = useAuthorization();
   const canInvite = usePermission("invitations.create");
   const canCompanies = usePermission("companies.create");
@@ -53,9 +55,13 @@ export function AdminPage() {
   const [historyId, setHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sections.some((item) => item.id === section) && sections[0])
+    const requested = searchParams.get("section") as AdminSection | null;
+    if (requested && sections.some((item) => item.id === requested)) {
+      if (requested !== section) setSection(requested);
+    } else if (!sections.some((item) => item.id === section) && sections[0]) {
       setSection(sections[0].id);
-  }, [section, sections]);
+    }
+  }, [searchParams, section, sections]);
 
   return (
     <main className="customers-content admin-page">
@@ -74,7 +80,10 @@ export function AdminPage() {
                   className={section === item.id ? "active" : ""}
                   aria-current={section === item.id ? "page" : undefined}
                   key={item.id}
-                  onClick={() => setSection(item.id)}
+                  onClick={() => {
+                    setSection(item.id);
+                    setSearchParams({ section: item.id });
+                  }}
                 >
                   <Icon />
                   {item.label}

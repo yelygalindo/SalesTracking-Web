@@ -150,6 +150,67 @@
     height: 280px;
   }
 }
+
+/* Two independent dashboard columns prevent cross-column row stretching. */
+.dashboard-columns-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.dashboard-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-columns-layout .dashboard-map-panel,
+.dashboard-columns-layout .dashboard-panel {
+  align-self: stretch;
+}
+
+.dashboard-columns-layout .dashboard-project-map,
+.dashboard-columns-layout .dashboard-map-empty,
+.dashboard-columns-layout .dashboard-map-state {
+  height: clamp(450px, 35vw, 480px);
+}
+
+.dashboard-activity-panel .dashboard-timeline {
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.dashboard-column-side .dashboard-empty {
+  min-height: 64px;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-columns-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-columns-layout .dashboard-project-map,
+  .dashboard-columns-layout .dashboard-map-empty,
+  .dashboard-columns-layout .dashboard-map-state {
+    height: clamp(410px, 56vw, 470px);
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-columns-layout .dashboard-project-map {
+    height: 360px;
+  }
+
+  .dashboard-columns-layout .dashboard-map-empty,
+  .dashboard-columns-layout .dashboard-map-state {
+    height: 280px;
+  }
+}
 .dashboard-primary-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr);

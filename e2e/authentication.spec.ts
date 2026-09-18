@@ -73,7 +73,7 @@ test("platform_admin inicia sesión y entra a Administración", async ({
     page.getByRole("heading", { name: "Administración" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Administración" }),
+    page.getByRole("button", { name: "Administración" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Empresas" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Resumen" })).toHaveCount(0);

@@ -4,6 +4,7 @@ import {
   Boxes,
   Building2,
   CalendarClock,
+  ChevronDown,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -44,12 +45,6 @@ const items = [
     permissions: ["projects.read"],
   },
   {
-    to: "/catalog",
-    label: "Productos",
-    icon: Boxes,
-    permissions: ["products.read"],
-  },
-  {
     to: "/deliveries",
     label: "Entregas",
     icon: PackageCheck,
@@ -61,17 +56,33 @@ const items = [
     icon: Route,
     permissions: ["visits.read"],
   },
+];
+const groups = [
   {
-    to: "/reports",
-    label: "Reportes",
-    icon: BarChart3,
-    permissions: ["reports.read"],
+    id: "catalog", label: "Productos", icon: Boxes, path: "/catalog",
+    children: [
+      { to: "/catalog?section=products", label: "Catálogo", permissions: ["products.read"] },
+      { to: "/catalog?section=units", label: "Unidades", allPermissions: ["products.read", "units.read"] },
+    ],
   },
   {
-    to: "/admin",
-    label: "Administración",
-    icon: Settings,
-    permissions: ["invitations.create", "companies.create", "users.read"],
+    id: "reports", label: "Reportes", icon: BarChart3, path: "/reports",
+    children: [
+      { to: "/reports?type=customers", label: "Clientes", permissions: ["reports.read"] },
+      { to: "/reports?type=deliveries", label: "Entregas", permissions: ["reports.read"] },
+      { to: "/reports?type=productivity", label: "Productividad", permissions: ["reports.read"] },
+      { to: "/reports?type=commercial-activity", label: "Actividad comercial", permissions: ["reports.read"] },
+    ],
+  },
+  {
+    id: "admin", label: "Administración", icon: Settings, path: "/admin",
+    children: [
+      { to: "/admin?section=invite", label: "Invitar usuario", permissions: ["invitations.create"] },
+      { to: "/admin?section=invitations", label: "Invitaciones", permissions: ["invitations.create"] },
+      { to: "/admin?section=users", label: "Usuarios", permissions: ["users.read"] },
+      { to: "/admin?section=settings", label: "Zona horaria", roles: ["admin", "super-admin", "superadmin"] },
+      { to: "/admin?section=companies", label: "Empresas", permissions: ["companies.create"] },
+    ],
   },
 ];
 const roleNames: Record<string, string> = {
@@ -84,12 +95,28 @@ const roleNames: Record<string, string> = {
 const roleLabel = (role: string) => roleNames[role.toLowerCase()] || role;
 
 export function AppShell() {
-  const { user, logout, canAny } = useAuthorization(),
+  const { user, logout, canAny, canAll, hasRole } = useAuthorization(),
     [open, setOpen] = useState(false),
+    [expandedGroups, setExpandedGroups] = useState<string[]>([]),
     location = useLocation();
-  useEffect(() => setOpen(false), [location.pathname]);
+  useEffect(() => setOpen(false), [location.pathname, location.search]);
+  useEffect(() => {
+    const activeGroup = groups.find((group) => location.pathname === group.path);
+    if (activeGroup)
+      setExpandedGroups((current) => current.includes(activeGroup.id) ? current : [...current, activeGroup.id]);
+  }, [location.pathname]);
   if (!user) return null;
   const allowed = items.filter((item) => canAny(item.permissions));
+  const allowedGroups = groups
+    .map((group) => ({
+      ...group,
+      children: group.children.filter((child) =>
+        ("permissions" in child && Boolean(child.permissions) && canAny(child.permissions!)) ||
+        ("allPermissions" in child && Boolean(child.allPermissions) && canAll(child.allPermissions!)) ||
+        ("roles" in child && Boolean(child.roles) && child.roles!.some((role) => hasRole(role))),
+      ),
+    }))
+    .filter((group) => group.children.length > 0);
   const initials = user.fullName
     .split(" ")
     .slice(0, 2)
@@ -127,6 +154,38 @@ export function AppShell() {
               <span>{label}</span>
             </NavLink>
           ))}
+          {allowedGroups.map(({ id, label, icon: Icon, path, children }) => {
+            const expanded = expandedGroups.includes(id);
+            const active = location.pathname === path;
+            return (
+              <div className={`nav-group ${active ? "active" : ""}`} key={id}>
+                <button
+                  className="nav-group-trigger"
+                  aria-expanded={expanded}
+                  onClick={() => setExpandedGroups((current) =>
+                    current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+                  )}
+                >
+                  <Icon />
+                  <span>{label}</span>
+                  <ChevronDown className="nav-group-chevron" />
+                </button>
+                {expanded && (
+                  <div className="nav-submenu">
+                    {children.map((child) => (
+                      <NavLink
+                        className={() => `${location.pathname}${location.search}` === child.to ? "active" : ""}
+                        key={child.to}
+                        to={child.to}
+                      >
+                        <span>{child.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <button className="logout" onClick={() => void logout()}>
           <LogOut />

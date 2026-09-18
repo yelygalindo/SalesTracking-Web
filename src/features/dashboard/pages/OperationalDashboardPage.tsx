@@ -222,8 +222,8 @@ function DashboardSections({
   map: DashboardMapState;
 }) {
   return (
-    <>
-      <section className="dashboard-primary-layout">
+      <section className="dashboard-columns-layout">
+        <div className="dashboard-column dashboard-column-main">
         <article className="dashboard-map-panel">
           <header className="dashboard-map-header">
             <div>
@@ -282,16 +282,14 @@ function DashboardSections({
             </div>
           )}
         </article>
-        <div className="dashboard-side-stack">
+          <ProgressPanel data={data} permissions={permissions} />
+        </div>
+        <div className="dashboard-column dashboard-column-side">
           <ActivityPanel data={data} permissions={permissions} />
           <FollowUpsPanel data={data} permissions={permissions} />
+          <DeliveriesPanel data={data} permissions={permissions} />
         </div>
       </section>
-      <section className="dashboard-real-grid operational-grid dashboard-secondary-layout">
-        <ProgressPanel data={data} permissions={permissions} />
-        <DeliveriesPanel data={data} permissions={permissions} />
-      </section>
-    </>
   );
 }
 

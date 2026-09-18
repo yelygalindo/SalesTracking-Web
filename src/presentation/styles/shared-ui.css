@@ -154,6 +154,9 @@
 .app-navigation nav {
   display: grid;
   gap: 3px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .app-navigation nav a {
   display: flex;
@@ -175,6 +178,59 @@
 }
 .app-navigation nav svg {
   width: 19px;
+}
+.nav-group {
+  display: grid;
+  gap: 3px;
+}
+.nav-group-trigger {
+  display: grid;
+  grid-template-columns: 19px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 11px;
+  color: rgba(255, 255, 255, 0.66);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.nav-group-trigger:hover,
+.nav-group.active > .nav-group-trigger {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+.nav-group-trigger svg {
+  width: 19px;
+}
+.nav-group-trigger .nav-group-chevron {
+  width: 15px;
+  transition: transform 0.18s ease;
+}
+.nav-group-trigger[aria-expanded="true"] .nav-group-chevron {
+  transform: rotate(180deg);
+}
+.nav-submenu {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 4px 21px;
+  padding-left: 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+.app-navigation nav .nav-submenu a {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+.app-navigation nav .nav-submenu a.active {
+  color: white;
+  background: rgba(245, 106, 28, 0.2);
+  box-shadow: inset 2px 0 #f56a1c;
 }
 .app-workspace {
   min-width: 0;
@@ -386,4 +442,3 @@
     grid-template-columns: 1fr;
   }
 }
-

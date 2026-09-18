@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
 import { PageHeader } from "@/components/layout/AppShell";
@@ -31,6 +32,7 @@ const emptyProduct: ProductInput = {
 };
 
 export function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth(),
     cache = useQueryClient();
   const isSeller =
@@ -43,12 +45,19 @@ export function CatalogPage() {
     canUpdateUnit = usePermission("units.update"),
     canDeleteUnit = usePermission("units.delete");
   const canReadUnits = !isSeller && hasUnitsRead;
-  const [tab, setTab] = useState<"products" | "units">("products"),
+  const requestedTab = searchParams.get("section");
+  const [tab, setTab] = useState<"products" | "units">(requestedTab === "units" ? "units" : "products"),
     [edit, setEdit] = useState<Product | Unit | null>(null),
     [showForm, setShowForm] = useState(false),
     [deleteTarget, setDeleteTarget] = useState<Product | Unit | null>(null);
   const [productForm, setProductForm] = useState(emptyProduct),
     [unitForm, setUnitForm] = useState(emptyUnit);
+  useEffect(() => {
+    const nextTab = searchParams.get("section") === "units" ? "units" : "products";
+    setTab(nextTab);
+    setEdit(null);
+    setShowForm(false);
+  }, [searchParams]);
   const units = useQuery({
     queryKey: ["units"],
     queryFn: () => unitsApi.list(),
@@ -140,6 +149,7 @@ export function CatalogPage() {
             className={tab === "products" ? "active" : ""}
             onClick={() => {
               setTab("products");
+              setSearchParams({ section: "products" });
               setShowForm(false);
             }}
           >
@@ -149,6 +159,7 @@ export function CatalogPage() {
             className={tab === "units" ? "active" : ""}
             onClick={() => {
               setTab("units");
+              setSearchParams({ section: "units" });
               setShowForm(false);
             }}
           >
