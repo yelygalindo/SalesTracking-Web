@@ -159,32 +159,36 @@ export function CatalogPage() {
             isEmpty={!rows?.length}
             empty="No hay registros disponibles."
           >
-            <div className="table-scroll">
-              <table>
+            <div className="table-scroll search-results-scroll">
+              <table className="search-results-table catalog-results-table">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>
+                    <th className="result-col-primary">Nombre</th>
+                    <th className="result-col-secondary">
                       {tab === "products" ? "Código / Precio" : "Símbolo"}
                     </th>
-                    <th>Estado</th>
-                    {(canUpdate || canDelete) && !isSeller && <th>Acciones</th>}
+                    <th className="result-col-status">Estado</th>
+                    {(canUpdate || canDelete) && !isSeller && (
+                      <th className="result-col-actions">Acciones</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {rows?.map((item) => (
                     <tr key={item.externalId}>
-                      <td>
+                      <td className="result-col-primary">
                         <strong>{item.name}</strong>
                       </td>
-                      <td>
+                      <td className="result-col-secondary">
                         {"code" in item
                           ? `${item.code} · ${item.price}`
                           : item.symbol}
                       </td>
-                      <td>{item.isActive ? "Activo" : "Inactivo"}</td>
+                      <td className="result-col-status">
+                        {item.isActive ? "Activo" : "Inactivo"}
+                      </td>
                       {(canUpdate || canDelete) && !isSeller && (
-                        <td>
+                        <td className="result-col-actions">
                           {canUpdate && (
                             <button
                               className="row-action"

@@ -98,9 +98,19 @@ const groups = [
         permissions: ["products.read"],
       },
       {
+        to: "/catalog/products/import",
+        label: "Importar productos",
+        allPermissions: ["products.read", "products.import"],
+      },
+      {
         to: "/catalog/units",
         label: "Unidades",
         allPermissions: ["products.read", "units.read"],
+      },
+      {
+        to: "/catalog/units/import",
+        label: "Importar unidades",
+        allPermissions: ["products.read", "units.read", "units.import"],
       },
     ],
   },

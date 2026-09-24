@@ -316,7 +316,7 @@ export function ProjectsPage() {
         >
           <option value="">Todos los estados</option>
           {statuses.data?.map((item) => (
-            <option key={item.value} value={item.label}>
+            <option key={item.value} value={String(item.value)}>
               {item.label}
             </option>
           ))}
@@ -347,31 +347,35 @@ export function ProjectsPage() {
         ) : !list.data?.items.length ? (
           <p className="table-message">No se encontraron proyectos.</p>
         ) : (
-          <div className="table-scroll">
-            <table>
+          <div className="table-scroll search-results-scroll">
+            <table className="search-results-table projects-results-table">
               <thead>
                 <tr>
-                  <th>Proyecto</th>
-                  <th>Cliente</th>
-                  <th>Responsable</th>
-                  <th>Avance</th>
-                  <th>Estado</th>
-                  <th>Fecha estimada</th>
-                  <th />
+                  <th className="result-col-primary">Proyecto</th>
+                  <th className="result-col-secondary">Cliente</th>
+                  <th className="result-col-tertiary">Responsable</th>
+                  <th className="result-col-secondary">Avance</th>
+                  <th className="result-col-status">Estado</th>
+                  <th className="result-col-tertiary">Fecha estimada</th>
+                  <th className="result-col-actions" />
                 </tr>
               </thead>
               <tbody>
                 {list.data.items.map((project) => (
                   <tr key={project.externalId}>
-                    <td>
+                    <td className="result-col-primary">
                       <strong>{project.name}</strong>
                       {project.description && (
                         <small>{project.description}</small>
                       )}
                     </td>
-                    <td>{project.customerName || "Sin cliente"}</td>
-                    <td>{project.sellerName || "Sin asignar"}</td>
-                    <td>
+                    <td className="result-col-secondary">
+                      {project.customerName || "Sin cliente"}
+                    </td>
+                    <td className="result-col-tertiary">
+                      {project.sellerName || "Sin asignar"}
+                    </td>
+                    <td className="result-col-secondary">
                       <div className="project-list-progress">
                         <span>{project.progressPercentage}%</span>
                         <progress
@@ -380,17 +384,17 @@ export function ProjectsPage() {
                         />
                       </div>
                     </td>
-                    <td>
+                    <td className="result-col-status">
                       <span className="status-pill">
                         {translateValue(project.status)}
                       </span>
                     </td>
-                    <td>
+                    <td className="result-col-tertiary result-cell-nowrap">
                       {project.expectedCloseDateUtc
                         ? formatProjectDate(project.expectedCloseDateUtc)
                         : "Sin fecha"}
                     </td>
-                    <td>
+                    <td className="result-col-actions">
                       <button
                         className="row-action"
                         onClick={() => setSelected(project.externalId)}

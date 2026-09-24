@@ -91,15 +91,15 @@ export function UsersAdministration() {
         isEmpty={!query.data?.items.length}
         empty="No se encontraron usuarios."
       >
-        <div className="table-scroll">
-          <table>
+        <div className="table-scroll search-results-scroll">
+          <table className="search-results-table users-results-table">
             <thead>
               <tr>
-                <th>Usuario</th>
-                <th>Roles</th>
-                <th>Estado</th>
-                <th>Creado</th>
-                <th>Acciones</th>
+                <th className="result-col-primary">Usuario</th>
+                <th className="result-col-secondary">Roles</th>
+                <th className="result-col-status">Estado</th>
+                <th className="result-col-tertiary">Creado</th>
+                <th className="result-col-actions">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -107,20 +107,54 @@ export function UsersAdministration() {
                 const self = item.externalId === user?.externalId;
                 return (
                   <tr key={item.externalId}>
-                    <td>
-                      <strong>{item.fullName}</strong>
-                      <small>{item.email}</small>
+                    <td className="result-col-primary">
+                      <div className="result-cell-stack">
+                        <strong
+                          className="result-cell-ellipsis"
+                          title={item.fullName}
+                        >
+                          {item.fullName}
+                        </strong>
+                        <small
+                          className="result-cell-ellipsis"
+                          title={item.email}
+                        >
+                          {item.email}
+                        </small>
+                      </div>
                     </td>
-                    <td>{item.roles.join(", ") || "Sin rol"}</td>
-                    <td>
+                    <td className="result-col-secondary">
+                      <div
+                        className="role-badges"
+                        title={item.roles.join(", ") || "Sin rol"}
+                      >
+                        {item.roles.length ? (
+                          <>
+                            {item.roles.slice(0, 2).map((role) => (
+                              <span key={role}>{role}</span>
+                            ))}
+                            {item.roles.length > 2 && (
+                              <span className="role-badge-more">
+                                +{item.roles.length - 2}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="role-badge-empty">Sin rol</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="result-col-status">
                       <span
                         className={`status-pill ${item.isActive ? "active" : "inactive"}`}
                       >
                         {item.isActive ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td>{formatDateTime(item.createdAtUtc)}</td>
-                    <td>
+                    <td className="result-col-tertiary result-cell-nowrap">
+                      {formatDateTime(item.createdAtUtc)}
+                    </td>
+                    <td className="result-col-actions">
                       <div className="invitation-actions">
                         {can("roles.update") && (
                           <button

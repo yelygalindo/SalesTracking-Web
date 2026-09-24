@@ -181,16 +181,16 @@ export function CompaniesPanel() {
           isEmpty={!companies.data?.items.length}
           empty="No se encontraron empresas."
         >
-          <div className="table-scroll">
-            <table>
+          <div className="table-scroll search-results-scroll">
+            <table className="search-results-table companies-results-table">
               <thead>
                 <tr>
-                  <th>Empresa</th>
-                  <th>Estado</th>
-                  <th>Uso</th>
-                  <th>Disponibles</th>
-                  <th>Límite</th>
-                  <th>Creada</th>
+                  <th className="result-col-primary">Empresa</th>
+                  <th className="result-col-status">Estado</th>
+                  <th className="result-col-secondary">Uso</th>
+                  <th className="result-col-tertiary">Disponibles</th>
+                  <th className="result-col-actions">Límite</th>
+                  <th className="result-col-tertiary">Creada</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,16 +230,16 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
   });
   return (
     <tr>
-      <td>
+      <td className="result-col-primary">
         <strong>{company.name}</strong>
         <small>{company.timeZoneId}</small>
       </td>
-      <td>
+      <td className="result-col-status">
         <span className={`status-pill ${company.status}`}>
           {translateValue(company.status)}
         </span>
       </td>
-      <td>
+      <td className="result-col-secondary">
         <strong>
           {usedSlots} / {company.userLimit}
         </strong>
@@ -248,8 +248,8 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
           pendientes
         </small>
       </td>
-      <td>{company.availableSlots}</td>
-      <td>
+      <td className="result-col-tertiary">{company.availableSlots}</td>
+      <td className="result-col-actions">
         <div className="limit-editor">
           <input
             type="number"
@@ -274,7 +274,9 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
           <small className="form-error">{update.error.message}</small>
         )}
       </td>
-      <td>{formatDateTime(company.createdAtUtc)}</td>
+      <td className="result-col-tertiary result-cell-nowrap">
+        {formatDateTime(company.createdAtUtc)}
+      </td>
     </tr>
   );
 }

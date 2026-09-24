@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSpreadsheetDate } from "./spreadsheetValues";
+import {
+  normalizeSpreadsheetBoolean,
+  normalizeSpreadsheetDate,
+} from "./spreadsheetValues";
 
 describe("normalizeSpreadsheetDate", () => {
   it("mantiene las fechas simples", () => {
@@ -18,5 +21,23 @@ describe("normalizeSpreadsheetDate", () => {
     expect(normalizeSpreadsheetDate("fecha incorrecta")).toBe(
       "fecha incorrecta",
     );
+  });
+});
+
+describe("normalizeSpreadsheetBoolean", () => {
+  it.each([
+    [true, true],
+    ["Sí", true],
+    ["1", true],
+    [false, false],
+    ["No", false],
+    ["0", false],
+    ["", null],
+  ])("convierte %s a %s", (value, expected) => {
+    expect(normalizeSpreadsheetBoolean(value)).toBe(expected);
+  });
+
+  it("mantiene un texto inválido para que el backend lo reporte", () => {
+    expect(normalizeSpreadsheetBoolean("quizás")).toBe("quizás");
   });
 });

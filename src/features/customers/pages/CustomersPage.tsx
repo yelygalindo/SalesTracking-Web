@@ -5,13 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import {
-  ChevronLeft,
-  MoreVertical,
-  Plus,
-  Search,
-  X,
-} from "lucide-react";
+import { ChevronLeft, MoreVertical, Plus, Search, X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
@@ -363,7 +357,7 @@ export function CustomersPage() {
         >
           <option value="">Todos los estados</option>
           {crmStatuses.map((x) => (
-            <option key={x.value} value={x.label}>
+            <option key={x.value} value={String(x.value)}>
               {translateValue(x.label)}
             </option>
           ))}
@@ -394,35 +388,41 @@ export function CustomersPage() {
         ) : !list.data?.customers.length ? (
           <p className="table-message">Aún no hay clientes registrados.</p>
         ) : (
-          <div className="table-scroll">
-            <table>
+          <div className="table-scroll search-results-scroll">
+            <table className="search-results-table customers-results-table">
               <thead>
                 <tr>
-                  <th>Cliente</th>
-                  <th>Contacto</th>
-                  <th>Estado</th>
-                  {canViewTeam && <th>Vendedor</th>}
-                  <th>Acciones</th>
+                  <th className="result-col-primary">Cliente</th>
+                  <th className="result-col-secondary">Contacto</th>
+                  <th className="result-col-status">Estado</th>
+                  {canViewTeam && (
+                    <th className="result-col-tertiary">Vendedor</th>
+                  )}
+                  <th className="result-col-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {list.data.customers.map((c) => (
                   <tr key={c.externalId}>
-                    <td>
+                    <td className="result-col-primary">
                       <strong>{c.name}</strong>
                       <small>{c.companyName || "Sin empresa"}</small>
                     </td>
-                    <td>
+                    <td className="result-col-secondary">
                       {c.phone || "—"}
                       <small>{c.email || "Sin correo"}</small>
                     </td>
-                    <td>
+                    <td className="result-col-status">
                       <span className={`status-pill ${c.status.toLowerCase()}`}>
                         {translateValue(c.status)}
                       </span>
                     </td>
-                    {canViewTeam && <td>{c.seller?.name || "Sin asignar"}</td>}
-                    <td>
+                    {canViewTeam && (
+                      <td className="result-col-tertiary">
+                        {c.seller?.name || "Sin asignar"}
+                      </td>
+                    )}
+                    <td className="result-col-actions">
                       <div className="customer-row-actions">
                         <button
                           className="row-action"

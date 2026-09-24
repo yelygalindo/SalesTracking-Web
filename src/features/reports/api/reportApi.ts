@@ -9,7 +9,6 @@ export interface ReportFilters {
   to?: string;
   sellerId?: string;
   status?: string;
-  zoneId?: string;
 }
 
 export interface ReportRow {
@@ -61,65 +60,34 @@ export interface ReportPage {
   };
 }
 
-const supportedFilters: Record<ReportType, Array<keyof ReportFilters>> = {
-  customers: ["sellerId", "status", "zoneId"],
-  deliveries: ["from", "to", "sellerId", "status", "zoneId"],
-  productivity: ["from", "to", "sellerId", "zoneId"],
-  "commercial-activity": ["from", "to", "sellerId", "zoneId"],
-};
-
-function paramsFor(type: ReportType, filters: ReportFilters) {
-  return Object.fromEntries(
-    supportedFilters[type]
-      .filter((key) => filters[key] !== undefined && filters[key] !== "")
-      .map((key) => [key, filters[key]]),
-  );
-}
-
-const legacyType: Partial<Record<ReportType, string>> = {
+const endpoints: Record<ReportType, string> = {
   customers: "customers-pending-contact",
+  deliveries: "deliveries",
+  productivity: "seller-productivity",
+  "commercial-activity": "commercial-activity",
 };
 
-const legacyParams = (filters: ReportFilters) => ({
+const paramsFor = (type: ReportType, filters: ReportFilters) => ({
   from: filters.from,
   to: filters.to,
   sellerExternalId: filters.sellerId,
   statusId:
-    filters.status && /^\d+$/.test(filters.status)
+    type !== "productivity" &&
+    type !== "commercial-activity" &&
+    filters.status &&
+    /^\d+$/.test(filters.status)
       ? Number(filters.status)
       : undefined,
   page: 1,
   pageSize: 100,
 });
 
-async function getReport(type: ReportType, filters: ReportFilters) {
-  try {
-    return (
-      await apiClient.get<ReportPage>(`/api/reports/${type}`, {
-        params: paramsFor(type, filters),
-      })
-    ).data;
-  } catch (error) {
-    const fallback = legacyType[type];
-    if (
-      error instanceof AppError &&
-      error.code === "notFound" &&
-      type === "productivity"
-    )
-      throw new AppError(
-        "notFound",
-        "El reporte de productividad todavía no está disponible en la API.",
-        404,
-      );
-    if (!(error instanceof AppError) || error.code !== "notFound" || !fallback)
-      throw error;
-    return (
-      await apiClient.get<ReportPage>(`/api/reports/${fallback}`, {
-        params: legacyParams(filters),
-      })
-    ).data;
-  }
-}
+const getReport = async (type: ReportType, filters: ReportFilters) =>
+  (
+    await apiClient.get<ReportPage>(`/api/reports/${endpoints[type]}`, {
+      params: paramsFor(type, filters),
+    })
+  ).data;
 
 const csvCell = (value: unknown) =>
   `"${String(value ?? "").replaceAll('"', '""')}"`;
@@ -174,7 +142,7 @@ export const reportApi = {
         throw error;
       const report = await apiClient.get<ReportPage>(
         "/api/reports/deliveries",
-        { params: legacyParams(filters) },
+        { params: paramsFor("deliveries", filters) },
       );
       return {
         blob: new Blob([deliveryCsv(report.data.items)], {

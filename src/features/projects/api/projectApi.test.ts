@@ -31,13 +31,13 @@ describe("projectApi.setCover", () => {
       pagination: { page: 2, pageSize: 20, totalItems: 0, totalPages: 0 },
     });
     await projectApi.list({
-      status: "Active",
+      status: "2",
       sellerId: "seller-1",
       page: 2,
       pageSize: 20,
     });
     expect(api.history.get[0].params).toEqual({
-      status: "Active",
+      status: "2",
       sellerId: "seller-1",
       page: 2,
       pageSize: 20,

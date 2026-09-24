@@ -30,8 +30,7 @@ const message = (error: unknown) =>
       ? error.message
       : "No fue posible completar la operación.";
 
-const statusClass = (value: string) =>
-  value.toLowerCase().replaceAll(" ", "-");
+const statusClass = (value: string) => value.toLowerCase().replaceAll(" ", "-");
 
 export function DeliveriesPage() {
   const cache = useQueryClient();
@@ -80,9 +79,7 @@ export function DeliveriesPage() {
         !form.projectExternalId ||
         !form.committedDateUtc ||
         !form.items.length ||
-        form.items.some(
-          (item) => !item.productExternalId || item.quantity <= 0,
-        )
+        form.items.some((item) => !item.productExternalId || item.quantity <= 0)
       )
         throw new Error(
           "Completa proyecto, fecha y al menos un producto con cantidad válida.",
@@ -96,7 +93,9 @@ export function DeliveriesPage() {
       return deliveryApi.update(detail.data!, input);
     },
     onSuccess: async () => {
-      notify(creating ? "Entrega creada correctamente." : "Entrega actualizada.");
+      notify(
+        creating ? "Entrega creada correctamente." : "Entrega actualizada.",
+      );
       const returnToList = creating;
       setCreating(false);
       setEditing(false);
@@ -107,7 +106,8 @@ export function DeliveriesPage() {
   });
 
   const change = useMutation({
-    mutationFn: (statusId: number) => deliveryApi.status(detail.data!, statusId),
+    mutationFn: (statusId: number) =>
+      deliveryApi.status(detail.data!, statusId),
     onSuccess: async () => {
       notify("Estado de entrega actualizado.");
       await refresh();
@@ -249,16 +249,15 @@ export function DeliveriesPage() {
           <select
             value={status || ""}
             onChange={(event) => {
-              setStatus(event.target.value ? Number(event.target.value) : undefined);
+              setStatus(
+                event.target.value ? Number(event.target.value) : undefined,
+              );
               setPage(1);
             }}
           >
             <option value="">Todos los estados</option>
             {statuses.data?.map((item) => (
-              <option
-                key={item.deliveryStatusId}
-                value={item.deliveryStatusId}
-              >
+              <option key={item.deliveryStatusId} value={item.deliveryStatusId}>
                 {item.name}
               </option>
             ))}
@@ -272,16 +271,16 @@ export function DeliveriesPage() {
           isEmpty={!list.data?.items.length}
           empty="No hay entregas para estos filtros."
         >
-          <div className="table-scroll">
-            <table>
+          <div className="table-scroll search-results-scroll">
+            <table className="search-results-table deliveries-results-table">
               <thead>
                 <tr>
-                  <th>Proyecto</th>
-                  <th>Fecha comprometida</th>
-                  <th>Vendedor</th>
-                  <th>Estado</th>
-                  <th>Avance</th>
-                  <th />
+                  <th className="result-col-primary">Proyecto</th>
+                  <th className="result-col-secondary">Fecha comprometida</th>
+                  <th className="result-col-tertiary">Vendedor</th>
+                  <th className="result-col-status">Estado</th>
+                  <th className="result-col-secondary">Avance</th>
+                  <th className="result-col-actions" />
                 </tr>
               </thead>
               <tbody>
@@ -294,32 +293,38 @@ export function DeliveriesPage() {
                     (sum, item) => sum + item.deliveredQuantity,
                     0,
                   );
-                  const progress = total ? Math.min(100, delivered / total * 100) : 0;
+                  const progress = total
+                    ? Math.min(100, (delivered / total) * 100)
+                    : 0;
                   return (
                     <tr key={delivery.externalId}>
-                      <td>
+                      <td className="result-col-primary">
                         <strong>{delivery.projectName}</strong>
                         <small>
                           {delivery.items.length} producto
                           {delivery.items.length === 1 ? "" : "s"}
                         </small>
                       </td>
-                      <td>{formatDateTime(delivery.committedDateUtc)}</td>
-                      <td>{delivery.sellerName || "Sin asignar"}</td>
-                      <td>
+                      <td className="result-col-secondary result-cell-nowrap">
+                        {formatDateTime(delivery.committedDateUtc)}
+                      </td>
+                      <td className="result-col-tertiary">
+                        {delivery.sellerName || "Sin asignar"}
+                      </td>
+                      <td className="result-col-status">
                         <span
                           className={`status-pill ${statusClass(delivery.statusName)}`}
                         >
                           {translateValue(delivery.statusName)}
                         </span>
                       </td>
-                      <td>
+                      <td className="result-col-secondary">
                         <div className="delivery-list-progress">
                           <progress max="100" value={progress} />
                           <span>{Math.round(progress)}%</span>
                         </div>
                       </td>
-                      <td>
+                      <td className="result-col-actions">
                         <button
                           className="row-action"
                           onClick={() => setSelected(delivery.externalId)}

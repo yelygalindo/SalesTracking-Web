@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router-dom";
@@ -23,14 +23,24 @@ const labels: Record<ReportType, string> = {
   "commercial-activity": "Actividad comercial",
 };
 
-const filtersByType: Record<
-  ReportType,
-  { dates: boolean; status: boolean; zone: boolean }
-> = {
-  customers: { dates: false, status: true, zone: true },
-  deliveries: { dates: true, status: true, zone: true },
-  productivity: { dates: true, status: false, zone: true },
-  "commercial-activity": { dates: true, status: false, zone: true },
+const filtersByType: Record<ReportType, { dates: boolean; status: boolean }> = {
+  customers: { dates: false, status: true },
+  deliveries: { dates: true, status: true },
+  productivity: { dates: true, status: false },
+  "commercial-activity": { dates: true, status: false },
+};
+
+const inputDate = (date: Date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+const initialTo = () => inputDate(new Date());
+const initialFrom = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 30);
+  return inputDate(date);
 };
 
 const formatDate = (value: unknown) =>
@@ -65,11 +75,10 @@ export function ReportsPage() {
   const canChooseSeller = !isSeller && can("sellers.read");
   const type: ReportType =
     routeType && routeType in labels ? (routeType as ReportType) : "customers";
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [from, setFrom] = useState(initialFrom);
+  const [to, setTo] = useState(initialTo);
   const [sellerId, setSellerId] = useState("");
   const [status, setStatus] = useState("");
-  const [zoneId, setZoneId] = useState("");
   const availableFilters = filtersByType[type];
   const sellers = useQuery({
     queryKey: ["sellers"],
@@ -81,6 +90,12 @@ export function ReportsPage() {
     queryFn: customerService.statuses,
     enabled: type === "customers",
   });
+  const deliveryStatuses = useQuery({
+    queryKey: ["delivery-statuses"],
+    queryFn: deliveryApi.statuses,
+    enabled: type === "deliveries",
+  });
+  useEffect(() => setStatus(""), [type]);
   const customerStatusLabels = Object.fromEntries(
     (customerStatuses.data || []).map((item) => [
       item.value,
@@ -93,10 +108,19 @@ export function ReportsPage() {
       to: availableFilters.dates && to ? to : undefined,
       sellerId: canChooseSeller && sellerId ? sellerId : undefined,
       status: availableFilters.status && status ? status : undefined,
-      zoneId: availableFilters.zone && zoneId ? zoneId : undefined,
     }),
-    [availableFilters, canChooseSeller, from, sellerId, status, to, zoneId],
+    [availableFilters, canChooseSeller, from, sellerId, status, to],
   );
+  const statusOptions =
+    type === "customers"
+      ? (customerStatuses.data ?? []).map((item) => ({
+          value: item.value,
+          label: translateValue(item.label),
+        }))
+      : (deliveryStatuses.data ?? []).map((item) => ({
+          value: item.deliveryStatusId,
+          label: translateValue(item.name),
+        }));
   const query = useQuery({
     queryKey: ["report", type, filters],
     queryFn: () => reportApi.get(type, filters),
@@ -180,21 +204,17 @@ export function ReportsPage() {
         {availableFilters.status && (
           <label>
             Estado
-            <input
+            <select
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              placeholder="Todos los estados"
-            />
-          </label>
-        )}
-        {availableFilters.zone && (
-          <label>
-            Zona
-            <input
-              value={zoneId}
-              onChange={(event) => setZoneId(event.target.value)}
-              placeholder="Todas las zonas"
-            />
+            >
+              <option value="">Todos los estados</option>
+              {statusOptions.map((item) => (
+                <option key={item.value} value={String(item.value)}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
           </label>
         )}
       </section>

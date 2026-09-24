@@ -13,6 +13,7 @@ import { CustomerImportPage } from "@/features/customers/pages/CustomerImportPag
 import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
 import { ProjectImportPage } from "@/features/projects/pages/ProjectImportPage";
 import { CatalogPage } from "@/features/catalog/pages/CatalogPage";
+import { CatalogImportPage } from "@/features/catalog/pages/CatalogImportPage";
 import { OperationsPage } from "@/features/operations/pages/OperationsPage";
 import { DeliveriesPage } from "@/features/deliveries/pages/DeliveriesPage";
 import { ReportsPage } from "@/features/reports/pages/ReportsPageWithScope";
@@ -66,6 +67,24 @@ export const router = createBrowserRouter([
             element: <PermissionRoute permission="products.read" />,
             children: [
               { path: "/catalog/:section?", element: <CatalogPage /> },
+            ],
+          },
+          {
+            element: <PermissionRoute permission="products.import" />,
+            children: [
+              {
+                path: "/catalog/products/import",
+                element: <CatalogImportPage kind="products" />,
+              },
+            ],
+          },
+          {
+            element: <PermissionRoute permission="units.import" />,
+            children: [
+              {
+                path: "/catalog/units/import",
+                element: <CatalogImportPage kind="units" />,
+              },
             ],
           },
           {
