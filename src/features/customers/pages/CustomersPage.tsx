@@ -64,6 +64,8 @@ const isCrmStatus = (label: string) =>
     "contactado",
     "active",
     "activo",
+    "inactive",
+    "inactivo",
   ].includes(label.trim().toLowerCase());
 
 export function CustomersPage() {
@@ -357,7 +359,7 @@ export function CustomersPage() {
         >
           <option value="">Todos los estados</option>
           {crmStatuses.map((x) => (
-            <option key={x.value} value={String(x.value)}>
+            <option key={x.value} value={x.label}>
               {translateValue(x.label)}
             </option>
           ))}

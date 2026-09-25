@@ -51,6 +51,15 @@
 .table-scroll:has(.row-actions-menu[open]) {
   overflow: visible;
 }
+.customers-results-table tbody tr:has(.row-actions-menu[open]) {
+  position: relative;
+  z-index: 10;
+}
+.customers-results-table td.result-col-actions:has(.row-actions-menu[open]) {
+  position: relative;
+  z-index: 10;
+  overflow: visible;
+}
 .row-actions-menu summary {
   display: grid;
   width: 34px;

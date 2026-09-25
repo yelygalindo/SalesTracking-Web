@@ -36,10 +36,18 @@ export interface CustomerImportResult {
 }
 
 const statusValues: Record<string, string> = {
-  Prospecto: "prospect",
-  Contactado: "contacted",
-  Activo: "active",
+  prospect: "prospect",
+  prospecto: "prospect",
+  contacted: "contacted",
+  contactado: "contacted",
+  active: "active",
+  activo: "active",
+  inactive: "inactive",
+  inactivo: "inactive",
 };
+
+const normalizeStatusFilter = (status?: string) =>
+  status ? (statusValues[status.trim().toLowerCase()] ?? status) : undefined;
 
 export const customerApi = {
   async importTemplate() {
@@ -82,9 +90,7 @@ export const customerApi = {
   async list(filters: CustomerFilters) {
     const params = {
       ...filters,
-      status: filters.status
-        ? (statusValues[filters.status] ?? filters.status)
-        : undefined,
+      status: normalizeStatusFilter(filters.status),
     };
     const response = await apiClient.get<CustomersResponseDto>(
       "/api/customers",

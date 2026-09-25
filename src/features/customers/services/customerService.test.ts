@@ -32,14 +32,14 @@ describe("customerService", () => {
     });
     await customerService.list({
       search: "ana",
-      status: "3",
+      status: "Activo",
       externalUserId: "seller-1",
       page: 2,
       pageSize: 20,
     });
     expect(mock.history.get[0].params).toEqual({
       search: "ana",
-      status: "3",
+      status: "active",
       externalUserId: "seller-1",
       page: 2,
       pageSize: 20,

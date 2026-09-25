@@ -9,6 +9,8 @@ const isCrmStatus = (label: string) =>
     "contactado",
     "active",
     "activo",
+    "inactive",
+    "inactivo",
   ].includes(label.trim().toLowerCase());
 
 export interface CustomerDataFilters {
