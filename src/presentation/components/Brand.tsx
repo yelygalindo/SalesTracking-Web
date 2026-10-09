@@ -3,7 +3,7 @@ export function Brand({ inverse = false }: { inverse?: boolean }) {
     <div className={`brand${inverse ? " brand--inverse" : ""}`}>
       <img
         className="brand-logo"
-        src="/urbantrack-icon.svg"
+        src="/urbantrack-logo-official.svg"
         alt=""
         width="48"
         height="48"

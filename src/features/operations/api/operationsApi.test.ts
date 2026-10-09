@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { apiClient } from "@/lib/api/apiClient";
 import { operationsApi } from "./operationsApi";
 
-describe("operationsApi.locations", () => {
+describe("rutas de vendedores", () => {
   const api = new MockAdapter(apiClient);
 
   beforeEach(() => api.reset());
 
   it("conserva los segmentos independientes del contrato actual", async () => {
-    api.onGet("/api/workdays/workday-1/locations").reply(200, {
+    api.onGet("/api/seller-routes").reply(200, {
       routePoints: [],
       segments: [
         {
@@ -23,10 +23,19 @@ describe("operationsApi.locations", () => {
       mapMatched: true,
     });
 
-    const result = await operationsApi.locations("workday-1");
+    const result = await operationsApi.sellerRoute({
+      sellerExternalId: "seller-1",
+      fromUtc: "2026-10-09T08:00:00Z",
+      toUtc: "2026-10-09T18:00:00Z",
+    });
 
     expect(result.segments).toHaveLength(1);
     expect(result.mapMatched).toBe(true);
+    expect(api.history.get[0].params).toEqual({
+      sellerExternalId: "seller-1",
+      fromUtc: "2026-10-09T08:00:00Z",
+      toUtc: "2026-10-09T18:00:00Z",
+    });
   });
 
   it("normaliza el contrato anterior sin intentar construir una polilínea", async () => {

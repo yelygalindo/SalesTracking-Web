@@ -62,6 +62,11 @@ export interface WorkdayFilters {
   to: string;
   sellerExternalId?: string;
 }
+export interface SellerRouteFilters {
+  sellerExternalId: string;
+  fromUtc: string;
+  toUtc: string;
+}
 
 const asList = <T>(value: T[] | { items: T[] }): T[] =>
   Array.isArray(value) ? value : value.items;
@@ -124,6 +129,18 @@ export const operationsApi = {
         await apiClient.get<unknown>(
           `/api/workdays/${workdayId}/locations`,
         )
+      ).data,
+    ),
+  sellerRoute: async (filters: SellerRouteFilters) =>
+    normalizeWorkdayLocations(
+      (
+        await apiClient.get<unknown>("/api/seller-routes", {
+          params: {
+            sellerExternalId: filters.sellerExternalId,
+            fromUtc: filters.fromUtc,
+            toUtc: filters.toUtc,
+          },
+        })
       ).data,
     ),
 };

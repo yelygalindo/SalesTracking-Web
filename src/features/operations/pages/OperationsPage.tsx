@@ -10,7 +10,7 @@ import {
   localDayStartUtc,
   formatDateTime,
 } from "@/lib/i18n/dateTime";
-import { operationsApi } from "../api/operationsApi";
+import { operationsApi, type Workday } from "../api/operationsApi";
 import { TrackingMap } from "../components/TrackingMap";
 
 const inputDate = (date: Date) =>
@@ -63,7 +63,7 @@ export function OperationsPage() {
   const [from, setFrom] = useState(yesterday());
   const [to, setTo] = useState(today());
   const [sellerId, setSellerId] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedWorkday, setSelectedWorkday] = useState<Workday | null>(null);
   const sellers = useQuery({
     queryKey: ["operation-sellers"],
     queryFn: operationsApi.sellers,
@@ -104,11 +104,14 @@ export function OperationsPage() {
     !(["active", "history"] as const).includes(section as "active" | "history")
   )
     return <Navigate replace to="/unauthorized" />;
-  if (selectedId)
+  if (selectedWorkday)
     return (
       <WorkdayDetail
-        workdayId={selectedId}
-        onBack={() => setSelectedId(null)}
+        workdaySummary={selectedWorkday}
+        sellerExternalId={
+          selectedWorkday.sellerExternalId || sellerId || user?.externalId || ""
+        }
+        onBack={() => setSelectedWorkday(null)}
       />
     );
   return (
@@ -284,7 +287,7 @@ export function OperationsPage() {
                         <td>
                           <button
                             className="table-link"
-                            onClick={() => setSelectedId(item.id)}
+                            onClick={() => setSelectedWorkday(item)}
                           >
                             Ver detalle
                           </button>
@@ -303,26 +306,44 @@ export function OperationsPage() {
 }
 
 function WorkdayDetail({
-  workdayId,
+  workdaySummary,
+  sellerExternalId,
   onBack,
 }: {
-  workdayId: string;
+  workdaySummary: Workday;
+  sellerExternalId: string;
   onBack: () => void;
 }) {
+  const workdayId = workdaySummary.id;
   const workday = useQuery({
     queryKey: ["workday", workdayId],
     queryFn: () => operationsApi.workday(workdayId),
   });
-  const locations = useQuery({
-    queryKey: ["workday-locations", workdayId],
-    queryFn: () => operationsApi.locations(workdayId),
+  const routeToUtc = useMemo(
+    () => workdaySummary.endedAtUtc ?? new Date().toISOString(),
+    [workdaySummary.endedAtUtc],
+  );
+  const sellerRoute = useQuery({
+    queryKey: [
+      "seller-route",
+      sellerExternalId,
+      workdaySummary.startedAtUtc,
+      routeToUtc,
+    ],
+    queryFn: () =>
+      operationsApi.sellerRoute({
+        sellerExternalId,
+        fromUtc: workdaySummary.startedAtUtc,
+        toUtc: routeToUtc,
+      }),
+    enabled: Boolean(sellerExternalId && workdaySummary.startedAtUtc),
   });
   const points = useMemo(
     () =>
-      [...(locations.data?.routePoints ?? [])].sort((a, b) =>
+      [...(sellerRoute.data?.routePoints ?? [])].sort((a, b) =>
         a.capturedAtUtc.localeCompare(b.capturedAtUtc),
       ),
-    [locations.data?.routePoints],
+    [sellerRoute.data?.routePoints],
   );
   const visitedProjects = useMemo(
     () =>
@@ -344,7 +365,7 @@ function WorkdayDetail({
       </button>
       <PageHeader
         eyebrow="Detalle de jornada"
-        title={workday.data?.sellerName || "Jornada"}
+        title={workday.data?.sellerName || workdaySummary.sellerName || "Jornada"}
         description={`${dateTime(workday.data?.startedAtUtc)} · ${statusLabel(workday.data?.status)}`}
       />
       <DataState
@@ -367,18 +388,18 @@ function WorkdayDetail({
                   </span>
                 </header>
                 <DataState
-                  loading={locations.isLoading}
-                  error={locations.error}
+                  loading={sellerRoute.isLoading}
+                  error={sellerRoute.error}
                   isEmpty={
-                    !points.length && !(locations.data?.segments?.length ?? 0)
+                    !points.length && !(sellerRoute.data?.segments?.length ?? 0)
                   }
                   empty="No se registraron ubicaciones durante esta jornada."
                 >
                   <TrackingMap
                     points={points}
                     route
-                    segments={locations.data?.segments ?? []}
-                    mapMatched={locations.data?.mapMatched ?? true}
+                    segments={sellerRoute.data?.segments ?? []}
+                    mapMatched={sellerRoute.data?.mapMatched ?? true}
                     visitedProjects={visitedProjects}
                   />
                 </DataState>

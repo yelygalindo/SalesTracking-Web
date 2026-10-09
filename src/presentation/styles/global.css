@@ -135,11 +135,10 @@ button {
   width: 46px;
   height: 46px;
   flex: 0 0 46px;
-  padding: 4px;
-  border: 1px solid #eeeae3;
-  border-radius: 13px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgb(35 29 24 / 10%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  filter: drop-shadow(0 8px 14px rgb(255 107 23 / 18%));
   object-fit: contain;
 }
 .brand-copy {
