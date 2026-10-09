@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock3, MapPin, Route, UserRoundCheck } from "lucide-react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
@@ -56,6 +56,7 @@ const coordinates = (latitude: number, longitude: number) =>
   `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 export function OperationsPage() {
   const { section } = useParams();
+  const location = useLocation();
   const { can, user } = useAuthorization();
   const canChooseSeller = can("sellers.read");
   const tab: "active" | "history" =
@@ -63,7 +64,10 @@ export function OperationsPage() {
   const [from, setFrom] = useState(yesterday());
   const [to, setTo] = useState(today());
   const [sellerId, setSellerId] = useState("");
-  const [selectedWorkday, setSelectedWorkday] = useState<Workday | null>(null);
+  const navigationState = location.state as { workday?: Workday } | null;
+  const [selectedWorkday, setSelectedWorkday] = useState<Workday | null>(
+    navigationState?.workday ?? null,
+  );
   const sellers = useQuery({
     queryKey: ["operation-sellers"],
     queryFn: operationsApi.sellers,

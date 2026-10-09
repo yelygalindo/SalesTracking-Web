@@ -8,6 +8,29 @@ describe("rutas de vendedores", () => {
 
   beforeEach(() => api.reset());
 
+  it("normaliza la ubicación plana de vendedores activos", async () => {
+    api.onGet("/api/tracking/active-sellers").reply(200, [
+      {
+        sellerExternalId: "seller-1",
+        sellerName: "Ana Pérez",
+        workdayExternalId: "workday-1",
+        startedAtUtc: "2026-10-09T12:00:00Z",
+        lastLocationAtUtc: "2026-10-09T15:00:00Z",
+        latitude: -17.39,
+        longitude: -66.15,
+      },
+    ]);
+
+    const [seller] = await operationsApi.activeSellers();
+
+    expect(seller.lastLocation).toEqual({
+      capturedAtUtc: "2026-10-09T15:00:00Z",
+      latitude: -17.39,
+      longitude: -66.15,
+    });
+    expect(seller.status).toBe("open");
+  });
+
   it("conserva los segmentos independientes del contrato actual", async () => {
     api.onGet("/api/seller-routes").reply(200, {
       routePoints: [],

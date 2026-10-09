@@ -15,6 +15,7 @@ import { ProjectImportPage } from "@/features/projects/pages/ProjectImportPage";
 import { CatalogPage } from "@/features/catalog/pages/CatalogPage";
 import { CatalogImportPage } from "@/features/catalog/pages/CatalogImportPage";
 import { OperationsPage } from "@/features/operations/pages/OperationsPage";
+import { OperationsDashboardPage } from "@/features/operations/pages/OperationsDashboardPage";
 import { DeliveriesPage } from "@/features/deliveries/pages/DeliveriesPage";
 import { ReportsPage } from "@/features/reports/pages/ReportsPageWithScope";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
           {
             element: <PermissionRoute permission="visits.read" />,
             children: [
+              {
+                path: "/operations/dashboard",
+                element: <OperationsDashboardPage />,
+              },
               { path: "/operations/:section?", element: <OperationsPage /> },
             ],
           },

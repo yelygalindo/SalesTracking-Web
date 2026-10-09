@@ -51,11 +51,28 @@ export interface Workday {
 export interface ActiveSeller {
   sellerExternalId: string;
   sellerName: string;
-  status: string;
+  workdayExternalId?: string | null;
+  status?: string;
   startedAtUtc: string;
   lastLocation?: WorkdayLocation | null;
+  lastLocationAtUtc?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  accuracyMeters?: number | null;
   lastUpdatedAtUtc?: string | null;
   currentVisit?: { name?: string | null; startedAtUtc?: string | null } | null;
+}
+export interface OperationVisit {
+  externalId: string;
+  projectExternalId?: string | null;
+  projectName?: string | null;
+  customerExternalId?: string | null;
+  customerName?: string | null;
+  visitedAtUtc: string;
+  checkOutAtUtc?: string | null;
+  result?: string | null;
+  sellerExternalId?: string | null;
+  sellerName?: string | null;
 }
 export interface WorkdayFilters {
   from: string;
@@ -67,6 +84,28 @@ export interface SellerRouteFilters {
   fromUtc: string;
   toUtc: string;
 }
+
+const normalizeActiveSeller = (seller: ActiveSeller): ActiveSeller => {
+  const hasCoordinates =
+    Number.isFinite(seller.latitude) && Number.isFinite(seller.longitude);
+  const capturedAtUtc =
+    seller.lastLocationAtUtc ?? seller.lastUpdatedAtUtc ?? seller.startedAtUtc;
+
+  return {
+    ...seller,
+    status: seller.status || "open",
+    lastUpdatedAtUtc: seller.lastUpdatedAtUtc ?? seller.lastLocationAtUtc,
+    lastLocation:
+      seller.lastLocation ??
+      (hasCoordinates
+        ? {
+            capturedAtUtc,
+            latitude: seller.latitude!,
+            longitude: seller.longitude!,
+          }
+        : null),
+  };
+};
 
 const asList = <T>(value: T[] | { items: T[] }): T[] =>
   Array.isArray(value) ? value : value.items;
@@ -108,7 +147,7 @@ export const operationsApi = {
           "/api/tracking/active-sellers",
         )
       ).data,
-    ),
+    ).map(normalizeActiveSeller),
   workdays: async (filters: WorkdayFilters) =>
     asList(
       (
@@ -141,6 +180,21 @@ export const operationsApi = {
             toUtc: filters.toUtc,
           },
         })
+      ).data,
+    ),
+  visits: async (filters: WorkdayFilters) =>
+    asList(
+      (
+        await apiClient.get<OperationVisit[] | { items: OperationVisit[] }>(
+          "/api/visits",
+          {
+            params: {
+              from: filters.from,
+              to: filters.to,
+              sellerExternalId: filters.sellerExternalId || undefined,
+            },
+          },
+        )
       ).data,
     ),
 };

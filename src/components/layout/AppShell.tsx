@@ -75,6 +75,11 @@ const groups = [
     path: "/operations",
     children: [
       {
+        to: "/operations/dashboard",
+        label: "Dashboard operativo",
+        permissions: ["visits.read"],
+      },
+      {
         to: "/operations/active",
         label: "Vendedores activos",
         permissions: ["visits.read"],
