@@ -14,6 +14,8 @@ import type {
   WorkdayRouteSegment,
 } from "../api/operationsApi";
 
+const routeColors = ["#1d4ed8", "#0284c7", "#4338ca", "#0369a1"];
+
 interface MarkerItem extends WorkdayLocation {
   label?: string;
 }
@@ -118,9 +120,12 @@ export function TrackingMap({
               key={`route-segment-${index}`}
               data={segment}
               style={{
-                color: mapMatched ? "#2563eb" : "#64748b",
-                weight: 5,
-                opacity: 0.85,
+                color: routeColors[index % routeColors.length],
+                weight: 6,
+                opacity: 0.95,
+                dashArray: mapMatched ? undefined : "10 7",
+                lineCap: "round",
+                lineJoin: "round",
               }}
             />
           ))}
