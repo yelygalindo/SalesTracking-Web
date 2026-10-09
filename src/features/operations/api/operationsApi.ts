@@ -27,6 +27,15 @@ export interface WorkdayLocation {
   latitude: number;
   longitude: number;
 }
+export interface WorkdayRouteSegment {
+  type: "LineString";
+  coordinates: [number, number][];
+}
+export interface WorkdayLocationsResponse {
+  routePoints: WorkdayLocation[];
+  segments: WorkdayRouteSegment[];
+  mapMatched: boolean;
+}
 export interface Workday {
   id: string;
   sellerExternalId?: string | null;
@@ -83,11 +92,9 @@ export const operationsApi = {
   workday: async (workdayId: string) =>
     (await apiClient.get<Workday>(`/api/workdays/${workdayId}`)).data,
   locations: async (workdayId: string) =>
-    asList(
-      (
-        await apiClient.get<WorkdayLocation[] | { items: WorkdayLocation[] }>(
-          `/api/workdays/${workdayId}/locations`,
-        )
-      ).data,
-    ),
+    (
+      await apiClient.get<WorkdayLocationsResponse>(
+        `/api/workdays/${workdayId}/locations`,
+      )
+    ).data,
 };

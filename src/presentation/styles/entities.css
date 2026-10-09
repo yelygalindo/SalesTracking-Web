@@ -84,14 +84,14 @@
 }
 .workday-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.7fr);
+  grid-template-columns: minmax(0, 2.2fr) minmax(240px, 0.65fr);
   gap: 14px;
   align-items: stretch;
 }
 .workday-overview .operations-map-card {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  min-height: 340px;
+  min-height: clamp(540px, 70vh, 760px);
   padding: 16px;
 }
 .workday-overview-aside {
@@ -246,7 +246,7 @@
 }
 .workday-overview .operations-map {
   height: 100%;
-  min-height: 260px;
+  min-height: 440px;
 }
 .operations-summary article > span {
   display: grid;
@@ -318,7 +318,7 @@
     grid-template-columns: 1fr;
   }
   .workday-overview .operations-map-card {
-    min-height: auto;
+    min-height: 500px;
   }
   .workday-overview .operations-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -337,6 +337,9 @@
   }
 }
 @media (max-width: 620px) {
+  .workday-overview .operations-map-card {
+    min-height: 430px;
+  }
   .workday-overview .operations-summary {
     grid-template-columns: 1fr;
   }

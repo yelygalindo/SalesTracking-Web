@@ -1,15 +1,18 @@
 import { useEffect } from "react";
 import { divIcon, latLngBounds } from "leaflet";
 import {
+  GeoJSON,
   MapContainer,
   Marker,
-  Polyline,
   Popup,
   TileLayer,
   useMap,
 } from "react-leaflet";
 import { formatDateTime } from "@/lib/i18n/dateTime";
-import type { WorkdayLocation } from "../api/operationsApi";
+import type {
+  WorkdayLocation,
+  WorkdayRouteSegment,
+} from "../api/operationsApi";
 
 interface MarkerItem extends WorkdayLocation {
   label?: string;
@@ -38,10 +41,14 @@ function RouteViewport({ positions }: { positions: [number, number][] }) {
 export function TrackingMap({
   points,
   route = false,
+  segments = [],
+  mapMatched = true,
   visitedProjects = [],
 }: {
   points: MarkerItem[];
   route?: boolean;
+  segments?: WorkdayRouteSegment[];
+  mapMatched?: boolean;
   visitedProjects?: VisitedProjectMarker[];
 }) {
   const valid = points.filter(
@@ -52,7 +59,21 @@ export function TrackingMap({
     (project) =>
       Number.isFinite(project.latitude) && Number.isFinite(project.longitude),
   );
-  if (!valid.length)
+  const validSegments = segments.filter(
+    (segment) =>
+      segment.type === "LineString" &&
+      segment.coordinates.length > 1 &&
+      segment.coordinates.every(
+        ([longitude, latitude]) =>
+          Number.isFinite(longitude) && Number.isFinite(latitude),
+      ),
+  );
+  const segmentPositions = validSegments.flatMap((segment) =>
+    segment.coordinates.map(
+      ([longitude, latitude]) => [latitude, longitude] as [number, number],
+    ),
+  );
+  if (!valid.length && !validSegments.length && !validProjects.length)
     return <div className="operations-map-empty">No hay ubicaciones registradas.</div>;
 
   const positions = valid.map(
@@ -61,7 +82,11 @@ export function TrackingMap({
   const projectPositions = validProjects.map(
     (project) => [project.latitude, project.longitude] as [number, number],
   );
-  const boundsPositions = [...positions, ...projectPositions];
+  const boundsPositions = [
+    ...segmentPositions,
+    ...positions,
+    ...projectPositions,
+  ];
   const routeMarkers = route
     ? valid.length === 1
       ? [{ point: valid[0], index: 0, label: "Inicio y fin" }]
@@ -75,16 +100,29 @@ export function TrackingMap({
         label: point.label || "Última ubicación",
       }));
 
+  const center = boundsPositions.at(-1)!;
+
   return (
     <div className="operations-map">
-      <MapContainer center={positions.at(-1)!} zoom={13} scrollWheelZoom={false}>
+      <MapContainer center={center} zoom={13} scrollWheelZoom={false}>
         <TileLayer
           maxZoom={19}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {route && <RouteViewport positions={boundsPositions} />}
-        {route && positions.length > 1 && <Polyline positions={positions} />}
+        {route &&
+          validSegments.map((segment, index) => (
+            <GeoJSON
+              key={`route-segment-${index}`}
+              data={segment}
+              style={{
+                color: mapMatched ? "#2563eb" : "#64748b",
+                weight: 5,
+                opacity: 0.85,
+              }}
+            />
+          ))}
         {routeMarkers.map(({ point, index, label }) => (
           <Marker
             position={positions[index]}

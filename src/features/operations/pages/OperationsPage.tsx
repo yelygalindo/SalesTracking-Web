@@ -319,10 +319,10 @@ function WorkdayDetail({
   });
   const points = useMemo(
     () =>
-      [...(locations.data ?? [])].sort((a, b) =>
+      [...(locations.data?.routePoints ?? [])].sort((a, b) =>
         a.capturedAtUtc.localeCompare(b.capturedAtUtc),
       ),
-    [locations.data],
+    [locations.data?.routePoints],
   );
   const visitedProjects = useMemo(
     () =>
@@ -369,12 +369,16 @@ function WorkdayDetail({
                 <DataState
                   loading={locations.isLoading}
                   error={locations.error}
-                  isEmpty={!points.length}
+                  isEmpty={
+                    !points.length && !(locations.data?.segments.length ?? 0)
+                  }
                   empty="No se registraron ubicaciones durante esta jornada."
                 >
                   <TrackingMap
                     points={points}
                     route
+                    segments={locations.data?.segments ?? []}
+                    mapMatched={locations.data?.mapMatched ?? true}
                     visitedProjects={visitedProjects}
                   />
                 </DataState>
