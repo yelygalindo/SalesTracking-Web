@@ -1,2 +1,17 @@
-import { MapPinned } from 'lucide-react'
-export function Brand({ inverse = false }: { inverse?: boolean }) { return <div className="brand"><div className="brand-logo"><MapPinned size={21}/></div><div><div className={inverse ? 'brand-name inverse' : 'brand-name'}><span>Urban</span><b>Track</b></div><small>CRM WEB</small></div></div> }
+export function Brand({ inverse = false }: { inverse?: boolean }) {
+  return (
+    <div className={`brand${inverse ? " brand--inverse" : ""}`}>
+      <img
+        className="brand-logo"
+        src="/urbantrack-icon.svg"
+        alt=""
+        width="48"
+        height="48"
+      />
+      <div className="brand-copy">
+        <span className="brand-name">UrbanTrack</span>
+        <small>CRM + operación en campo</small>
+      </div>
+    </div>
+  );
+}

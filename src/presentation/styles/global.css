@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: "DM Sans", Inter, ui-sans-serif, system-ui, sans-serif;
   color: #172033;
   background: #f4f7fa;
   font-synthesis: none;
@@ -75,6 +75,7 @@ a {
 }
 h1 {
   margin: 6px 0 8px;
+  font-family: Manrope, "DM Sans", sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
 }
 .page-header p:last-child {
@@ -126,40 +127,47 @@ button {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   margin: 0;
 }
 .brand-logo {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  color: white;
-  background: linear-gradient(135deg, #ff8a24, #f35b18);
-  box-shadow: 0 10px 24px rgba(244, 100, 24, 0.28);
+  display: block;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  padding: 4px;
+  border: 1px solid #eeeae3;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(35 29 24 / 10%);
+  object-fit: contain;
+}
+.brand-copy {
+  min-width: 0;
 }
 .brand-name {
-  color: #14233b;
-  font-size: 1.15rem;
+  display: block;
+  color: #1d1d1b;
+  font-family: Manrope, "DM Sans", sans-serif;
+  font-size: 1.08rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
   line-height: 1;
 }
-.brand-name b {
-  color: #f56a1c;
-}
-.brand-name.inverse span {
+.brand--inverse .brand-name {
   color: white;
 }
 .brand small {
   display: block;
-  margin-top: 5px;
+  margin-top: 6px;
   color: #8290a5;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.105em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.brand-name.inverse + small {
-  color: rgba(255, 255, 255, 0.55);
+.brand--inverse small {
+  color: rgb(255 255 255 / 48%);
 }

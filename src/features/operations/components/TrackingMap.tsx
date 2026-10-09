@@ -62,6 +62,7 @@ export function TrackingMap({
   const validSegments = segments.filter(
     (segment) =>
       segment.type === "LineString" &&
+      Array.isArray(segment.coordinates) &&
       segment.coordinates.length > 1 &&
       segment.coordinates.every(
         ([longitude, latitude]) =>

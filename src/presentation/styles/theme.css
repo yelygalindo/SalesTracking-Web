@@ -10,7 +10,7 @@ button:disabled { cursor:not-allowed; opacity:.55; }
 .app-navigation,.dashboard-sidebar { background:var(--ut-sidebar); }
 .app-navigation nav a,.dashboard-sidebar nav a { position:relative; color:rgb(255 255 255 / 68%); }
 .app-navigation nav a:hover,.dashboard-sidebar nav a:hover { color:white; background:rgb(255 255 255 / 7%); }
-.app-navigation nav a.active,.dashboard-sidebar nav a.active { color:white; background:rgb(37 99 235 / 18%); box-shadow:inset 3px 0 var(--ut-accent); }
+.app-navigation nav a.active,.dashboard-sidebar nav a.active { color:white; background:rgb(255 107 23 / 14%); box-shadow:inset 3px 0 var(--ut-accent); }
 .app-topbar,.topbar { border-color:var(--ut-border); background:var(--ut-surface); }
 .app-workspace { background:var(--ut-background); }
 
@@ -25,11 +25,11 @@ button:disabled { cursor:not-allowed; opacity:.55; }
 .metric-icon.orange { color:var(--ut-accent); background:var(--ut-accent-soft); }
 .metric-icon.blue { color:var(--ut-primary); background:var(--ut-primary-soft); }
 
-.action-primary,.primary-button { color:white; background:var(--ut-primary); box-shadow:0 5px 14px rgb(37 99 235 / 18%); }
-.action-primary:hover,.primary-button:hover { background:#1d4ed8; }
+.action-primary,.primary-button { color:white; background:var(--ut-primary); box-shadow:0 7px 18px rgb(237 100 24 / 20%); }
+.action-primary:hover,.primary-button:hover { background:#d9530c; }
 .danger-button { color:white; background:var(--ut-error); }
 .row-action { color:var(--ut-primary); }
-.row-action:hover { color:#1d4ed8; background:var(--ut-primary-soft); border-radius:var(--ut-radius-sm); }
+.row-action:hover { color:#c94b08; background:var(--ut-primary-soft); border-radius:var(--ut-radius-sm); }
 
 input,select,textarea,.customer-toolbar input,.customer-toolbar select,.status-field select { color:var(--ut-text); border-color:var(--ut-border); background:var(--ut-surface); }
 input::placeholder,textarea::placeholder { color:#94a3b8; }
@@ -62,7 +62,7 @@ input:focus,select:focus,textarea:focus,.customer-form input:focus,.customer-too
 .dashboard-empty span { color:var(--ut-text-secondary); background:#f1f5f9; }
 .dashboard-section-header,.customer-detail-header { border-color:var(--ut-border); }
 .project-progress-list progress,.progress-control progress { accent-color:var(--ut-primary); }
-.profile-roles span { color:#1d4ed8; background:var(--ut-primary-soft); }
+.profile-roles span { color:#c94b08; background:var(--ut-primary-soft); }
 .toast { color:#047857; background:var(--ut-success-soft); }.toast.error { color:#b91c1c; background:var(--ut-error-soft); }
 
 @media(max-width:700px){

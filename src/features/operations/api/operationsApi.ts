@@ -66,6 +66,33 @@ export interface WorkdayFilters {
 const asList = <T>(value: T[] | { items: T[] }): T[] =>
   Array.isArray(value) ? value : value.items;
 
+export function normalizeWorkdayLocations(
+  value: unknown,
+): WorkdayLocationsResponse {
+  if (Array.isArray(value)) {
+    return { routePoints: value as WorkdayLocation[], segments: [], mapMatched: false };
+  }
+
+  if (!value || typeof value !== "object") {
+    return { routePoints: [], segments: [], mapMatched: false };
+  }
+
+  const response = value as Record<string, unknown>;
+  const routePoints = Array.isArray(response.routePoints)
+    ? (response.routePoints as WorkdayLocation[])
+    : Array.isArray(response.items)
+      ? (response.items as WorkdayLocation[])
+      : [];
+
+  return {
+    routePoints,
+    segments: Array.isArray(response.segments)
+      ? (response.segments as WorkdayRouteSegment[])
+      : [],
+    mapMatched: response.mapMatched === true,
+  };
+}
+
 export const operationsApi = {
   sellers: async () =>
     (await apiClient.get<SellerOption[]>("/api/sellers")).data,
@@ -92,9 +119,11 @@ export const operationsApi = {
   workday: async (workdayId: string) =>
     (await apiClient.get<Workday>(`/api/workdays/${workdayId}`)).data,
   locations: async (workdayId: string) =>
-    (
-      await apiClient.get<WorkdayLocationsResponse>(
-        `/api/workdays/${workdayId}/locations`,
-      )
-    ).data,
+    normalizeWorkdayLocations(
+      (
+        await apiClient.get<unknown>(
+          `/api/workdays/${workdayId}/locations`,
+        )
+      ).data,
+    ),
 };

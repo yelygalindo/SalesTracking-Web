@@ -21,10 +21,12 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { AcceptInvitationPage } from "@/features/admin/pages/AcceptInvitationPage";
 import { RemindersPage } from "@/features/reminders/pages/RemindersPage";
 import { AppShell } from "@/components/layout/AppShell";
+import { RouteErrorPage } from "@/components/feedback/RouteErrorPage";
 
 export const router = createBrowserRouter([
   {
     element: <PublicOnlyRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       { path: "/login", element: <LoginPage /> },
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
@@ -34,6 +36,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <ProtectedRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         element: <AppShell />,

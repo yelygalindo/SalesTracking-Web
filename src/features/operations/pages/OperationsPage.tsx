@@ -370,7 +370,7 @@ function WorkdayDetail({
                   loading={locations.isLoading}
                   error={locations.error}
                   isEmpty={
-                    !points.length && !(locations.data?.segments.length ?? 0)
+                    !points.length && !(locations.data?.segments?.length ?? 0)
                   }
                   empty="No se registraron ubicaciones durante esta jornada."
                 >
