@@ -47,6 +47,10 @@ describe("buildOperationsDashboard", () => {
           latitude: -17.39,
           longitude: -66.15,
         },
+        currentVisit: {
+          name: "Clínica Central",
+          startedAtUtc: "2026-10-09T17:30:00Z",
+        },
       },
     ];
     const visits: OperationVisit[] = [
@@ -77,7 +81,14 @@ describe("buildOperationsDashboard", () => {
       completedVisits: 1,
       incidents: 0,
     });
-    expect(result.workers.find((worker) => worker.sellerExternalId === "seller-3")?.status).toBe("not-started");
+    expect(
+      result.workers.find((worker) => worker.sellerExternalId === "seller-3")
+        ?.status,
+    ).toBe("not-started");
+    expect(
+      result.workers.find((worker) => worker.sellerExternalId === "seller-1")
+        ?.currentVisitName,
+    ).toBe("Clínica Central");
   });
 
   it("marca como incidencia una jornada sin señal durante más de 30 minutos", () => {

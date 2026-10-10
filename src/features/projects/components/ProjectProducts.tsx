@@ -10,8 +10,8 @@ export function ProjectProducts({ id }: { id: string }) {
   return (
     <section className="project-products">
       <header>
-        <p className="overline">Productos asociados</p>
-        <h3>Materiales del proyecto</h3>
+        <p className="overline">Entrega asociada</p>
+        <h3>Productos comprometidos</h3>
       </header>
       {query.data?.map((item) => (
         <article key={item.productExternalId}>
@@ -40,13 +40,16 @@ export function ProjectProducts({ id }: { id: string }) {
         </article>
       ))}
       {!query.isLoading && !query.data?.length && (
-        <p className="activity-empty">Sin productos asociados a entregas.</p>
+        <p className="activity-empty">
+          Este seguimiento no tiene entregas asociadas.
+        </p>
       )}
       {query.isLoading && <p className="activity-empty">Cargando productos…</p>}
       {query.isError && (
-        <p className="form-error">No fue posible cargar los productos.</p>
+        <p className="form-error">
+          No fue posible cargar la información de la entrega.
+        </p>
       )}
     </section>
   );
 }
-

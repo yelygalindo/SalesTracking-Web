@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { Activity, Download } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { DataState } from "@/components/data/DataState";
 import { PageHeader } from "@/components/layout/AppShell";
@@ -18,7 +18,7 @@ import {
 
 const labels: Record<ReportType, string> = {
   customers: "Contactos para seguimiento",
-  deliveries: "Entregas pendientes",
+  deliveries: "Reporte de entregas",
   "commercial-activity": "Actividades",
 };
 
@@ -93,7 +93,16 @@ export function ReportsPage() {
     queryFn: deliveryApi.statuses,
     enabled: type === "deliveries",
   });
-  useEffect(() => setStatus(""), [type]);
+  useEffect(() => {
+    setStatus("");
+    if (type === "deliveries") {
+      setFrom("");
+      setTo("");
+    } else if (type === "commercial-activity") {
+      setFrom(initialFrom());
+      setTo(initialTo());
+    }
+  }, [type]);
   const customerStatusLabels = Object.fromEntries(
     (customerStatuses.data || []).map((item) => [
       item.value,
@@ -378,6 +387,41 @@ function ReportTable({
       },
     ],
   };
+  if (type === "commercial-activity")
+    return (
+      <div className="activity-history" aria-label="Histórico de actividades">
+        {rows.map((row, index) => (
+          <article key={String(row.externalId || row.occurredAtUtc || index)}>
+            <span className="activity-history-icon">
+              <Activity />
+            </span>
+            <div className="activity-history-content">
+              <header>
+                <div>
+                  <strong>
+                    {String(
+                      row.title ||
+                        humanKey(String(row.eventTypeName || "Actividad")),
+                    )}
+                  </strong>
+                  <small>
+                    {String(row.description || "Acción registrada")}
+                  </small>
+                </div>
+                <time>{formatDate(row.occurredAtUtc || row.createdAtUtc)}</time>
+              </header>
+              <footer>
+                {row.customerName && <span>Contacto: {customer(row)}</span>}
+                {row.projectName && <span>Seguimiento: {project(row)}</span>}
+                {row.sellerName && (
+                  <span>Responsable: {String(row.sellerName)}</span>
+                )}
+              </footer>
+            </div>
+          </article>
+        ))}
+      </div>
+    );
   return (
     <div className="table-scroll">
       <table>

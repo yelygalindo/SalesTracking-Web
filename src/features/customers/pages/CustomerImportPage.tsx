@@ -17,8 +17,8 @@ export function CustomerImportPage() {
   return (
     <SpreadsheetImportWizard
       eyebrow="Contactos"
-      title="Importar contactos"
-      description="Carga contactos de forma masiva con validación previa por fila."
+      title="Importar base de datos de clientes"
+      description="Carga tu base de datos de clientes de forma masiva con validación previa por fila."
       plural="clientes"
       backTo="/customers"
       templateName="plantilla-clientes.xlsx"

@@ -35,7 +35,7 @@ type WorkerFilter = "all" | WorkerOperationStatus | "incidents";
 const statusLabels: Record<WorkerOperationStatus, string> = {
   working: "Trabajando",
   finished: "Jornada finalizada",
-  "not-started": "Sin jornada hoy",
+  "not-started": "Sin actividad en vivo",
 };
 const workerInitials = (name: string) =>
   name
@@ -108,7 +108,9 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
             <Popup>
               <strong>{worker.sellerName}</strong>
               <br />
-              {worker.incident || "Ubicación actualizada"}
+              {worker.currentVisitName ||
+                worker.incident ||
+                "Ubicación actualizada"}
               {worker.lastLocationAtUtc && (
                 <>
                   <br />
@@ -154,35 +156,79 @@ export function OperationsDashboardPage() {
   const query = useQuery({
     queryKey: ["operations-dashboard", date, effectiveSellerId],
     queryFn: async () => {
-      const [activeSellers, workdays, visits, sellers] = await Promise.all([
-        operationsApi.activeSellers(),
-        operationsApi.workdays({
-          from,
-          to,
-          sellerExternalId: effectiveSellerId,
-        }),
-        operationsApi.visits({ from, to, sellerExternalId: effectiveSellerId }),
-        Promise.resolve(
-          selectedSeller
-            ? [selectedSeller]
-            : [
-                {
-                  externalId: effectiveSellerId,
-                  displayName: user?.fullName || "Responsable",
-                },
-              ],
-        ),
-      ]);
+      const activeSellers = await operationsApi.activeSellers();
+      const workdays = effectiveSellerId
+        ? await operationsApi.workdays({
+            from,
+            to,
+            sellerExternalId: effectiveSellerId,
+          })
+        : [];
+      const visitGroups = effectiveSellerId
+        ? [
+            await operationsApi.visits({
+              from,
+              to,
+              sellerExternalId: effectiveSellerId,
+            }),
+          ]
+        : await Promise.all(
+            activeSellers.map((seller) =>
+              operationsApi
+                .visits({
+                  from,
+                  to,
+                  sellerExternalId: seller.sellerExternalId,
+                })
+                .catch(() => []),
+            ),
+          );
+      const visits = visitGroups.flat();
+      const activeWithVisits = activeSellers.map((seller) => {
+        const currentVisit = visits
+          .filter(
+            (visit) =>
+              visit.sellerExternalId === seller.sellerExternalId &&
+              !visit.checkOutAtUtc,
+          )
+          .sort((left, right) =>
+            right.visitedAtUtc.localeCompare(left.visitedAtUtc),
+          )[0];
+        return {
+          ...seller,
+          currentVisit: currentVisit
+            ? {
+                name:
+                  currentVisit.projectName ||
+                  currentVisit.customerName ||
+                  "Visita en curso",
+                startedAtUtc: currentVisit.visitedAtUtc,
+              }
+            : seller.currentVisit,
+        };
+      });
+      const sellerDirectory = selectedSeller
+        ? [selectedSeller]
+        : canChooseSeller
+          ? (sellers.data ?? [])
+          : [
+              {
+                externalId: effectiveSellerId,
+                displayName: user?.fullName || "Responsable",
+              },
+            ];
       return buildOperationsDashboard(
-        sellers,
-        activeSellers.filter(
-          (seller) => seller.sellerExternalId === effectiveSellerId,
-        ),
+        sellerDirectory,
+        effectiveSellerId
+          ? activeWithVisits.filter(
+              (seller) => seller.sellerExternalId === effectiveSellerId,
+            )
+          : activeWithVisits,
         workdays,
         visits,
       );
     },
-    enabled: Boolean(effectiveSellerId),
+    enabled: !canChooseSeller || sellers.isSuccess,
     refetchInterval: 30_000,
   });
   const visibleWorkers = useMemo(() => {
@@ -229,7 +275,7 @@ export function OperationsDashboardPage() {
               <option value="">
                 {sellers.isLoading
                   ? "Cargando responsables..."
-                  : "Selecciona un responsable"}
+                  : "Todos los responsables"}
               </option>
               {sellers.data?.map((seller) => (
                 <option key={seller.externalId} value={seller.externalId}>
@@ -249,14 +295,6 @@ export function OperationsDashboardPage() {
         >
           {null}
         </DataState>
-      ) : !effectiveSellerId ? (
-        <div className="operations-dashboard-prompt">
-          <UserRoundSearch />
-          <strong>Selecciona un responsable</strong>
-          <span>
-            El resumen de su jornada, visitas e incidencias aparecerá aquí.
-          </span>
-        </div>
       ) : (
         <DataState
           loading={query.isLoading}
@@ -278,14 +316,31 @@ export function OperationsDashboardPage() {
                 />
                 <OperationMetric
                   icon={CheckCircle2}
-                  label="Finalizaron jornada"
-                  value={query.data.metrics.finished}
+                  label={
+                    effectiveSellerId ? "Finalizó jornada" : "Total equipo"
+                  }
+                  value={
+                    effectiveSellerId
+                      ? query.data.metrics.finished
+                      : query.data.workers.length
+                  }
                   tone="finished"
                 />
                 <OperationMetric
                   icon={ClipboardCheck}
-                  label="Visitas completadas"
-                  value={query.data.metrics.completedVisits}
+                  label={
+                    effectiveSellerId ? "Visitas completadas" : "Con ubicación"
+                  }
+                  value={
+                    effectiveSellerId
+                      ? query.data.metrics.completedVisits
+                      : query.data.workers.filter(
+                          (worker) =>
+                            worker.status === "working" &&
+                            Number.isFinite(worker.latitude) &&
+                            Number.isFinite(worker.longitude),
+                        ).length
+                  }
                   tone="visits"
                 />
                 <OperationMetric
@@ -308,14 +363,16 @@ export function OperationsDashboardPage() {
                         [
                           ["all", "Todos"],
                           ["working", "Trabajando"],
-                          ["finished", "Finalizaron"],
+                          effectiveSellerId
+                            ? ["finished", "Finalizó"]
+                            : ["not-started", "Sin actividad"],
                           ["incidents", "Incidencias"],
                         ] as const
                       ).map(([value, label]) => (
                         <button
                           className={filter === value ? "active" : ""}
                           key={value}
-                          onClick={() => setFilter(value)}
+                          onClick={() => setFilter(value as WorkerFilter)}
                         >
                           {label}
                         </button>
@@ -431,7 +488,11 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       <span className="operations-worker-avatar">{initials}</span>
       <div className="operations-worker-name">
         <strong>{worker.sellerName}</strong>
-        <small>{worker.incident || statusLabels[worker.status]}</small>
+        <small>
+          {worker.currentVisitName ||
+            worker.incident ||
+            statusLabels[worker.status]}
+        </small>
       </div>
       <span className={`operations-worker-status ${worker.status}`}>
         {statusLabels[worker.status]}

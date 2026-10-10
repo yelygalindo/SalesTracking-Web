@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarClock,
@@ -7,11 +7,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Plus,
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/layout/AppShell";
 import { notify } from "@/components/feedback/toast";
+import { usePermission } from "@/hooks/usePermission";
+import { customerService } from "@/features/customers/services/customerService";
 import {
   reminderApi,
   type ReminderFilters,
@@ -70,19 +73,29 @@ const reminderDateTime = (value: string) =>
 
 export function RemindersPage() {
   const cache = useQueryClient();
+  const canCreateReminder = usePermission("customers.update");
+  const canFilterSeller = usePermission("sellers.read");
   const [month, setMonth] = useState(currentMonthKey);
   const [status, setStatus] = useState<ReminderStatus>("pending");
+  const [sellerId, setSellerId] = useState("");
   const [selected, setSelected] = useState<SellerReminder | null>(null);
   const [rescheduling, setRescheduling] = useState<SellerReminder | null>(null);
+  const [creating, setCreating] = useState(false);
   const days = useMemo(() => monthDays(month), [month]);
   const filters = useMemo<ReminderFilters>(
     () => ({
       from: dateKey(days[0]),
       to: dateKey(days[days.length - 1]),
       completed: status === "all" ? undefined : status === "completed",
+      sellerExternalId: canFilterSeller && sellerId ? sellerId : undefined,
     }),
-    [days, status],
+    [canFilterSeller, days, sellerId, status],
   );
+  const sellers = useQuery({
+    queryKey: ["sellers"],
+    queryFn: customerService.sellers,
+    enabled: canFilterSeller,
+  });
   const query = useQuery({
     queryKey: ["reminders", filters],
     queryFn: () => reminderApi.list(filters),
@@ -140,6 +153,16 @@ export function RemindersPage() {
         eyebrow="Agenda"
         title="Agenda mensual"
         description="Organiza recordatorios y seguimientos programados, y abre cada pendiente para revisar su detalle."
+        action={
+          canCreateReminder ? (
+            <button
+              className="action-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus /> Programar recordatorio
+            </button>
+          ) : undefined
+        }
       />
 
       <section
@@ -174,6 +197,22 @@ export function RemindersPage() {
           </button>
         </div>
         <div className="reminder-calendar-filters">
+          {canFilterSeller && (
+            <label>
+              Responsable
+              <select
+                value={sellerId}
+                onChange={(event) => setSellerId(event.target.value)}
+              >
+                <option value="">Todos los responsables</option>
+                {sellers.data?.map((seller) => (
+                  <option key={seller.externalId} value={seller.externalId}>
+                    {seller.displayName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label>
             Estado
             <select
@@ -257,6 +296,9 @@ export function RemindersPage() {
                           <time>{reminderTime(reminder.reminderAtUtc)}</time>
                           <strong>{reminder.text}</strong>
                           <small>{reminder.customerName}</small>
+                          {reminder.assignedTo?.name && (
+                            <small>{reminder.assignedTo.name}</small>
+                          )}
                         </button>
                       );
                     })}
@@ -308,6 +350,10 @@ export function RemindersPage() {
                 <dd>{reminderDateTime(selected.reminderAtUtc)}</dd>
               </div>
               <div>
+                <dt>Responsable</dt>
+                <dd>{selected.assignedTo?.name || "Sin asignar"}</dd>
+              </div>
+              <div>
                 <dt>Estado</dt>
                 <dd>{selected.completed ? "Completado" : "Pendiente"}</dd>
               </div>
@@ -353,6 +399,139 @@ export function RemindersPage() {
           }
         />
       )}
+      {creating && (
+        <CreateReminderDialog
+          onClose={() => setCreating(false)}
+          onCreated={async () => {
+            setCreating(false);
+            notify("Recordatorio programado correctamente.");
+            await cache.invalidateQueries({ queryKey: ["reminders"] });
+          }}
+        />
+      )}
     </main>
+  );
+}
+
+function CreateReminderDialog({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => Promise<void>;
+}) {
+  const [customerId, setCustomerId] = useState("");
+  const [sellerId, setSellerId] = useState("");
+  const [text, setText] = useState("");
+  const [date, setDate] = useState("");
+  const customers = useQuery({
+    queryKey: ["reminder-customers"],
+    queryFn: () =>
+      customerService.list({ search: "", status: "", page: 1, pageSize: 100 }),
+  });
+  const sellers = useQuery({
+    queryKey: ["reminder-sellers"],
+    queryFn: customerService.sellers,
+  });
+  const create = useMutation({
+    mutationFn: () =>
+      customerService.addReminder(
+        customerId,
+        text,
+        new Date(date).toISOString(),
+        sellerId,
+      ),
+    onSuccess: onCreated,
+    onError: (error: Error) => notify(error.message, "error"),
+  });
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (!customerId || !sellerId || !text.trim() || !date) return;
+    create.mutate();
+  };
+
+  return (
+    <div
+      className="reminder-detail-backdrop"
+      role="presentation"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <section
+        className="reminder-create-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-reminder-title"
+      >
+        <header>
+          <div>
+            <small>Agenda del equipo</small>
+            <h2 id="create-reminder-title">Programar recordatorio</h2>
+          </div>
+          <button type="button" aria-label="Cerrar" onClick={onClose}>
+            <X />
+          </button>
+        </header>
+        <form onSubmit={submit}>
+          <label>
+            Contacto
+            <select
+              required
+              value={customerId}
+              onChange={(event) => setCustomerId(event.target.value)}
+            >
+              <option value="">Selecciona un contacto</option>
+              {customers.data?.customers.map((customer) => (
+                <option key={customer.externalId} value={customer.externalId}>
+                  {customer.name} · {customer.companyName || "Sin organización"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Responsable
+            <select
+              required
+              value={sellerId}
+              onChange={(event) => setSellerId(event.target.value)}
+            >
+              <option value="">Selecciona un responsable</option>
+              {sellers.data?.map((seller) => (
+                <option key={seller.externalId} value={seller.externalId}>
+                  {seller.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Fecha y hora
+            <input
+              required
+              type="datetime-local"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+          <label>
+            Recordatorio
+            <textarea
+              required
+              maxLength={500}
+              rows={4}
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              placeholder="Describe el pendiente o seguimiento"
+            />
+          </label>
+          <footer>
+            <button type="button" onClick={onClose}>
+              Cancelar
+            </button>
+            <button className="action-primary" disabled={create.isPending}>
+              {create.isPending ? "Guardando…" : "Programar"}
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
   );
 }

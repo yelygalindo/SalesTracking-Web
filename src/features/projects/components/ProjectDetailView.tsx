@@ -61,7 +61,7 @@ export function ProjectDetailView({
     ["summary", "Resumen", undefined],
     ["activity", "Actividad", timeline.data?.items.length],
     ["attachments", "Archivos", attachments.data?.length],
-    ["products", "Productos", products.data?.length],
+    ["products", "Entrega", products.data?.length],
   ];
   return (
     <div className="project-detail-page">
@@ -195,46 +195,46 @@ function ProjectSummary({
             </div>
           </header>
           <dl>
-          <div>
-            <dt>Cliente</dt>
-            <dd>{project.customerName || "Sin cliente"}</dd>
-          </div>
-          <div>
-            <dt>Responsable</dt>
-            <dd>{project.sellerName || "Sin responsable"}</dd>
-          </div>
-          <div>
-            <dt>Estado</dt>
-            <dd>
-              <span className="status-pill">
-                {translateValue(project.status)}
-              </span>
-            </dd>
-          </div>
-          {project.estimatedAmount != null && (
             <div>
-              <dt>Monto estimado</dt>
-              <dd>{money}</dd>
+              <dt>Cliente</dt>
+              <dd>{project.customerName || "Sin cliente"}</dd>
             </div>
-          )}
-          {project.startDateUtc && (
             <div>
-              <dt>Fecha de inicio</dt>
-              <dd>{formatDate(project.startDateUtc)}</dd>
+              <dt>Responsable</dt>
+              <dd>{project.sellerName || "Sin responsable"}</dd>
             </div>
-          )}
-          {project.expectedCloseDateUtc && (
             <div>
-              <dt>Cierre estimado</dt>
-              <dd>{formatDate(project.expectedCloseDateUtc)}</dd>
+              <dt>Estado</dt>
+              <dd>
+                <span className="status-pill">
+                  {translateValue(project.status)}
+                </span>
+              </dd>
             </div>
-          )}
-          {project.actualCloseDateUtc && (
-            <div>
-              <dt>Cierre real</dt>
-              <dd>{formatDate(project.actualCloseDateUtc)}</dd>
-            </div>
-          )}
+            {project.estimatedAmount != null && (
+              <div>
+                <dt>Monto estimado</dt>
+                <dd>{money}</dd>
+              </div>
+            )}
+            {project.startDateUtc && (
+              <div>
+                <dt>Fecha de inicio</dt>
+                <dd>{formatDate(project.startDateUtc)}</dd>
+              </div>
+            )}
+            {project.expectedCloseDateUtc && (
+              <div>
+                <dt>Cierre estimado</dt>
+                <dd>{formatDate(project.expectedCloseDateUtc)}</dd>
+              </div>
+            )}
+            {project.actualCloseDateUtc && (
+              <div>
+                <dt>Cierre real</dt>
+                <dd>{formatDate(project.actualCloseDateUtc)}</dd>
+              </div>
+            )}
             {project.address && (
               <div className="project-address-fact">
                 <dt>Dirección</dt>

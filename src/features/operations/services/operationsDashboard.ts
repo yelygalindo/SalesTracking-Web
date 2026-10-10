@@ -18,6 +18,7 @@ export interface OperationsWorker {
   latitude?: number | null;
   longitude?: number | null;
   completedVisits: number;
+  currentVisitName?: string | null;
   incident?: string;
 }
 
@@ -154,6 +155,7 @@ export function buildOperationsDashboard(
         latitude: lastLocation?.latitude,
         longitude: lastLocation?.longitude,
         completedVisits: completedVisitsBySeller.get(seller.externalId) ?? 0,
+        currentVisitName: active?.currentVisit?.name,
         incident,
       };
     },

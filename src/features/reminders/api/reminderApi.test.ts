@@ -8,19 +8,21 @@ describe("reminderApi", () => {
 
   beforeEach(() => api.reset());
 
-  it("envía el rango mensual y el estado seleccionado", async () => {
+  it("envía el rango mensual, el estado y el responsable seleccionado", async () => {
     api.onGet("/api/reminders").reply(200, []);
 
     await reminderApi.list({
       from: "2026-09-28",
       to: "2026-11-01",
       completed: false,
+      sellerExternalId: "seller-1",
     });
 
     expect(api.history.get[0].params).toEqual({
       from: "2026-09-28",
       to: "2026-11-01",
       completed: false,
+      sellerExternalId: "seller-1",
     });
   });
 });

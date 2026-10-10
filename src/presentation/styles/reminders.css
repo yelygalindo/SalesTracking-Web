@@ -280,6 +280,99 @@
   box-shadow: 0 30px 80px rgb(5 15 32 / 28%);
 }
 
+.reminder-create-dialog {
+  width: min(100%, 580px);
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 80px rgb(5 15 32 / 28%);
+}
+
+.reminder-create-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e5eaf0;
+}
+
+.reminder-create-dialog h2 {
+  margin: 3px 0 0;
+  color: #172033;
+  font-size: 1.1rem;
+}
+.reminder-create-dialog header small {
+  color: #64748b;
+  font-weight: 750;
+}
+.reminder-create-dialog header button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #64748b;
+  background: #f1f4f7;
+}
+.reminder-create-dialog header svg {
+  width: 18px;
+}
+.reminder-create-dialog form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 22px;
+}
+.reminder-create-dialog form label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+.reminder-create-dialog form label:last-of-type,
+.reminder-create-dialog form footer {
+  grid-column: 1 / -1;
+}
+.reminder-create-dialog input,
+.reminder-create-dialog select,
+.reminder-create-dialog textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  color: #172033;
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+}
+.reminder-create-dialog textarea {
+  resize: vertical;
+}
+.reminder-create-dialog form footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 3px;
+}
+.reminder-create-dialog form footer button {
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background: #fff;
+  font-weight: 750;
+}
+.reminder-create-dialog form footer .action-primary {
+  color: #fff;
+  background: #1d4ed8;
+}
+
 .reminder-detail-dialog > header {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) 34px;
@@ -413,5 +506,12 @@
   .reminder-detail-dialog > footer button {
     justify-content: center;
     flex: 1;
+  }
+  .reminder-create-dialog form {
+    grid-template-columns: 1fr;
+  }
+  .reminder-create-dialog form label,
+  .reminder-create-dialog form footer {
+    grid-column: 1;
   }
 }

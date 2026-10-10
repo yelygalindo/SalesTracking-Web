@@ -60,7 +60,7 @@ export function DeliveriesPage() {
   });
   const projects = useQuery({
     queryKey: ["project-options"],
-    queryFn: () => projectService.list("", 1),
+    queryFn: projectService.listOptions,
   });
   const products = useQuery({
     queryKey: ["product-options"],
@@ -167,7 +167,7 @@ export function DeliveriesPage() {
           <DeliveryForm
             form={form}
             setForm={setForm}
-            projects={projects.data?.items || []}
+            projects={projects.data || []}
             products={products.data?.items || []}
             submit={(event) => {
               event.preventDefault();

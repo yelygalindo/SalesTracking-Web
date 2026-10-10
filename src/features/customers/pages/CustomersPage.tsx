@@ -5,7 +5,16 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { ChevronLeft, MoreVertical, Plus, Search, X } from "lucide-react";
+import {
+  ChevronLeft,
+  Eye,
+  Mail,
+  MessageCircle,
+  MoreVertical,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
@@ -35,6 +44,11 @@ const emptyForm: CustomerInputDto = {
   address: null,
   latitude: null,
   longitude: null,
+};
+const whatsappHref = (phone: string) => {
+  const digits = phone.replace(/\D/g, "").replace(/^00/, "");
+  const international = digits.length === 8 ? `591${digits}` : digits;
+  return `https://wa.me/${international}`;
 };
 const emptyExtras: CustomerCreateExtrasDto = {
   statusId: null,
@@ -425,11 +439,33 @@ export function CustomersPage() {
                     )}
                     <td className="result-col-actions">
                       <div className="customer-row-actions">
+                        {c.phone && (
+                          <a
+                            className="customer-contact-action whatsapp"
+                            href={whatsappHref(c.phone)}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={`Contactar a ${c.name} por WhatsApp`}
+                            title="Contactar por WhatsApp"
+                          >
+                            <MessageCircle />
+                          </a>
+                        )}
+                        {c.email && (
+                          <a
+                            className="customer-contact-action email"
+                            href={`mailto:${c.email}`}
+                            aria-label={`Enviar correo a ${c.name}`}
+                            title="Enviar correo"
+                          >
+                            <Mail />
+                          </a>
+                        )}
                         <button
                           className="row-action"
                           onClick={() => openCustomer(c)}
                         >
-                          Ver detalle
+                          <Eye /> Ver detalle
                         </button>
                         {(canUpdate || canDelete) && (
                           <details

@@ -7,12 +7,18 @@ export interface SellerReminder {
   completed: boolean;
   customerExternalId: string;
   customerName: string;
+  assignedTo: {
+    id: number | null;
+    externalId: string | null;
+    name: string | null;
+  } | null;
 }
 
 export interface ReminderFilters {
   from: string;
   to: string;
   completed?: boolean;
+  sellerExternalId?: string;
 }
 
 export const reminderApi = {

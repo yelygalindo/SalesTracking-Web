@@ -8,7 +8,6 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
-  MapPinned,
   Menu,
   Route,
   Settings,
@@ -28,21 +27,9 @@ const items = [
     end: true,
   },
   {
-    to: "/operations/dashboard",
-    label: "Monitoreo en vivo",
-    icon: MapPinned,
-    permissions: ["visits.read"],
-  },
-  {
     to: "/operations/history",
     label: "Recorridos y jornadas",
     icon: Route,
-    permissions: ["visits.read"],
-  },
-  {
-    to: "/operations/active",
-    label: "Visitas",
-    icon: CalendarDays,
     permissions: ["visits.read"],
   },
   {
@@ -66,6 +53,24 @@ const items = [
 ];
 const groups = [
   {
+    id: "monitoring",
+    label: "Monitoreo en vivo",
+    icon: CalendarDays,
+    path: "/operations/dashboard",
+    children: [
+      {
+        to: "/operations/dashboard",
+        label: "Estado del equipo",
+        permissions: ["visits.read"],
+      },
+      {
+        to: "/operations/active",
+        label: "Visitas en curso",
+        permissions: ["visits.read"],
+      },
+    ],
+  },
+  {
     id: "customers",
     label: "Contactos",
     icon: Users,
@@ -78,7 +83,7 @@ const groups = [
       },
       {
         to: "/customers/import",
-        label: "Importar contactos",
+        label: "Importar base de datos de clientes",
         allPermissions: ["customers.read", "customers.import"],
       },
       {
@@ -95,7 +100,7 @@ const groups = [
   },
   {
     id: "catalog",
-    label: "Productos y servicios",
+    label: "Productos",
     icon: Boxes,
     path: "/catalog",
     children: [
@@ -139,7 +144,7 @@ const groups = [
       },
       {
         to: "/reports/deliveries",
-        label: "Entregas",
+        label: "Reporte de entregas",
         permissions: ["reports.read"],
       },
     ],
@@ -321,6 +326,9 @@ export function AppShell() {
                 <span>{label}</span>
               </NavLink>
             ))}
+          {allowedGroups
+            .filter((group) => group.id === "monitoring")
+            .map(renderGroup)}
           {allowed
             .filter((item) => item.to !== "/" && item.to !== "/admin/users")
             .map(({ to, label, icon: Icon, end }) => (
