@@ -17,16 +17,14 @@ import {
 } from "../api/reportApi";
 
 const labels: Record<ReportType, string> = {
-  customers: "Clientes para contactar",
+  customers: "Contactos para seguimiento",
   deliveries: "Entregas pendientes",
-  productivity: "Productividad",
-  "commercial-activity": "Actividad comercial",
+  "commercial-activity": "Actividades",
 };
 
 const filtersByType: Record<ReportType, { dates: boolean; status: boolean }> = {
   customers: { dates: false, status: true },
   deliveries: { dates: true, status: true },
-  productivity: { dates: true, status: false },
   "commercial-activity": { dates: true, status: false },
 };
 
@@ -55,8 +53,8 @@ const humanKey = (value: string) =>
   (
     ({
       total: "Total",
-      totalCustomers: "Clientes",
-      activeCustomers: "Clientes activos",
+      totalCustomers: "Contactos",
+      activeCustomers: "Contactos activos",
       totalDeliveries: "Entregas",
       pendingDeliveries: "Pendientes",
       completedDeliveries: "Completadas",
@@ -147,9 +145,11 @@ export function ReportsPage() {
         eyebrow="Reportes"
         title={labels[type]}
         description={
-          isSeller
-            ? "Consulta exclusivamente la información autorizada de tus clientes."
-            : "Consulta información comercial y operativa."
+          type === "commercial-activity"
+            ? "Acciones realizadas durante las visitas y seguimientos del equipo."
+            : isSeller
+              ? "Consulta exclusivamente la información autorizada de tus contactos."
+              : "Consulta información de seguimiento y operación."
         }
         action={
           type === "deliveries" ? (
@@ -187,12 +187,12 @@ export function ReportsPage() {
         )}
         {canChooseSeller && (
           <label>
-            Vendedor
+            Responsable
             <select
               value={sellerId}
               onChange={(event) => setSellerId(event.target.value)}
             >
-              <option value="">Todos los vendedores</option>
+              <option value="">Todos los responsables</option>
               {sellers.data?.map((seller) => (
                 <option key={seller.externalId} value={seller.externalId}>
                   {seller.displayName}
@@ -322,7 +322,7 @@ function ReportTable({
         label: "Próximo contacto",
         render: (row) => formatDate(row.nextContactAtUtc || row.reminderAtUtc),
       },
-      { label: "Vendedor", render: (row) => String(row.sellerName || "—") },
+      { label: "Responsable", render: (row) => String(row.sellerName || "—") },
     ],
     deliveries: [
       {
@@ -359,35 +359,7 @@ function ReportTable({
           <DeliveryItemsCell deliveryId={row.deliveryExternalId} />
         ),
       },
-      { label: "Vendedor", render: (row) => String(row.sellerName || "—") },
-    ],
-    productivity: [
-      {
-        label: "Registro",
-        render: (row) =>
-          String(row.name || row.projectName || row.sellerName || "—"),
-      },
-      {
-        label: "Cliente / Zona",
-        render: (row) => String(row.customerName || row.zoneName || "—"),
-      },
-      {
-        label: "Completadas",
-        render: (row) =>
-          row.completedCount != null
-            ? String(row.completedCount)
-            : row.progressPercentage != null
-              ? `${row.progressPercentage}%`
-              : "—",
-      },
-      { label: "Pendientes", render: (row) => String(row.pendingCount ?? "—") },
-      {
-        label: "Total / Fecha estimada",
-        render: (row) =>
-          row.totalCount != null
-            ? String(row.totalCount)
-            : formatDate(row.expectedCloseDateUtc),
-      },
+      { label: "Responsable", render: (row) => String(row.sellerName || "—") },
     ],
     "commercial-activity": [
       {
@@ -399,7 +371,7 @@ function ReportTable({
       },
       { label: "Cliente", render: (row) => customer(row) },
       { label: "Proyecto", render: (row) => project(row) },
-      { label: "Vendedor", render: (row) => String(row.sellerName || "—") },
+      { label: "Responsable", render: (row) => String(row.sellerName || "—") },
       {
         label: "Fecha",
         render: (row) => formatDate(row.occurredAtUtc || row.createdAtUtc),

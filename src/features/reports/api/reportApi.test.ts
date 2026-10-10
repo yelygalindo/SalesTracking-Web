@@ -31,19 +31,19 @@ describe("reportApi", () => {
     });
   });
 
-  it("usa la ruta publicada y los filtros de productividad", async () => {
-    api.onGet("/api/reports/seller-productivity").reply(200, {
+  it("usa la ruta publicada y los filtros de actividad comercial", async () => {
+    api.onGet("/api/reports/commercial-activity").reply(200, {
       items: [],
       pagination: { page: 1, pageSize: 100, totalItems: 0, totalPages: 0 },
     });
 
-    await reportApi.get("productivity", {
+    await reportApi.get("commercial-activity", {
       from: "2026-01-01",
       to: "2026-01-31",
       sellerId: "seller-2",
     });
 
-    expect(api.history.get[0].url).toBe("/api/reports/seller-productivity");
+    expect(api.history.get[0].url).toBe("/api/reports/commercial-activity");
     expect(api.history.get[0].params).toEqual({
       from: "2026-01-01",
       to: "2026-01-31",

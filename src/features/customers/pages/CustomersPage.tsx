@@ -259,14 +259,13 @@ export function CustomersPage() {
               if (mode === "create") setSelected(null);
             }}
           >
-            <ChevronLeft /> Volver a clientes
+            <ChevronLeft /> Volver a contactos
           </button>
           <div>
-            <p className="overline">Clientes</p>
-            <h1>{mode === "create" ? "Nuevo cliente" : "Editar cliente"}</h1>
+            <p className="overline">Contactos</p>
+            <h1>{mode === "create" ? "Nuevo contacto" : "Editar contacto"}</h1>
             <p>
-              Organiza los datos comerciales, la asignación y la ubicación en un
-              solo lugar.
+              Organiza los datos, la asignación y la ubicación en un solo lugar.
             </p>
           </div>
         </header>
@@ -293,9 +292,9 @@ export function CustomersPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión comercial</p>
-          <h1>Clientes</h1>
-          <p>Administra tu cartera de clientes y prospectos.</p>
+          <p className="overline">Gestión de contactos</p>
+          <h1>Contactos</h1>
+          <p>Administra las personas y organizaciones de tu cartera.</p>
         </div>
         <div className="heading-actions">
           <CustomerCsvActions
@@ -313,17 +312,17 @@ export function CustomersPage() {
               }}
             >
               <Plus />
-              Nuevo cliente
+              Nuevo contacto
             </button>
           )}
         </div>
       </header>
       {notice && <p className="customer-feedback">{notice}</p>}
-      <section className="customer-metrics" aria-label="Resumen de clientes">
+      <section className="customer-metrics" aria-label="Resumen de contactos">
         {[
-          { label: "Total clientes", index: 0 },
+          { label: "Total contactos", index: 0 },
           { label: "Prospectos", index: 1 },
-          { label: "Clientes activos", index: 2 },
+          { label: "Contactos activos", index: 2 },
         ].map(({ label, index }) => (
           <article key={label} className={index === 1 ? "accent" : ""}>
             <span>{label}</span>
@@ -398,7 +397,7 @@ export function CustomersPage() {
                   <th className="result-col-secondary">Contacto</th>
                   <th className="result-col-status">Estado</th>
                   {canViewTeam && (
-                    <th className="result-col-tertiary">Vendedor</th>
+                    <th className="result-col-tertiary">Responsable</th>
                   )}
                   <th className="result-col-actions">Acciones</th>
                 </tr>

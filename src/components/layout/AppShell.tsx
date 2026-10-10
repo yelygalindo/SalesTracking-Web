@@ -1,14 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Activity,
   BarChart3,
   Boxes,
-  Building2,
   CalendarClock,
+  CalendarDays,
   ChevronDown,
   LayoutDashboard,
   LogOut,
+  MapPinned,
   Menu,
-  PackageCheck,
   Route,
   Settings,
   Users,
@@ -27,73 +28,74 @@ const items = [
     end: true,
   },
   {
+    to: "/operations/dashboard",
+    label: "Monitoreo en vivo",
+    icon: MapPinned,
+    permissions: ["visits.read"],
+  },
+  {
+    to: "/operations/history",
+    label: "Recorridos y jornadas",
+    icon: Route,
+    permissions: ["visits.read"],
+  },
+  {
+    to: "/operations/active",
+    label: "Visitas",
+    icon: CalendarDays,
+    permissions: ["visits.read"],
+  },
+  {
+    to: "/reports/commercial-activity",
+    label: "Actividades",
+    icon: Activity,
+    permissions: ["reports.read"],
+  },
+  {
     to: "/reminders",
-    label: "Recordatorios",
+    label: "Agenda",
     icon: CalendarClock,
     permissions: ["customers.read"],
   },
   {
-    to: "/deliveries",
-    label: "Entregas",
-    icon: PackageCheck,
-    permissions: ["deliveries.read"],
+    to: "/admin/users",
+    label: "Equipo",
+    icon: Users,
+    permissions: ["users.read"],
   },
 ];
 const groups = [
   {
     id: "customers",
-    label: "Clientes",
+    label: "Contactos",
     icon: Users,
     path: "/customers",
     children: [
-      { to: "/customers", label: "Listado", permissions: ["customers.read"] },
+      {
+        to: "/customers",
+        label: "Directorio",
+        permissions: ["customers.read"],
+      },
       {
         to: "/customers/import",
-        label: "Importar",
+        label: "Importar contactos",
         allPermissions: ["customers.read", "customers.import"],
       },
-    ],
-  },
-  {
-    id: "projects",
-    label: "Proyectos",
-    icon: Building2,
-    path: "/projects",
-    children: [
-      { to: "/projects", label: "Listado", permissions: ["projects.read"] },
+      {
+        to: "/projects",
+        label: "Seguimientos",
+        permissions: ["projects.read"],
+      },
       {
         to: "/projects/import",
-        label: "Importar",
+        label: "Importar seguimientos",
         allPermissions: ["projects.read", "projects.import"],
       },
     ],
   },
   {
-    id: "operations",
-    label: "Operación",
-    icon: Route,
-    path: "/operations",
-    children: [
-      {
-        to: "/operations/dashboard",
-        label: "Dashboard operativo",
-        permissions: ["visits.read"],
-      },
-      {
-        to: "/operations/active",
-        label: "Vendedores activos",
-        permissions: ["visits.read"],
-      },
-      {
-        to: "/operations/history",
-        label: "Historial de jornadas",
-        permissions: ["visits.read"],
-      },
-    ],
-  },
-  {
     id: "catalog",
-    label: "Productos",
+    label: "Productos y servicios",
     icon: Boxes,
     path: "/catalog",
     children: [
@@ -117,6 +119,11 @@ const groups = [
         label: "Importar unidades",
         allPermissions: ["products.read", "units.read", "units.import"],
       },
+      {
+        to: "/deliveries",
+        label: "Compromisos y entregas",
+        permissions: ["deliveries.read"],
+      },
     ],
   },
   {
@@ -127,22 +134,12 @@ const groups = [
     children: [
       {
         to: "/reports/customers",
-        label: "Clientes",
+        label: "Contactos",
         permissions: ["reports.read"],
       },
       {
         to: "/reports/deliveries",
         label: "Entregas",
-        permissions: ["reports.read"],
-      },
-      {
-        to: "/reports/productivity",
-        label: "Productividad",
-        permissions: ["reports.read"],
-      },
-      {
-        to: "/reports/commercial-activity",
-        label: "Actividad comercial",
         permissions: ["reports.read"],
       },
     ],
@@ -163,7 +160,6 @@ const groups = [
         label: "Invitaciones",
         permissions: ["invitations.create"],
       },
-      { to: "/admin/users", label: "Usuarios", permissions: ["users.read"] },
       {
         to: "/admin/time-zone",
         label: "Zona horaria",
@@ -178,7 +174,7 @@ const groups = [
   },
 ];
 const roleNames: Record<string, string> = {
-  seller: "Vendedor",
+  seller: "Personal de campo",
   supervisor: "Supervisor",
   admin: "Administrador",
   "super-admin": "Superadministrador",
@@ -196,7 +192,12 @@ export function AppShell() {
     const activeGroup = groups.find(
       (group) =>
         location.pathname === group.path ||
-        location.pathname.startsWith(`${group.path}/`),
+        location.pathname.startsWith(`${group.path}/`) ||
+        group.children.some(
+          (child) =>
+            location.pathname === child.to ||
+            location.pathname.startsWith(`${child.to}/`),
+        ),
     );
     if (activeGroup)
       setExpandedGroups((current) =>
@@ -239,7 +240,13 @@ export function AppShell() {
   }: (typeof allowedGroups)[number]) => {
     const expanded = expandedGroups.includes(id);
     const active =
-      location.pathname === path || location.pathname.startsWith(`${path}/`);
+      location.pathname === path ||
+      location.pathname.startsWith(`${path}/`) ||
+      children.some(
+        (child) =>
+          location.pathname === child.to ||
+          location.pathname.startsWith(`${child.to}/`),
+      );
     return (
       <div className={`nav-group ${active ? "active" : ""}`} key={id}>
         <button
@@ -304,7 +311,7 @@ export function AppShell() {
             <X />
           </button>
         </div>
-        <p className="nav-label">Operación</p>
+        <p className="nav-label">Navegación</p>
         <nav>
           {allowed
             .filter((item) => item.to === "/")
@@ -314,11 +321,8 @@ export function AppShell() {
                 <span>{label}</span>
               </NavLink>
             ))}
-          {allowedGroups
-            .filter((group) => group.id === "customers")
-            .map(renderGroup)}
           {allowed
-            .filter((item) => item.to !== "/")
+            .filter((item) => item.to !== "/" && item.to !== "/admin/users")
             .map(({ to, label, icon: Icon, end }) => (
               <NavLink end={end} key={to} to={to}>
                 <Icon />
@@ -326,7 +330,18 @@ export function AppShell() {
               </NavLink>
             ))}
           {allowedGroups
-            .filter((group) => group.id !== "customers")
+            .filter((group) => ["customers", "catalog"].includes(group.id))
+            .map(renderGroup)}
+          {allowed
+            .filter((item) => item.to === "/admin/users")
+            .map(({ to, label, icon: Icon, end }) => (
+              <NavLink end={end} key={to} to={to}>
+                <Icon />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          {allowedGroups
+            .filter((group) => ["reports", "admin"].includes(group.id))
             .map(renderGroup)}
         </nav>
         <button className="logout" onClick={() => void logout()}>

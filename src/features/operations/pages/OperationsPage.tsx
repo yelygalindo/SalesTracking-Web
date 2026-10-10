@@ -121,11 +121,9 @@ export function OperationsPage() {
   return (
     <main className="customers-content operations-page">
       <PageHeader
-        eyebrow="Operación"
-        title={
-          tab === "active" ? "Vendedores activos" : "Historial de jornadas"
-        }
-        description="Consulta jornadas, visitas y ubicaciones registradas por el equipo autorizado."
+        eyebrow="Visitas"
+        title={tab === "active" ? "Visitas en curso" : "Recorridos y jornadas"}
+        description="Consulta lugares, responsables, fechas y el seguimiento registrado en cada jornada."
       />
       {!canChooseSeller && (
         <p className="assignment-note">
@@ -146,7 +144,7 @@ export function OperationsPage() {
               loading={active.isLoading}
               error={active.error}
               isEmpty={!active.data?.length}
-              empty="No hay vendedores con jornada activa."
+              empty="No hay responsables con jornada activa."
             >
               <TrackingMap points={activePoints} />
             </DataState>
@@ -156,13 +154,13 @@ export function OperationsPage() {
               loading={active.isLoading}
               error={active.error}
               isEmpty={!active.data?.length}
-              empty="No hay vendedores con jornada activa."
+              empty="No hay responsables con jornada activa."
             >
               <div className="table-scroll">
                 <table>
                   <thead>
                     <tr>
-                      <th>Vendedor</th>
+                      <th>Responsable</th>
                       <th>Estado</th>
                       <th>Hora de inicio</th>
                       <th>Última ubicación</th>
@@ -227,12 +225,12 @@ export function OperationsPage() {
             </label>
             {canChooseSeller && (
               <label>
-                Vendedor
+                Responsable
                 <select
                   value={sellerId}
                   onChange={(event) => setSellerId(event.target.value)}
                 >
-                  <option value="">Selecciona un vendedor</option>
+                  <option value="">Selecciona un responsable</option>
                   {sellers.data?.map((seller) => (
                     <option key={seller.externalId} value={seller.externalId}>
                       {seller.displayName}
@@ -254,7 +252,7 @@ export function OperationsPage() {
               isEmpty={!history.data?.length}
               empty={
                 canChooseSeller && !sellerId
-                  ? "Selecciona un vendedor para consultar sus jornadas."
+                  ? "Selecciona un responsable para consultar sus jornadas."
                   : "No hay jornadas registradas para estos filtros."
               }
             >
@@ -262,7 +260,7 @@ export function OperationsPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Vendedor</th>
+                      <th>Responsable</th>
                       <th>Inicio</th>
                       <th>Fin</th>
                       <th>Duración</th>
@@ -276,7 +274,7 @@ export function OperationsPage() {
                     {history.data?.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          <strong>{item.sellerName || "Vendedor"}</strong>
+                          <strong>{item.sellerName || "Responsable"}</strong>
                         </td>
                         <td>{dateTime(item.startedAtUtc)}</td>
                         <td>{dateTime(item.endedAtUtc)}</td>
@@ -369,7 +367,9 @@ function WorkdayDetail({
       </button>
       <PageHeader
         eyebrow="Detalle de jornada"
-        title={workday.data?.sellerName || workdaySummary.sellerName || "Jornada"}
+        title={
+          workday.data?.sellerName || workdaySummary.sellerName || "Jornada"
+        }
         description={`${dateTime(workday.data?.startedAtUtc)} · ${statusLabel(workday.data?.status)}`}
       />
       <DataState

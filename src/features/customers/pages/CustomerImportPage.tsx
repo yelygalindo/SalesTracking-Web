@@ -16,9 +16,9 @@ const fields = [
 export function CustomerImportPage() {
   return (
     <SpreadsheetImportWizard
-      eyebrow="Clientes"
-      title="Importar clientes"
-      description="Carga clientes de forma masiva con validación previa por fila."
+      eyebrow="Contactos"
+      title="Importar contactos"
+      description="Carga contactos de forma masiva con validación previa por fila."
       plural="clientes"
       backTo="/customers"
       templateName="plantilla-clientes.xlsx"

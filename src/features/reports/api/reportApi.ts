@@ -1,8 +1,7 @@
 import { apiClient } from "@/lib/api/apiClient";
 import { AppError } from "@/lib/api/apiError";
 
-export type ReportType =
-  "customers" | "deliveries" | "productivity" | "commercial-activity";
+export type ReportType = "customers" | "deliveries" | "commercial-activity";
 
 export interface ReportFilters {
   from?: string;
@@ -63,7 +62,6 @@ export interface ReportPage {
 const endpoints: Record<ReportType, string> = {
   customers: "customers-pending-contact",
   deliveries: "deliveries",
-  productivity: "seller-productivity",
   "commercial-activity": "commercial-activity",
 };
 
@@ -72,7 +70,6 @@ const paramsFor = (type: ReportType, filters: ReportFilters) => ({
   to: filters.to,
   sellerExternalId: filters.sellerId,
   statusId:
-    type !== "productivity" &&
     type !== "commercial-activity" &&
     filters.status &&
     /^\d+$/.test(filters.status)

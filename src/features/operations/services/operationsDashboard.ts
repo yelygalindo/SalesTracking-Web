@@ -82,7 +82,7 @@ export function buildOperationsDashboard(
       displayName:
         active.sellerName ||
         sellerDirectory.get(active.sellerExternalId)?.displayName ||
-        "Vendedor",
+        "Responsable",
     });
   for (const workday of workdays)
     if (workday.sellerExternalId)
@@ -91,7 +91,7 @@ export function buildOperationsDashboard(
         displayName:
           workday.sellerName ||
           sellerDirectory.get(workday.sellerExternalId)?.displayName ||
-          "Vendedor",
+          "Responsable",
       });
   for (const visit of visits)
     if (visit.sellerExternalId)
@@ -100,62 +100,64 @@ export function buildOperationsDashboard(
         displayName:
           visit.sellerName ||
           sellerDirectory.get(visit.sellerExternalId)?.displayName ||
-          "Vendedor",
+          "Responsable",
       });
 
   const staleAfterMilliseconds = 30 * 60 * 1000;
-  const workers = [...sellerDirectory.values()].map<OperationsWorker>((seller) => {
-    const active = activeBySeller.get(seller.externalId);
-    const sellerWorkdays = workdaysBySeller.get(seller.externalId) ?? [];
-    const openWorkday = sellerWorkdays.find((item) =>
-      ["open", "active"].includes(item.status.toLowerCase()),
-    );
-    const activeWorkday = active?.workdayExternalId
-      ? workdayById.get(active.workdayExternalId)
-      : undefined;
-    const workday = activeWorkday ?? openWorkday ?? sellerWorkdays[0];
-    const isWorking = Boolean(active || openWorkday);
-    const isFinished = !isWorking && Boolean(workday?.endedAtUtc);
-    const lastLocation = active?.lastLocation;
-    const lastLocationAtUtc =
-      active?.lastUpdatedAtUtc ?? lastLocation?.capturedAtUtc ?? null;
-    let incident: string | undefined;
+  const workers = [...sellerDirectory.values()].map<OperationsWorker>(
+    (seller) => {
+      const active = activeBySeller.get(seller.externalId);
+      const sellerWorkdays = workdaysBySeller.get(seller.externalId) ?? [];
+      const openWorkday = sellerWorkdays.find((item) =>
+        ["open", "active"].includes(item.status.toLowerCase()),
+      );
+      const activeWorkday = active?.workdayExternalId
+        ? workdayById.get(active.workdayExternalId)
+        : undefined;
+      const workday = activeWorkday ?? openWorkday ?? sellerWorkdays[0];
+      const isWorking = Boolean(active || openWorkday);
+      const isFinished = !isWorking && Boolean(workday?.endedAtUtc);
+      const lastLocation = active?.lastLocation;
+      const lastLocationAtUtc =
+        active?.lastUpdatedAtUtc ?? lastLocation?.capturedAtUtc ?? null;
+      let incident: string | undefined;
 
-    if (isWorking && !lastLocation) incident = "Sin ubicación reportada";
-    else if (isWorking && lastLocationAtUtc) {
-      const elapsed = now.getTime() - new Date(lastLocationAtUtc).getTime();
-      if (elapsed > staleAfterMilliseconds) {
-        const minutes = Math.max(31, Math.floor(elapsed / 60000));
-        incident = `Sin señal hace ${minutes} min`;
+      if (isWorking && !lastLocation) incident = "Sin ubicación reportada";
+      else if (isWorking && lastLocationAtUtc) {
+        const elapsed = now.getTime() - new Date(lastLocationAtUtc).getTime();
+        if (elapsed > staleAfterMilliseconds) {
+          const minutes = Math.max(31, Math.floor(elapsed / 60000));
+          incident = `Sin señal hace ${minutes} min`;
+        }
       }
-    }
 
-    return {
-      sellerExternalId: seller.externalId,
-      sellerName: seller.displayName,
-      status: isWorking ? "working" : isFinished ? "finished" : "not-started",
-      workday:
-        workday ??
-        (active?.workdayExternalId
-          ? {
-              id: active.workdayExternalId,
-              sellerExternalId: seller.externalId,
-              sellerName: seller.displayName,
-              status: active.status || "open",
-              startedAtUtc: active.startedAtUtc,
-              visitCount: completedVisitsBySeller.get(seller.externalId) ?? 0,
-              locationCount: active.lastLocation ? 1 : 0,
-            }
-          : undefined),
-      startedAtUtc: active?.startedAtUtc ?? workday?.startedAtUtc,
-      endedAtUtc: workday?.endedAtUtc,
-      lastLocationAtUtc,
-      latitude: lastLocation?.latitude,
-      longitude: lastLocation?.longitude,
-      completedVisits: completedVisitsBySeller.get(seller.externalId) ?? 0,
-      incident,
-    };
-  });
+      return {
+        sellerExternalId: seller.externalId,
+        sellerName: seller.displayName,
+        status: isWorking ? "working" : isFinished ? "finished" : "not-started",
+        workday:
+          workday ??
+          (active?.workdayExternalId
+            ? {
+                id: active.workdayExternalId,
+                sellerExternalId: seller.externalId,
+                sellerName: seller.displayName,
+                status: active.status || "open",
+                startedAtUtc: active.startedAtUtc,
+                visitCount: completedVisitsBySeller.get(seller.externalId) ?? 0,
+                locationCount: active.lastLocation ? 1 : 0,
+              }
+            : undefined),
+        startedAtUtc: active?.startedAtUtc ?? workday?.startedAtUtc,
+        endedAtUtc: workday?.endedAtUtc,
+        lastLocationAtUtc,
+        latitude: lastLocation?.latitude,
+        longitude: lastLocation?.longitude,
+        completedVisits: completedVisitsBySeller.get(seller.externalId) ?? 0,
+        incident,
+      };
+    },
+  );
 
   workers.sort(
     (left, right) =>
@@ -169,7 +171,8 @@ export function buildOperationsDashboard(
     metrics: {
       working: workers.filter((worker) => worker.status === "working").length,
       finished: workers.filter((worker) => worker.status === "finished").length,
-      completedVisits: visits.filter((visit) => Boolean(visit.checkOutAtUtc)).length,
+      completedVisits: visits.filter((visit) => Boolean(visit.checkOutAtUtc))
+        .length,
       incidents: workers.filter((worker) => Boolean(worker.incident)).length,
     },
   };

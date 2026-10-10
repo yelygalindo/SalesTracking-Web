@@ -8,6 +8,7 @@ import {
   MapPinOff,
   Radio,
   TriangleAlert,
+  UserRoundSearch,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -55,7 +56,10 @@ function LiveMapViewport({ workers }: { workers: OperationsWorker[] }) {
     );
     if (positions.length === 1) map.setView(positions[0], 15);
     else if (positions.length > 1)
-      map.fitBounds(latLngBounds(positions), { padding: [32, 32], maxZoom: 15 });
+      map.fitBounds(latLngBounds(positions), {
+        padding: [32, 32],
+        maxZoom: 15,
+      });
   }, [map, workers]);
   return null;
 }
@@ -107,7 +111,8 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
               {worker.incident || "Ubicación actualizada"}
               {worker.lastLocationAtUtc && (
                 <>
-                  <br />{formatDateTime(worker.lastLocationAtUtc)}
+                  <br />
+                  {formatDateTime(worker.lastLocationAtUtc)}
                 </>
               )}
               {worker.workday && (
@@ -116,7 +121,7 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
                   to="/operations/history"
                   state={{ workday: worker.workday }}
                 >
-                  Ver trabajador
+                  Ver responsable
                 </Link>
               )}
             </Popup>
@@ -128,27 +133,56 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
 }
 
 export function OperationsDashboardPage() {
-  const { can } = useAuthorization();
+  const { can, user } = useAuthorization();
+  const canChooseSeller = can("sellers.read");
   const [filter, setFilter] = useState<WorkerFilter>("all");
+  const [sellerId, setSellerId] = useState("");
   const date = localDayKey(new Date());
   const from = localDayStartUtc(date);
   const to = localDayEndUtc(date);
+  const sellers = useQuery({
+    queryKey: ["operation-sellers"],
+    queryFn: operationsApi.sellers,
+    enabled: canChooseSeller,
+  });
+  const effectiveSellerId = canChooseSeller
+    ? sellerId
+    : (user?.externalId ?? "");
+  const selectedSeller = sellers.data?.find(
+    (seller) => seller.externalId === effectiveSellerId,
+  );
   const query = useQuery({
-    queryKey: ["operations-dashboard", date, can("sellers.read")],
+    queryKey: ["operations-dashboard", date, effectiveSellerId],
     queryFn: async () => {
       const [activeSellers, workdays, visits, sellers] = await Promise.all([
         operationsApi.activeSellers(),
-        operationsApi.workdays({ from, to }),
-        operationsApi.visits({ from, to }),
-        can("sellers.read") ? operationsApi.sellers() : Promise.resolve([]),
+        operationsApi.workdays({
+          from,
+          to,
+          sellerExternalId: effectiveSellerId,
+        }),
+        operationsApi.visits({ from, to, sellerExternalId: effectiveSellerId }),
+        Promise.resolve(
+          selectedSeller
+            ? [selectedSeller]
+            : [
+                {
+                  externalId: effectiveSellerId,
+                  displayName: user?.fullName || "Responsable",
+                },
+              ],
+        ),
       ]);
       return buildOperationsDashboard(
         sellers,
-        activeSellers,
+        activeSellers.filter(
+          (seller) => seller.sellerExternalId === effectiveSellerId,
+        ),
         workdays,
         visits,
       );
     },
+    enabled: Boolean(effectiveSellerId),
     refetchInterval: 30_000,
   });
   const visibleWorkers = useMemo(() => {
@@ -158,12 +192,13 @@ export function OperationsDashboardPage() {
       return workers.filter((worker) => Boolean(worker.incident));
     return workers.filter((worker) => worker.status === filter);
   }, [filter, query.data?.workers]);
-  const incidents = query.data?.workers.filter((worker) => worker.incident) ?? [];
+  const incidents =
+    query.data?.workers.filter((worker) => worker.incident) ?? [];
 
   return (
     <main className="customers-content operations-dashboard-page">
       <PageHeader
-        eyebrow="Operación en tiempo real"
+        eyebrow="Monitoreo en vivo"
         title="Estado del equipo"
         description="Jornadas, visitas e incidencias de hoy, actualizadas automáticamente."
         action={
@@ -172,126 +207,193 @@ export function OperationsDashboardPage() {
           </span>
         }
       />
-      <DataState
-        loading={query.isLoading}
-        error={query.error}
-        isEmpty={!query.data}
-        empty="No hay información operativa disponible."
-      >
-        {query.data && (
-          <>
-            <section className="operations-live-metrics" aria-label="Resumen operativo">
-              <OperationMetric
-                icon={Activity}
-                label="Trabajando ahora"
-                value={query.data.metrics.working}
-                tone="active"
-              />
-              <OperationMetric
-                icon={CheckCircle2}
-                label="Finalizaron jornada"
-                value={query.data.metrics.finished}
-                tone="finished"
-              />
-              <OperationMetric
-                icon={ClipboardCheck}
-                label="Visitas completadas"
-                value={query.data.metrics.completedVisits}
-                tone="visits"
-              />
-              <OperationMetric
-                icon={TriangleAlert}
-                label="Incidencias"
-                value={query.data.metrics.incidents}
-                tone="incident"
-              />
-            </section>
+      {canChooseSeller && (
+        <section className="operations-seller-picker">
+          <div>
+            <UserRoundSearch />
+            <span>
+              <strong>Responsable</strong>
+              <small>Selecciona a quién deseas monitorear hoy.</small>
+            </span>
+          </div>
+          <label>
+            <span>Buscar responsable</span>
+            <select
+              value={sellerId}
+              onChange={(event) => {
+                setSellerId(event.target.value);
+                setFilter("all");
+              }}
+              disabled={sellers.isLoading}
+            >
+              <option value="">
+                {sellers.isLoading
+                  ? "Cargando responsables..."
+                  : "Selecciona un responsable"}
+              </option>
+              {sellers.data?.map((seller) => (
+                <option key={seller.externalId} value={seller.externalId}>
+                  {seller.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+      )}
+      {sellers.error && canChooseSeller ? (
+        <DataState
+          loading={false}
+          error={sellers.error}
+          isEmpty={false}
+          empty="No hay responsables disponibles."
+        >
+          {null}
+        </DataState>
+      ) : !effectiveSellerId ? (
+        <div className="operations-dashboard-prompt">
+          <UserRoundSearch />
+          <strong>Selecciona un responsable</strong>
+          <span>
+            El resumen de su jornada, visitas e incidencias aparecerá aquí.
+          </span>
+        </div>
+      ) : (
+        <DataState
+          loading={query.isLoading}
+          error={query.error}
+          isEmpty={!query.data}
+          empty="No hay información operativa disponible."
+        >
+          {query.data && (
+            <>
+              <section
+                className="operations-live-metrics"
+                aria-label="Resumen operativo"
+              >
+                <OperationMetric
+                  icon={Activity}
+                  label="Trabajando ahora"
+                  value={query.data.metrics.working}
+                  tone="active"
+                />
+                <OperationMetric
+                  icon={CheckCircle2}
+                  label="Finalizaron jornada"
+                  value={query.data.metrics.finished}
+                  tone="finished"
+                />
+                <OperationMetric
+                  icon={ClipboardCheck}
+                  label="Visitas completadas"
+                  value={query.data.metrics.completedVisits}
+                  tone="visits"
+                />
+                <OperationMetric
+                  icon={TriangleAlert}
+                  label="Incidencias"
+                  value={query.data.metrics.incidents}
+                  tone="incident"
+                />
+              </section>
 
-            <section className="operations-live-layout">
-              <article className="operations-team-panel">
-                <header>
-                  <div>
-                    <h2>Equipo de hoy</h2>
-                    <p>{query.data.workers.length} trabajadores visibles</p>
-                  </div>
-                  <nav aria-label="Filtrar trabajadores">
-                    {([
-                      ["all", "Todos"],
-                      ["working", "Trabajando"],
-                      ["finished", "Finalizaron"],
-                      ["incidents", "Incidencias"],
-                    ] as const).map(([value, label]) => (
-                      <button
-                        className={filter === value ? "active" : ""}
-                        key={value}
-                        onClick={() => setFilter(value)}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </nav>
-                </header>
-                {visibleWorkers.length ? (
-                  <div className="operations-worker-list">
-                    {visibleWorkers.map((worker) => (
-                      <WorkerRow worker={worker} key={worker.sellerExternalId} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="operations-workers-empty">No hay trabajadores en este filtro.</div>
-                )}
-              </article>
-
-              <aside className="operations-live-side">
-                <article className="operations-live-map-card">
+              <section className="operations-live-layout">
+                <article className="operations-team-panel">
                   <header>
                     <div>
-                      <h2>Ubicación del equipo</h2>
-                      <p>Última posición reportada por jornadas activas.</p>
+                      <h2>Responsables de hoy</h2>
+                      <p>{query.data.workers.length} responsables visibles</p>
                     </div>
-                    <span>{formatTime(new Date(query.dataUpdatedAt))}</span>
+                    <nav aria-label="Filtrar responsables">
+                      {(
+                        [
+                          ["all", "Todos"],
+                          ["working", "Trabajando"],
+                          ["finished", "Finalizaron"],
+                          ["incidents", "Incidencias"],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <button
+                          className={filter === value ? "active" : ""}
+                          key={value}
+                          onClick={() => setFilter(value)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </nav>
                   </header>
-                  <OperationsLiveMap workers={query.data.workers} />
-                </article>
-                <article className="operations-incidents-card">
-                  <header>
-                    <div>
-                      <h2>Incidencias</h2>
-                      <p>Jornadas sin ubicación o con señal atrasada.</p>
-                    </div>
-                    <TriangleAlert />
-                  </header>
-                  {incidents.length ? (
-                    <div>
-                      {incidents.map((worker) => (
-                        <div className="operations-incident-row" key={worker.sellerExternalId}>
-                          <span>{worker.sellerName.slice(0, 1).toUpperCase()}</span>
-                          <div>
-                            <strong>{worker.sellerName}</strong>
-                            <small>{worker.incident}</small>
-                          </div>
-                          {worker.workday && (
-                            <Link
-                              to="/operations/history"
-                              state={{ workday: worker.workday }}
-                            >
-                              Revisar
-                            </Link>
-                          )}
-                        </div>
+                  {visibleWorkers.length ? (
+                    <div className="operations-worker-list">
+                      {visibleWorkers.map((worker) => (
+                        <WorkerRow
+                          worker={worker}
+                          key={worker.sellerExternalId}
+                        />
                       ))}
                     </div>
                   ) : (
-                    <div className="operations-no-incidents">
-                      <CheckCircle2 /> Sin incidencias activas
+                    <div className="operations-workers-empty">
+                      No hay responsables en este filtro.
                     </div>
                   )}
                 </article>
-              </aside>
-            </section>
-          </>
-        )}
-      </DataState>
+
+                <aside className="operations-live-side">
+                  <article className="operations-live-map-card">
+                    <header>
+                      <div>
+                        <h2>Ubicación del equipo</h2>
+                        <p>Última posición reportada por jornadas activas.</p>
+                      </div>
+                      <span>{formatTime(new Date(query.dataUpdatedAt))}</span>
+                    </header>
+                    <OperationsLiveMap workers={query.data.workers} />
+                  </article>
+                  <article className="operations-incidents-card">
+                    <header>
+                      <div>
+                        <h2>Incidencias</h2>
+                        <p>Jornadas sin ubicación o con señal atrasada.</p>
+                      </div>
+                      <TriangleAlert />
+                    </header>
+                    {incidents.length ? (
+                      <div>
+                        {incidents.map((worker) => (
+                          <div
+                            className="operations-incident-row"
+                            key={worker.sellerExternalId}
+                          >
+                            <span>
+                              {worker.sellerName.slice(0, 1).toUpperCase()}
+                            </span>
+                            <div>
+                              <strong>{worker.sellerName}</strong>
+                              <small>{worker.incident}</small>
+                            </div>
+                            {worker.workday && (
+                              <Link
+                                to="/operations/history"
+                                state={{ workday: worker.workday }}
+                              >
+                                Revisar
+                              </Link>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="operations-no-incidents">
+                        <CheckCircle2 /> Sin incidencias activas
+                      </div>
+                    )}
+                  </article>
+                </aside>
+              </section>
+            </>
+          )}
+        </DataState>
+      )}
     </main>
   );
 }
@@ -309,8 +411,13 @@ function OperationMetric({
 }) {
   return (
     <article className={`operations-live-metric ${tone}`}>
-      <span><Icon /></span>
-      <div><p>{label}</p><strong>{value}</strong></div>
+      <span>
+        <Icon />
+      </span>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+      </div>
     </article>
   );
 }
@@ -318,7 +425,9 @@ function OperationMetric({
 function WorkerRow({ worker }: { worker: OperationsWorker }) {
   const initials = workerInitials(worker.sellerName);
   return (
-    <div className={`operations-worker-row ${worker.incident ? "incident" : ""}`}>
+    <div
+      className={`operations-worker-row ${worker.incident ? "incident" : ""}`}
+    >
       <span className="operations-worker-avatar">{initials}</span>
       <div className="operations-worker-name">
         <strong>{worker.sellerName}</strong>
@@ -329,11 +438,17 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       </span>
       <div className="operations-worker-fact">
         <small>Inicio</small>
-        <strong>{worker.startedAtUtc ? formatTime(worker.startedAtUtc) : "—"}</strong>
+        <strong>
+          {worker.startedAtUtc ? formatTime(worker.startedAtUtc) : "—"}
+        </strong>
       </div>
       <div className="operations-worker-fact">
         <small>Última señal</small>
-        <strong>{worker.lastLocationAtUtc ? formatTime(worker.lastLocationAtUtc) : "—"}</strong>
+        <strong>
+          {worker.lastLocationAtUtc
+            ? formatTime(worker.lastLocationAtUtc)
+            : "—"}
+        </strong>
       </div>
       <div className="operations-worker-fact">
         <small>Visitas</small>

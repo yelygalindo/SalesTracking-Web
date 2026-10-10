@@ -44,9 +44,9 @@ const displayDate = (value: unknown) => {
 export function ProjectImportPage() {
   return (
     <SpreadsheetImportWizard
-      eyebrow="Proyectos"
-      title="Importar proyectos"
-      description="Carga proyectos de forma masiva con validación previa por fila."
+      eyebrow="Seguimientos"
+      title="Importar seguimientos"
+      description="Carga seguimientos de forma masiva con validación previa por fila."
       plural="proyectos"
       backTo="/projects"
       templateName="plantilla-proyectos.xlsx"

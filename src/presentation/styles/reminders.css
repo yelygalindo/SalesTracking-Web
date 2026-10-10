@@ -1,51 +1,417 @@
-.reminder-filters {
+.reminders-page {
+  display: grid;
+  gap: 16px;
+}
+
+.reminders-page > .shared-page-header {
+  margin-bottom: 0;
+}
+
+.reminder-calendar-toolbar {
+  display: flex;
   align-items: end;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--ut-border);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: var(--ut-shadow-sm);
 }
 
-.reminder-search {
-  height: 42px;
-  white-space: nowrap;
+.reminder-month-navigation,
+.reminder-month-navigation > div,
+.reminder-calendar-filters {
+  display: flex;
+  align-items: center;
 }
 
-.reminder-search svg {
-  width: 17px;
+.reminder-month-navigation {
+  gap: 7px;
 }
 
-.applied-reminder-filters {
+.reminder-month-navigation > div {
+  min-width: 215px;
+  justify-content: center;
+  gap: 9px;
+  color: #11213b;
+  text-transform: capitalize;
+}
+
+.reminder-month-navigation svg {
+  width: 18px;
+}
+
+.reminder-month-navigation > button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #d6deea;
+  border-radius: 9px;
+  color: #40526a;
+  background: #f8fafc;
+}
+
+.reminder-month-navigation > button:hover {
+  color: #1d4ed8;
+  border-color: #a9bde0;
+  background: #eff6ff;
+}
+
+.reminder-month-navigation .reminder-today-button {
+  width: auto;
+  padding: 0 12px;
+  font-weight: 750;
+}
+
+.reminder-calendar-filters {
+  gap: 12px;
+}
+
+.reminder-calendar-filters label {
+  display: grid;
+  min-width: 190px;
+  gap: 5px;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+
+.reminder-calendar-filters select {
+  min-height: 39px;
+  padding: 0 34px 0 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  color: #172033;
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.reminder-calendar-summary {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 20px;
-  padding: 0 4px;
-  color: #64748b;
-  font-size: .78rem;
+  gap: 9px;
+  padding: 0 3px;
 }
 
-.applied-reminder-filters > span:first-child {
-  font-weight: 700;
-}
-
-.applied-reminder-filters strong {
-  padding: 4px 9px;
+.reminder-calendar-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
   border-radius: 99px;
-  color: #92400e;
-  background: #fff7ed;
+  color: #31577f;
+  background: #eaf2fc;
+  font-size: 0.75rem;
 }
 
-.applied-reminder-filters small {
+.reminder-calendar-summary span.overdue {
+  color: #b42318;
+  background: #feeceb;
+}
+
+.reminder-calendar-summary svg {
+  width: 14px;
+}
+.reminder-calendar-summary small {
   margin-left: auto;
   color: #64748b;
 }
 
-@media (max-width: 700px) {
-  .reminder-filters {
-    align-items: stretch;
-  }
+.reminder-calendar-scroll {
+  overflow-x: auto;
+  border: 1px solid #d8e0ea;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgb(17 33 59 / 8%);
+}
 
-  .applied-reminder-filters small {
+.reminder-calendar {
+  display: grid;
+  min-width: 980px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.reminder-weekday {
+  padding: 11px 12px;
+  border-bottom: 1px solid #d8e0ea;
+  color: #65758a;
+  background: #f7f9fc;
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.reminder-calendar-day {
+  min-height: 148px;
+  padding: 9px;
+  border-right: 1px solid #e5eaf0;
+  border-bottom: 1px solid #e5eaf0;
+  background: #fff;
+}
+
+.reminder-calendar-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.reminder-calendar-day.outside {
+  background: #fafbfc;
+}
+
+.reminder-calendar-day.outside .reminder-day-events {
+  opacity: 0.55;
+}
+
+.reminder-calendar-day > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 27px;
+  margin-bottom: 5px;
+}
+
+.reminder-calendar-day > header time {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  color: #43546a;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.reminder-calendar-day.today > header time {
+  color: #fff;
+  background: #1d4ed8;
+  box-shadow: 0 4px 10px rgb(29 78 216 / 28%);
+}
+
+.reminder-calendar-day.outside > header time {
+  color: #a7b0bd;
+}
+
+.reminder-calendar-day > header span {
+  padding: 2px 6px;
+  border-radius: 99px;
+  color: #64748b;
+  background: #eef2f6;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.reminder-day-events {
+  display: grid;
+  gap: 5px;
+}
+
+.reminder-day-events button {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  padding: 7px 8px;
+  border: 0;
+  border-left: 3px solid #2563eb;
+  border-radius: 7px;
+  color: #173b6d;
+  background: #eaf2ff;
+  text-align: left;
+}
+
+.reminder-day-events button:hover {
+  translate: 0 -1px;
+  box-shadow: 0 5px 12px rgb(37 99 235 / 14%);
+}
+
+.reminder-day-events button.overdue {
+  border-left-color: #dc2626;
+  color: #8f1d19;
+  background: #fff0ef;
+}
+
+.reminder-day-events button.completed {
+  border-left-color: #16a36a;
+  color: #176648;
+  background: #eaf8f2;
+}
+
+.reminder-day-events time {
+  font-size: 0.63rem;
+  font-weight: 800;
+}
+
+.reminder-day-events strong,
+.reminder-day-events small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reminder-day-events strong {
+  font-size: 0.72rem;
+}
+.reminder-day-events small {
+  opacity: 0.75;
+  font-size: 0.63rem;
+}
+
+.reminder-detail-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(10 20 37 / 48%);
+  backdrop-filter: blur(3px);
+}
+
+.reminder-detail-dialog {
+  width: min(100%, 540px);
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 80px rgb(5 15 32 / 28%);
+}
+
+.reminder-detail-dialog > header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 34px;
+  align-items: start;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid #e5eaf0;
+}
+
+.reminder-detail-dialog > header > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: #1d4ed8;
+  background: #eaf2ff;
+}
+
+.reminder-detail-dialog > header > span.completed {
+  color: #087052;
+  background: #e7f8f0;
+}
+.reminder-detail-dialog > header svg {
+  width: 20px;
+}
+.reminder-detail-dialog h2 {
+  margin: 3px 0 0;
+  color: #172033;
+  font-size: 1.05rem;
+}
+.reminder-detail-dialog header small {
+  color: #64748b;
+  font-weight: 750;
+}
+
+.reminder-detail-dialog > header > button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #64748b;
+  background: #f1f4f7;
+}
+
+.reminder-detail-dialog dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 20px;
+}
+
+.reminder-detail-dialog dl > div {
+  display: grid;
+  grid-template-columns: 115px 1fr;
+  gap: 14px;
+}
+
+.reminder-detail-dialog dt {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+.reminder-detail-dialog dd {
+  margin: 0;
+  color: #26364a;
+  font-size: 0.84rem;
+}
+
+.reminder-detail-dialog > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 15px 20px;
+  border-top: 1px solid #e5eaf0;
+  background: #f8fafc;
+}
+
+.reminder-detail-dialog > footer a,
+.reminder-detail-dialog > footer button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  background: #fff;
+  font-size: 0.77rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.reminder-detail-dialog > footer .action-primary {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+@media (max-width: 900px) {
+  .reminder-calendar-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .reminder-calendar-filters label {
+    flex: 1;
+  }
+}
+
+@media (max-width: 620px) {
+  .reminder-month-navigation {
+    flex-wrap: wrap;
+  }
+  .reminder-month-navigation > div {
+    min-width: 160px;
+    flex: 1;
+  }
+  .reminder-calendar-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .reminder-calendar-summary small {
     width: 100%;
     margin-left: 0;
+  }
+  .reminder-detail-dialog > footer {
+    flex-wrap: wrap;
+  }
+  .reminder-detail-dialog > footer a,
+  .reminder-detail-dialog > footer button {
+    justify-content: center;
+    flex: 1;
   }
 }

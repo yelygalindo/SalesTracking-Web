@@ -126,14 +126,14 @@ export function CatalogPage() {
   return (
     <main className="customers-content">
       <PageHeader
-        eyebrow="Catálogo"
-        title={tab === "products" ? "Productos" : "Unidades"}
+        eyebrow="Productos y servicios"
+        title={tab === "products" ? "Catálogo" : "Unidades"}
         description={
           tab === "units"
             ? "Administra las unidades de medida disponibles para el catálogo."
             : isSeller
-              ? "Consulta los productos disponibles."
-              : "Administra los productos disponibles en el catálogo comercial."
+              ? "Consulta los productos y servicios disponibles."
+              : "Administra los productos y servicios disponibles en el catálogo."
         }
         action={
           canCreate &&

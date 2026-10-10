@@ -48,8 +48,8 @@ const metricDefinitions: Array<{
   label: string;
   Icon: LucideIcon;
 }> = [
-  { key: "activeCustomers", label: "Clientes activos", Icon: Users },
-  { key: "activeProjects", label: "Proyectos activos", Icon: Building2 },
+  { key: "activeCustomers", label: "Contactos activos", Icon: Users },
+  { key: "activeProjects", label: "Seguimientos activos", Icon: Building2 },
   {
     key: "pendingDeliveries",
     label: "Entregas pendientes",
@@ -98,9 +98,9 @@ export function DashboardPage() {
   return (
     <main className="dashboard-content">
       <PageHeader
-        eyebrow="Operación comercial"
+        eyebrow="Resumen de actividad"
         title={`Buenos días, ${user?.fullName.split(" ")[0] || "equipo"}`}
-        description="Resumen actualizado de la operación."
+        description="Resumen actualizado del trabajo del equipo."
       />
       <DataState
         loading={query.isLoading}
@@ -222,13 +222,13 @@ function DashboardSections({
   map: DashboardMapState;
 }) {
   return (
-      <section className="dashboard-columns-layout">
-        <div className="dashboard-column dashboard-column-main">
+    <section className="dashboard-columns-layout">
+      <div className="dashboard-column dashboard-column-main">
         <article className="dashboard-map-panel">
           <header className="dashboard-map-header">
             <div>
-              <h2>Mapa de proyectos</h2>
-              <p>Proyectos con ubicación registrada.</p>
+              <h2>Mapa de ubicaciones</h2>
+              <p>Registros de seguimiento con ubicación disponible.</p>
             </div>
             <div className="dashboard-map-filters">
               <label>
@@ -247,7 +247,7 @@ function DashboardSections({
               </label>
               {map.canChooseSeller && (
                 <label>
-                  Vendedor
+                  Responsable
                   <select
                     value={map.sellerId}
                     onChange={(event) => map.setSellerId(event.target.value)}
@@ -278,18 +278,18 @@ function DashboardSections({
           ) : (
             <div className="dashboard-map-state">
               <Building2 />
-              <strong>No hay proyectos con ubicación registrada.</strong>
+              <strong>No hay ubicaciones registradas.</strong>
             </div>
           )}
         </article>
-          <ProgressPanel data={data} permissions={permissions} />
-        </div>
-        <div className="dashboard-column dashboard-column-side">
-          <ActivityPanel data={data} permissions={permissions} />
-          <FollowUpsPanel data={data} permissions={permissions} />
-          <DeliveriesPanel data={data} permissions={permissions} />
-        </div>
-      </section>
+        <ProgressPanel data={data} permissions={permissions} />
+      </div>
+      <div className="dashboard-column dashboard-column-side">
+        <ActivityPanel data={data} permissions={permissions} />
+        <FollowUpsPanel data={data} permissions={permissions} />
+        <DeliveriesPanel data={data} permissions={permissions} />
+      </div>
+    </section>
   );
 }
 
@@ -352,7 +352,7 @@ function ActivityPanel({
         <Empty
           icon={Route}
           title="Todavía no hay actividad"
-          text="Los movimientos comerciales aparecerán aquí."
+          text="Las acciones realizadas aparecerán aquí."
         />
       )}
     </article>
@@ -446,9 +446,7 @@ function DeliveriesPanel({
                       {item.customerName ? ` · ${item.customerName}` : ""}
                     </small>
                   )}
-                  <time>
-                    {formatDate(item.committedDateUtc)}
-                  </time>
+                  <time>{formatDate(item.committedDateUtc)}</time>
                 </div>
                 <em className={item.isOverdue ? "overdue" : ""}>
                   {item.statusName}
@@ -490,7 +488,7 @@ function ProgressPanel({
   return (
     <article className="activity-card dashboard-panel">
       <SectionHeader
-        title="Avance de proyectos"
+        title="Avance de seguimientos"
         to={permissions.projects ? "/projects" : undefined}
         label="Ver todos"
       />
@@ -529,7 +527,7 @@ function ProgressPanel({
           })}
         </div>
       ) : (
-        <Empty icon={Building2} title="No hay proyectos activos" />
+        <Empty icon={Building2} title="No hay seguimientos activos" />
       )}
     </article>
   );

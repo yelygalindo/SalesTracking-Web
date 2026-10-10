@@ -221,14 +221,14 @@ export function ProjectsPage() {
               }
             }}
           >
-            <ArrowLeft /> Volver a proyectos
+            <ArrowLeft /> Volver a seguimientos
           </button>
           <div>
-            <p className="overline">Proyectos</p>
-            <h1>{creating ? "Nuevo proyecto" : "Editar proyecto"}</h1>
+            <p className="overline">Seguimientos</p>
+            <h1>{creating ? "Nuevo seguimiento" : "Editar seguimiento"}</h1>
             <p>
-              Completa la información comercial, planificación, avance y
-              ubicación del proyecto.
+              Completa la planificación, el avance y la ubicación del
+              seguimiento.
             </p>
           </div>
         </header>
@@ -253,9 +253,9 @@ export function ProjectsPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión comercial</p>
-          <h1>Proyectos</h1>
-          <p>Administra el avance y seguimiento de tus proyectos.</p>
+          <p className="overline">Gestión de seguimientos</p>
+          <h1>Seguimientos</h1>
+          <p>Administra la planificación y el avance de cada seguimiento.</p>
         </div>
         <div className="heading-actions">
           {canExport && (
@@ -281,16 +281,19 @@ export function ProjectsPage() {
               }}
             >
               <Plus />
-              Nuevo proyecto
+              Nuevo seguimiento
             </button>
           )}
         </div>
       </header>
-      <section className="customer-metrics" aria-label="Resumen de proyectos">
+      <section
+        className="customer-metrics"
+        aria-label="Resumen de seguimientos"
+      >
         {[
-          { label: "Total proyectos", index: 0 },
-          { label: "Proyectos activos", index: 1 },
-          { label: "Proyectos completados", index: 2 },
+          { label: "Total seguimientos", index: 0 },
+          { label: "Seguimientos activos", index: 1 },
+          { label: "Seguimientos completados", index: 2 },
         ].map(({ label, index }) => (
           <article key={label} className={index === 1 ? "accent" : ""}>
             <span>{label}</span>
