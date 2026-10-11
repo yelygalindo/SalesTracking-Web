@@ -1,0 +1,225 @@
+/* Cross-feature responsive safeguards. Keep this file last in the cascade. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.app-shell-root .leaflet-container {
+  z-index: 0;
+  max-width: 100%;
+  isolation: isolate;
+}
+
+.dashboard-project-map,
+.operations-live-map,
+.operations-map,
+.location-picker,
+.location-viewer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-map-panel,
+.operations-map-card,
+.operations-live-map-card,
+.project-location-card,
+.customer-map-card {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .app-navigation {
+    z-index: 1400;
+    height: 100dvh;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+
+  .nav-backdrop {
+    z-index: 1300;
+  }
+
+  .app-topbar {
+    z-index: 30;
+    height: 64px;
+    padding-inline: max(16px, env(safe-area-inset-left));
+  }
+
+  .customers-content,
+  .dashboard-content {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px clamp(14px, 4vw, 24px) 32px;
+  }
+
+  .shared-page-header,
+  .shared-page-header > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .shared-page-header h1 {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+    overflow-wrap: anywhere;
+  }
+
+  .workday-overview .operations-map-card {
+    min-height: 0;
+  }
+
+  .workday-overview .operations-map {
+    height: clamp(340px, 58vh, 480px);
+    min-height: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .operations-team-panel > header,
+  .operations-live-map-card > header,
+  .operations-incidents-card > header,
+  .operations-map-card > header,
+  .dashboard-map-header {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .operations-map-card > header,
+  .dashboard-map-header {
+    padding: 0;
+  }
+
+  .operations-team-panel nav {
+    width: 100%;
+    padding-bottom: 5px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .operations-team-panel nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .operations-live-map {
+    height: clamp(270px, 72vw, 330px);
+  }
+
+  .operations-map-card,
+  .dashboard-map-panel {
+    padding: 12px;
+  }
+
+  .operations-map {
+    display: flex;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .operations-map .leaflet-container {
+    height: clamp(300px, 78vw, 390px);
+    flex: 0 0 auto;
+  }
+
+  .workday-map-legend {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+    padding: 10px;
+    border: 0;
+    border-top: 1px solid var(--ut-border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .dashboard-columns-layout .dashboard-project-map,
+  .dashboard-project-map {
+    display: flex;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .dashboard-project-map .leaflet-container {
+    height: clamp(300px, 78vw, 390px);
+    flex: 0 0 auto;
+  }
+
+  .dashboard-map-legend {
+    position: static;
+    width: 100%;
+    max-height: none;
+    padding: 10px 4px 2px;
+    border: 0;
+    border-radius: 0;
+    background: white;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .dashboard-map-legend > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .leaflet-control-attribution {
+    max-width: calc(100vw - 70px);
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .customers-content,
+  .dashboard-content {
+    padding-inline: 12px;
+  }
+
+  .shared-page-header {
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .shared-page-header .action-primary,
+  .shared-page-header > button,
+  .shared-page-header > a {
+    width: 100%;
+  }
+
+  .operations-worker-row {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .operations-worker-status {
+    grid-column: 2;
+  }
+
+  .operations-worker-detail {
+    grid-column: 2;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .dashboard-map-legend > div {
+    grid-template-columns: 1fr;
+  }
+
+  .location-actions,
+  .coordinate-row,
+  .location-viewer footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .location-actions button,
+  .location-viewer footer a {
+    width: 100%;
+    text-align: center;
+  }
+}

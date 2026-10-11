@@ -8,6 +8,7 @@ import type {
 } from "../api/dashboardApi";
 import { translateValue } from "@/lib/i18n/labels";
 import { formatDateTime } from "@/lib/i18n/dateTime";
+import { MapResizeHandler } from "@/components/maps/MapResizeHandler";
 
 const isCoordinate = (value: number | null | undefined, limit: number) =>
   typeof value === "number" &&
@@ -37,18 +38,6 @@ function Viewport({ items }: { items: DashboardProjectItem[] }) {
     else if (points.length > 1)
       map.fitBounds(latLngBounds(points), { padding: [30, 30], maxZoom: 15 });
   }, [items, map]);
-  return null;
-}
-
-function ResponsiveMap() {
-  const map = useMap();
-  useEffect(() => {
-    const container = map.getContainer();
-    const observer = new ResizeObserver(() => map.invalidateSize(false));
-    observer.observe(container);
-    map.invalidateSize(false);
-    return () => observer.disconnect();
-  }, [map]);
   return null;
 }
 
@@ -82,7 +71,9 @@ export function DashboardProjectsMap({
   const sellerKey = (project: DashboardProjectItem) =>
     project.sellerExternalId ||
     sellerIdByName.get(normalizedName(project.sellerName)) ||
-    (project.sellerName ? `name:${normalizedName(project.sellerName)}` : "unassigned");
+    (project.sellerName
+      ? `name:${normalizedName(project.sellerName)}`
+      : "unassigned");
   const colorBySeller = useMemo(() => {
     const orderedKeys = sellerOptions
       .map((seller) => seller.externalId)
@@ -97,7 +88,10 @@ export function DashboardProjectsMap({
       if (!orderedKeys.includes(key)) orderedKeys.push(key);
     });
     return new Map(
-      orderedKeys.map((key, index) => [key, key === "unassigned" ? 0 : (index % 12) + 1]),
+      orderedKeys.map((key, index) => [
+        key,
+        key === "unassigned" ? 0 : (index % 12) + 1,
+      ]),
     );
   }, [projects, sellerIdByName, sellerOptions]);
   const sellers = useMemo(() => {
@@ -144,7 +138,7 @@ export function DashboardProjectsMap({
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Viewport items={projects} />
-        <ResponsiveMap />
+        <MapResizeHandler />
         {projects.map((item) => {
           const detailUrl =
             item.detailUrl ||
@@ -164,7 +158,9 @@ export function DashboardProjectsMap({
               <Popup className="dashboard-project-popup">
                 <div className="dashboard-popup-title">
                   <strong>{item.name}</strong>
-                  {item.statusName && <span>{translateValue(item.statusName)}</span>}
+                  {item.statusName && (
+                    <span>{translateValue(item.statusName)}</span>
+                  )}
                 </div>
                 {item.customerName && (
                   <p>
@@ -196,7 +192,9 @@ export function DashboardProjectsMap({
         <div>
           {sellers.map((seller) => (
             <span key={seller.externalId || "unassigned"}>
-              <i className={`seller-color-${colorBySeller.get(seller.externalId || "unassigned") ?? 0}`} />
+              <i
+                className={`seller-color-${colorBySeller.get(seller.externalId || "unassigned") ?? 0}`}
+              />
               <b>{seller.name}</b>
               <small>{seller.count}</small>
             </span>

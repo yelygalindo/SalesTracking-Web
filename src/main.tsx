@@ -6,6 +6,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { App } from "@/app/App";
 import { AppProviders } from "@/app/providers/AppProviders";
+import "leaflet/dist/leaflet.css";
 import "@/presentation/styles/tokens.css";
 import "@/presentation/styles/global.css";
 import "@/presentation/styles/auth.css";
@@ -22,7 +23,7 @@ import "@/presentation/styles/customers.css";
 import "@/presentation/styles/deliveries.css";
 import "@/presentation/styles/reports.css";
 import "@/presentation/styles/projects-operational.css";
-import "leaflet/dist/leaflet.css";
+import "@/presentation/styles/responsive.css";
 
 Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,

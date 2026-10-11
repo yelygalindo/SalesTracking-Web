@@ -9,6 +9,7 @@ import {
   useMap,
 } from "react-leaflet";
 import { formatDateTime } from "@/lib/i18n/dateTime";
+import { MapResizeHandler } from "@/components/maps/MapResizeHandler";
 import type {
   WorkdayLocation,
   WorkdayRouteSegment,
@@ -77,7 +78,11 @@ export function TrackingMap({
     ),
   );
   if (!valid.length && !validSegments.length && !validProjects.length)
-    return <div className="operations-map-empty">No hay ubicaciones registradas.</div>;
+    return (
+      <div className="operations-map-empty">
+        No hay ubicaciones registradas.
+      </div>
+    );
 
   const positions = valid.map(
     (point) => [point.latitude, point.longitude] as [number, number],
@@ -113,6 +118,7 @@ export function TrackingMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapResizeHandler />
         {route && <RouteViewport positions={boundsPositions} />}
         {route &&
           validSegments.map((segment, index) => (
@@ -134,7 +140,11 @@ export function TrackingMap({
             position={positions[index]}
             key={point.externalId ?? `${point.capturedAtUtc}-${index}`}
           >
-            <Popup><strong>{label}</strong><br />{formatDateTime(point.capturedAtUtc)}</Popup>
+            <Popup>
+              <strong>{label}</strong>
+              <br />
+              {formatDateTime(point.capturedAtUtc)}
+            </Popup>
           </Marker>
         ))}
         {validProjects.map((project, index) => (
@@ -148,14 +158,24 @@ export function TrackingMap({
               iconAnchor: [14, 14],
             })}
           >
-            <Popup><strong>Obra visitada</strong><br />{project.name}<br />{formatDateTime(project.visitedAtUtc)}</Popup>
+            <Popup>
+              <strong>Obra visitada</strong>
+              <br />
+              {project.name}
+              <br />
+              {formatDateTime(project.visitedAtUtc)}
+            </Popup>
           </Marker>
         ))}
       </MapContainer>
       {route && (
         <div className="workday-map-legend">
-          <span><i className="route-point" /> Inicio/fin</span>
-          <span><i className="project-point" /> Obra visitada</span>
+          <span>
+            <i className="route-point" /> Inicio/fin
+          </span>
+          <span>
+            <i className="project-point" /> Obra visitada
+          </span>
         </div>
       )}
     </div>

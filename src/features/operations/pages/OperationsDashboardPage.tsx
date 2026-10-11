@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { DataState } from "@/components/data/DataState";
 import { PageHeader } from "@/components/layout/AppShell";
+import { MapResizeHandler } from "@/components/maps/MapResizeHandler";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import {
   formatDateTime,
@@ -93,6 +94,7 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapResizeHandler />
         <LiveMapViewport workers={locatedWorkers} />
         {locatedWorkers.map((worker) => (
           <Marker
