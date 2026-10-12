@@ -1,3 +1,4 @@
+import "@/components/maps/leafletSetup";
 import { useState } from "react";
 import { divIcon, type LatLng } from "leaflet";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";

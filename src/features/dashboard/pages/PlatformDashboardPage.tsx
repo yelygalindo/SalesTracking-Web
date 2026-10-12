@@ -25,6 +25,7 @@ export function PlatformDashboardPage() {
       <DataState
         loading={query.isLoading}
         error={query.error}
+        onRetry={query.refetch}
         isEmpty={!query.data}
         empty="No hay información disponible."
       >

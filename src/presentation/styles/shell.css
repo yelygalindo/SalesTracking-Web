@@ -426,6 +426,261 @@
   display: none;
 }
 
+/* Global search (Ctrl+K) */
+.command-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(280px, 32vw);
+  height: 38px;
+  flex: none;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--ut-border);
+  border-radius: 10px;
+  color: var(--ut-text-muted);
+  background: var(--ut-surface-soft);
+  font-size: 0.86rem;
+}
+.command-trigger:hover {
+  border-color: var(--ut-border-strong);
+  color: var(--ut-text-secondary);
+}
+.command-trigger svg {
+  width: 16px;
+  flex: none;
+}
+.command-trigger span {
+  flex: 1;
+  text-align: left;
+}
+.app-topbar kbd,
+.command-palette kbd {
+  padding: 2px 6px;
+  border: 1px solid var(--ut-border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: var(--ut-text-secondary);
+  background: var(--ut-surface);
+  font: 600 0.68rem/1.4 inherit;
+  font-family: inherit;
+}
+.command-backdrop {
+  position: fixed;
+  z-index: 1500;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgb(9 20 37 / 45%);
+  animation: nav-backdrop-in 0.15s ease;
+}
+.command-palette {
+  display: flex;
+  width: min(100%, 600px);
+  max-height: 70vh;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ut-border);
+  border-radius: var(--ut-radius-lg);
+  background: var(--ut-surface);
+  box-shadow: var(--ut-shadow-lg);
+  animation: profile-menu-in 0.16s var(--ut-ease);
+}
+.command-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ut-border);
+}
+.command-input > svg {
+  width: 18px;
+  flex: none;
+  color: var(--ut-text-muted);
+}
+.command-input input,
+.command-input input:focus {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+}
+.command-results {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+.command-group {
+  margin: 8px 10px 4px;
+  color: var(--ut-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.command-results button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ut-text);
+  background: transparent;
+  text-align: left;
+}
+.command-results button.active {
+  background: var(--ut-surface-muted);
+}
+.command-results button > svg {
+  width: 18px;
+  flex: none;
+  color: var(--ut-text-secondary);
+}
+.command-results button.active > svg:first-child {
+  color: var(--ut-primary-text);
+}
+.command-results button > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.command-results strong,
+.command-results small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-results strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.command-results small {
+  color: var(--ut-text-secondary);
+  font-size: 0.76rem;
+}
+.command-enter {
+  width: 15px;
+  color: var(--ut-text-muted);
+}
+.command-empty,
+.command-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 18px 18px 22px;
+  color: var(--ut-text-secondary);
+  font-size: 0.88rem;
+}
+.command-empty p {
+  margin: 0;
+}
+.command-empty svg {
+  width: 18px;
+}
+.command-footer {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--ut-border);
+  color: var(--ut-text-muted);
+  background: var(--ut-surface-soft);
+  font-size: 0.74rem;
+}
+.command-footer kbd {
+  margin-right: 3px;
+}
+
+/* Collapse toggle and collapsed icon rail (desktop only). */
+.nav-collapse {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ut-sidebar-muted);
+  background: transparent;
+}
+.nav-collapse:hover {
+  color: white;
+  background: var(--ut-sidebar-hover);
+}
+.nav-collapse svg {
+  width: 18px;
+}
+.app-shell-root {
+  transition: grid-template-columns 0.22s var(--ut-ease);
+}
+@media (min-width: 901px) {
+  .app-shell-root.nav-collapsed {
+    --ut-sidebar-width: 76px;
+  }
+  .nav-collapsed .nav-brand {
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 0 6px;
+  }
+  .nav-collapsed .brand-copy,
+  .nav-collapsed .nav-group-chevron,
+  .nav-collapsed .nav-footer-identity {
+    display: none;
+  }
+  .nav-collapsed .app-navigation > nav {
+    padding-inline: 14px;
+  }
+  .nav-collapsed .app-navigation .nav-label {
+    height: 1px;
+    margin: 4px 8px 8px;
+    padding: 0;
+    overflow: hidden;
+    background: rgb(255 255 255 / 10%);
+    color: transparent;
+  }
+  .nav-collapsed .app-navigation nav a,
+  .nav-collapsed .nav-group-trigger {
+    justify-content: center;
+    min-height: 42px;
+    padding: 0;
+  }
+  .nav-collapsed .app-navigation nav a > span,
+  .nav-collapsed .nav-group-trigger > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .nav-collapsed .app-navigation nav a.active::before {
+    left: -14px;
+  }
+  .nav-collapsed .nav-group.active > .nav-group-trigger {
+    background: var(--ut-sidebar-active);
+  }
+  .nav-collapsed .nav-footer {
+    flex-direction: column;
+    margin-inline: 12px;
+    padding-inline: 0;
+  }
+}
+
+/* Mobile bottom bar with the most used destinations. */
+.bottom-nav {
+  display: none;
+}
+
 /* Mobile and tablet: the sidebar becomes a drawer. */
 @media (max-width: 900px) {
   .app-shell-root {
@@ -452,6 +707,64 @@
   .nav-close {
     display: grid;
   }
+  .nav-collapse {
+    display: none;
+  }
+  .bottom-nav {
+    position: fixed;
+    z-index: 1200;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    padding: 6px max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    border-top: 1px solid var(--ut-border);
+    background: rgb(255 255 255 / 94%);
+    box-shadow: 0 -6px 20px rgb(15 23 42 / 6%);
+    backdrop-filter: saturate(1.4) blur(10px);
+  }
+  .bottom-nav a,
+  .bottom-nav button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
+    min-height: 52px;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 12px;
+    color: var(--ut-text-secondary);
+    background: transparent;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .bottom-nav span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bottom-nav svg {
+    width: 22px;
+    height: 22px;
+  }
+  .bottom-nav a.active {
+    color: var(--ut-primary-text);
+  }
+  .bottom-nav a.active svg {
+    padding: 2px 10px;
+    width: 44px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--ut-primary-soft);
+  }
+  .app-shell-root:has(.bottom-nav) .app-workspace {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
   .nav-backdrop {
     position: fixed;
     z-index: 1300;
@@ -469,8 +782,25 @@
     display: grid;
   }
   .app-topbar .profile-identity,
-  .profile-chevron {
+  .profile-chevron,
+  .command-trigger span,
+  .command-trigger kbd,
+  .command-footer {
     display: none;
+  }
+  .command-trigger {
+    width: 40px;
+    justify-content: center;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    color: var(--ut-text);
+  }
+  .command-trigger svg {
+    width: 20px;
+  }
+  .command-backdrop {
+    padding-top: 8px;
   }
   .profile-trigger {
     padding: 3px;
@@ -488,4 +818,26 @@
   from {
     opacity: 0;
   }
+}
+.profile-menu .profile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--ut-text-strong);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.profile-menu .profile-menu-link:hover {
+  background: var(--ut-surface-muted);
+}
+.profile-menu .profile-menu-link svg {
+  width: 17px;
+}
+.profile-menu .profile-menu-link + button {
+  margin-top: 2px;
 }

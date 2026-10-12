@@ -1,7 +1,15 @@
 import { Navigate } from "react-router-dom";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
-import { DashboardPage } from "@/features/dashboard/pages/OperationalDashboardPage";
-import { PlatformDashboardPage } from "@/features/dashboard/pages/PlatformDashboardPage";
+import { lazyPage } from "@/app/lazyPage";
+
+const DashboardPage = lazyPage(
+  () => import("@/features/dashboard/pages/OperationalDashboardPage"),
+  "DashboardPage",
+);
+const PlatformDashboardPage = lazyPage(
+  () => import("@/features/dashboard/pages/PlatformDashboardPage"),
+  "PlatformDashboardPage",
+);
 
 export function HomeRoute() {
   const { can } = useAuthorization();

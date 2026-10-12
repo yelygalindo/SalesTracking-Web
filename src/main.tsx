@@ -1,12 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Icon } from "leaflet";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { App } from "@/app/App";
 import { AppProviders } from "@/app/providers/AppProviders";
-import "leaflet/dist/leaflet.css";
 import "@/presentation/styles/tokens.css";
 import "@/presentation/styles/global.css";
 import "@/presentation/styles/auth.css";
@@ -25,12 +20,6 @@ import "@/presentation/styles/reports.css";
 import "@/presentation/styles/projects-operational.css";
 import "@/presentation/styles/shell.css";
 import "@/presentation/styles/responsive.css";
-
-Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

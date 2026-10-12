@@ -9,7 +9,8 @@ import { notify } from "@/components/feedback/toast";
 import { usePermission } from "@/hooks/usePermission";
 import { projectService } from "@/features/projects/services/projectService";
 import { productsApi } from "@/features/catalog/api/catalogApi";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { translateValue } from "@/lib/i18n/labels";
 import { formatDateTime } from "@/lib/i18n/dateTime";
 import { deliveryApi, type Delivery, type Input } from "../api/deliveryApi";
@@ -23,12 +24,7 @@ const empty: Input = {
   items: [],
 };
 
-const message = (error: unknown) =>
-  error instanceof AppError
-    ? error.message
-    : error instanceof Error
-      ? error.message
-      : "No fue posible completar la operación.";
+const message = errorMessage;
 
 const statusClass = (value: string) => value.toLowerCase().replaceAll(" ", "-");
 
@@ -37,8 +33,9 @@ export function DeliveriesPage() {
   const canCreate = usePermission("deliveries.create");
   const canUpdate = usePermission("deliveries.update");
   const canDelete = usePermission("deliveries.delete");
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<number>();
+  const filters = useUrlFilters(["status"] as const),
+    { page, setPage, update: updateFilters } = filters;
+  const status = Number(filters.values.status) || undefined;
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -192,6 +189,7 @@ export function DeliveriesPage() {
         <DataState
           loading={detail.isLoading}
           error={detail.error}
+          onRetry={detail.refetch}
           isEmpty={!detail.data}
           empty="No se encontró la entrega."
         >
@@ -249,10 +247,7 @@ export function DeliveriesPage() {
           <select
             value={status || ""}
             onChange={(event) => {
-              setStatus(
-                event.target.value ? Number(event.target.value) : undefined,
-              );
-              setPage(1);
+              updateFilters({ status: event.target.value });
             }}
           >
             <option value="">Todos los estados</option>
@@ -268,6 +263,8 @@ export function DeliveriesPage() {
         <DataState
           loading={list.isLoading}
           error={list.error}
+          onRetry={list.refetch}
+          skeleton="table"
           isEmpty={!list.data?.items.length}
           empty="No hay entregas para estos filtros."
         >
@@ -305,20 +302,20 @@ export function DeliveriesPage() {
                           {delivery.items.length === 1 ? "" : "s"}
                         </small>
                       </td>
-                      <td className="result-col-secondary result-cell-nowrap">
+                      <td className="result-col-secondary result-cell-nowrap" data-label="Fecha comprometida">
                         {formatDateTime(delivery.committedDateUtc)}
                       </td>
-                      <td className="result-col-tertiary">
+                      <td className="result-col-tertiary" data-label="Vendedor">
                         {delivery.sellerName || "Sin asignar"}
                       </td>
-                      <td className="result-col-status">
+                      <td className="result-col-status" data-label="Estado">
                         <span
                           className={`status-pill ${statusClass(delivery.statusName)}`}
                         >
                           {translateValue(delivery.statusName)}
                         </span>
                       </td>
-                      <td className="result-col-secondary">
+                      <td className="result-col-secondary" data-label="Avance">
                         <div className="delivery-list-progress">
                           <progress max="100" value={progress} />
                           <span>{Math.round(progress)}%</span>

@@ -1,10 +1,12 @@
 import {
   Activity,
   BarChart3,
+  MapPin,
   Boxes,
   CalendarClock,
   ContactRound,
   FileUp,
+  LifeBuoy,
   LayoutDashboard,
   Radar,
   Route,
@@ -16,6 +18,8 @@ import {
 } from "lucide-react";
 
 export type NavAccess = {
+  /** Visible to every signed-in user. */
+  everyone?: boolean;
   permissions?: string[];
   allPermissions?: string[];
   roles?: string[];
@@ -41,6 +45,12 @@ export type NavGroupEntry = {
 export type NavEntry = NavLinkEntry | NavGroupEntry;
 
 export type NavSection = { id: string; label?: string; entries: NavEntry[] };
+
+/** Data the shell shares with its pages through the router outlet. */
+export interface ShellOutletContext {
+  /** Last page visited before the current one, used for support context. */
+  previousPage?: string;
+}
 
 export const navigationSections: NavSection[] = [
   {
@@ -236,17 +246,25 @@ export const navigationSections: NavSection[] = [
           },
         ],
       },
+      {
+        kind: "link",
+        to: "/support",
+        label: "Ayuda y soporte",
+        icon: LifeBuoy,
+        everyone: true,
+      },
     ],
   },
 ];
 
-type AccessCheck = {
+export type AccessCheck = {
   canAny: (permissions: string[]) => boolean;
   canAll: (permissions: string[]) => boolean;
   hasRole: (role: string) => boolean;
 };
 
-const isAllowed = (access: NavAccess, check: AccessCheck) =>
+export const isAllowed = (access: NavAccess, check: AccessCheck) =>
+  access.everyone === true ||
   (access.permissions !== undefined && check.canAny(access.permissions)) ||
   (access.allPermissions !== undefined &&
     check.canAll(access.allPermissions)) ||
@@ -292,3 +310,42 @@ export function findCurrentPage(sections: NavSection[], pathname: string) {
     }
   return undefined;
 }
+
+/** Shortcuts for the mobile bottom bar, in priority order; the first four allowed are shown. */
+export const bottomNavCandidates: NavLinkEntry[] = [
+  {
+    kind: "link",
+    to: "/",
+    label: "Inicio",
+    icon: LayoutDashboard,
+    permissions: ["dashboard.read", "platform-dashboard.read"],
+  },
+  {
+    kind: "link",
+    to: "/reminders",
+    label: "Agenda",
+    icon: CalendarClock,
+    permissions: ["customers.read"],
+  },
+  {
+    kind: "link",
+    to: "/operations/active",
+    label: "Visitas",
+    icon: MapPin,
+    permissions: ["visits.read"],
+  },
+  {
+    kind: "link",
+    to: "/customers",
+    label: "Contactos",
+    icon: ContactRound,
+    permissions: ["customers.read"],
+  },
+  {
+    kind: "link",
+    to: "/projects",
+    label: "Seguimientos",
+    icon: Target,
+    permissions: ["projects.read"],
+  },
+];

@@ -1,3 +1,4 @@
+import "@/components/maps/leafletSetup";
 import { MapContainer, Marker, TileLayer } from "react-leaflet";
 import { MapResizeHandler } from "./MapResizeHandler";
 

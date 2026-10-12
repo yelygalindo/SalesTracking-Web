@@ -178,6 +178,8 @@ export function CompaniesPanel() {
         <DataState
           loading={companies.isLoading}
           error={companies.error}
+          onRetry={companies.refetch}
+          skeleton="table"
           isEmpty={!companies.data?.items.length}
           empty="No se encontraron empresas."
         >
@@ -234,12 +236,12 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
         <strong>{company.name}</strong>
         <small>{company.timeZoneId}</small>
       </td>
-      <td className="result-col-status">
+      <td className="result-col-status" data-label="Estado">
         <span className={`status-pill ${company.status}`}>
           {translateValue(company.status)}
         </span>
       </td>
-      <td className="result-col-secondary">
+      <td className="result-col-secondary" data-label="Uso">
         <strong>
           {usedSlots} / {company.userLimit}
         </strong>
@@ -248,7 +250,7 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
           pendientes
         </small>
       </td>
-      <td className="result-col-tertiary">{company.availableSlots}</td>
+      <td className="result-col-tertiary" data-label="Disponibles">{company.availableSlots}</td>
       <td className="result-col-actions">
         <div className="limit-editor">
           <input
@@ -274,7 +276,7 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
           <small className="form-error">{update.error.message}</small>
         )}
       </td>
-      <td className="result-col-tertiary result-cell-nowrap">
+      <td className="result-col-tertiary result-cell-nowrap" data-label="Creada">
         {formatDateTime(company.createdAtUtc)}
       </td>
     </tr>

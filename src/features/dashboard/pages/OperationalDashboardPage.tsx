@@ -105,6 +105,7 @@ export function DashboardPage() {
       <DataState
         loading={query.isLoading}
         error={query.error}
+        onRetry={query.refetch}
         isEmpty={!query.data}
         empty="No hay información disponible."
       >
@@ -276,9 +277,15 @@ function DashboardSections({
           ) : map.items.length ? (
             <DashboardProjectsMap items={map.items} sellers={map.sellers} />
           ) : (
-            <div className="dashboard-map-state">
+            <div className="dashboard-map-state empty">
               <Building2 />
-              <strong>No hay ubicaciones registradas.</strong>
+              <div>
+                <strong>No hay ubicaciones registradas</strong>
+                <p>
+                  Los seguimientos con dirección marcada en el mapa aparecerán
+                  aquí.
+                </p>
+              </div>
             </div>
           )}
         </article>

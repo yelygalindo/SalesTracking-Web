@@ -1,3 +1,4 @@
+import "@/components/maps/leafletSetup";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { divIcon, latLngBounds } from "leaflet";
@@ -292,6 +293,7 @@ export function OperationsDashboardPage() {
         <DataState
           loading={false}
           error={sellers.error}
+          onRetry={sellers.refetch}
           isEmpty={false}
           empty="No hay responsables disponibles."
         >
@@ -301,6 +303,7 @@ export function OperationsDashboardPage() {
         <DataState
           loading={query.isLoading}
           error={query.error}
+          onRetry={query.refetch}
           isEmpty={!query.data}
           empty="No hay información operativa disponible."
         >

@@ -24,6 +24,11 @@ VITE_API_BASE_URL=https://api.example.com
 
 La API debe admitir el origen `http://localhost:5173` en su configuración CORS.
 
+Opcionalmente, `VITE_SUPPORT_EMAIL` define el correo que recibe los mensajes de
+**Ayuda y soporte** (por ejemplo `soporte@urbantrack.io`). Sin esta variable, la página
+de soporte permite copiar el mensaje pero no abre el programa de correo. Como toda
+variable `VITE_`, se fija al compilar: cambiarla requiere un nuevo build.
+
 ## Estructura
 
 ```text
@@ -79,7 +84,8 @@ En el environment `beta` de GitHub configura:
 - Variable `RAILWAY_ENVIRONMENT`: nombre del environment, normalmente `production` o `beta`.
 - Variable `RAILWAY_BETA_URL`: URL pública sin `/` final.
 
-En variables generales del repositorio configura `VITE_API_BASE_URL`. Para publicar:
+En variables generales del repositorio configura `VITE_API_BASE_URL` y, si usas
+soporte por correo, `VITE_SUPPORT_EMAIL`. Para publicar:
 
 ```powershell
 git tag v0.1.0-beta.1

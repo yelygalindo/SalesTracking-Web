@@ -1,3 +1,4 @@
+import { errorMessage } from "@/lib/api/errorMessage";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CalendarDays, ClipboardList, Download, FileText, PackageCheck, Paperclip, Pencil, Trash2 } from "lucide-react";
@@ -8,7 +9,7 @@ import { translateValue } from "@/lib/i18n/labels";
 import { downloadBlob } from "@/lib/export/downloadBlob";
 import { deliveryApi, type Delivery, type Status } from "../api/deliveryApi";
 
-const message = (error: unknown) => error instanceof Error ? error.message : "No fue posible completar la operación.";
+const message = errorMessage;
 const statusClass = (value: string) => value.toLowerCase().replaceAll(" ", "-");
 const formatBytes = (value: number) => value < 1024 * 1024 ? `${Math.max(1, Math.round(value / 1024))} KB` : `${(value / 1024 / 1024).toFixed(1)} MB`;
 

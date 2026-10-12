@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { AppError } from "@/lib/api/apiError";
 import { Brand } from "@/presentation/components/Brand";
+import { env } from "@/config/env";
 
 export function LoginPage() {
   const auth = useAuth();
@@ -128,7 +129,16 @@ export function LoginPage() {
             </button>
           </form>
           <p className="help">
-            ¿Necesitas ayuda? <strong>Contacta a soporte</strong>
+            ¿Necesitas ayuda?{" "}
+            {env.supportEmail ? (
+              <a
+                href={`mailto:${env.supportEmail}?subject=${encodeURIComponent("Ayuda para iniciar sesión en UrbanTrack")}`}
+              >
+                Contacta a soporte
+              </a>
+            ) : (
+              <strong>Contacta a soporte</strong>
+            )}
           </p>
         </div>
       </section>
