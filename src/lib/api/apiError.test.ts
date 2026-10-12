@@ -12,6 +12,11 @@ describe('normalizeApi', () => {
     const error = await client.get('/error').catch(reason => normalizeApi(reason))
     expect(error).toMatchObject({ code: 'validation', message, details })
   })
+  it('reconoce la prueba gratuita vencida', async () => {
+    const client = axios.create(); new MockAdapter(client).onPost('/login').reply(403, { code: 'trial_expired', message: 'Tu prueba gratuita terminó.' })
+    const error = await client.post('/login').catch(reason => normalizeApi(reason))
+    expect(error).toMatchObject({ code: 'trialExpired', status: 403, message: 'Tu prueba gratuita terminó.' })
+  })
   it('normaliza errores de red', async () => {
     const client = axios.create(); new MockAdapter(client).onGet('/error').networkError()
     const error = await client.get('/error').catch(reason => normalizeApi(reason))

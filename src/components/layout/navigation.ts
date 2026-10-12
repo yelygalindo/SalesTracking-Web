@@ -16,6 +16,11 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
+import type { OperationModules } from "@/features/operation-settings/api/operationSettingsApi";
+import {
+  defaultOperationTerms,
+  type OperationTerms,
+} from "@/features/operation-settings/services/operationTerms";
 
 export type NavAccess = {
   /** Visible to every signed-in user. */
@@ -25,16 +30,19 @@ export type NavAccess = {
   roles?: string[];
 };
 
-export type NavLinkEntry = NavAccess & {
+/** Optional module the entry belongs to; it is hidden when the company turns that module off. */
+export type NavModule = { module?: keyof OperationModules };
+
+export type NavLinkEntry = NavAccess & NavModule & {
   kind: "link";
   to: string;
   label: string;
   icon: LucideIcon;
 };
 
-export type NavChild = NavAccess & { to: string; label: string };
+export type NavChild = NavAccess & NavModule & { to: string; label: string };
 
-export type NavGroupEntry = {
+export type NavGroupEntry = NavModule & {
   kind: "group";
   id: string;
   label: string;
@@ -52,7 +60,10 @@ export interface ShellOutletContext {
   previousPage?: string;
 }
 
-export const navigationSections: NavSection[] = [
+/** Menu for the company's terminology ("Obras", "Visitas a obra en curso"…). */
+export const buildNavigationSections = ({
+  labels: { customer, project, visit },
+}: OperationTerms): NavSection[] => [
   {
     id: "home",
     entries: [
@@ -89,7 +100,7 @@ export const navigationSections: NavSection[] = [
           },
           {
             to: "/operations/active",
-            label: "Visitas en curso",
+            label: `${visit.plural} en curso`,
             permissions: ["visits.read"],
           },
         ],
@@ -117,14 +128,14 @@ export const navigationSections: NavSection[] = [
       {
         kind: "link",
         to: "/customers",
-        label: "Contactos",
+        label: customer.plural,
         icon: ContactRound,
         permissions: ["customers.read"],
       },
       {
         kind: "link",
         to: "/projects",
-        label: "Seguimientos",
+        label: project.plural,
         icon: Target,
         permissions: ["projects.read"],
       },
@@ -132,6 +143,7 @@ export const navigationSections: NavSection[] = [
         kind: "group",
         id: "catalog",
         label: "Catálogo",
+        module: "catalog",
         icon: Boxes,
         children: [
           {
@@ -150,6 +162,7 @@ export const navigationSections: NavSection[] = [
         kind: "link",
         to: "/deliveries",
         label: "Compromisos y entregas",
+        module: "deliveries",
         icon: Truck,
         permissions: ["deliveries.read"],
       },
@@ -167,12 +180,13 @@ export const navigationSections: NavSection[] = [
         children: [
           {
             to: "/reports/customers",
-            label: "Contactos",
+            label: customer.plural,
             permissions: ["reports.read"],
           },
           {
             to: "/reports/deliveries",
             label: "Entregas",
+            module: "deliveries",
             permissions: ["reports.read"],
           },
         ],
@@ -198,22 +212,24 @@ export const navigationSections: NavSection[] = [
         children: [
           {
             to: "/customers/import",
-            label: "Contactos",
+            label: customer.plural,
             allPermissions: ["customers.read", "customers.import"],
           },
           {
             to: "/projects/import",
-            label: "Seguimientos",
+            label: project.plural,
             allPermissions: ["projects.read", "projects.import"],
           },
           {
             to: "/catalog/products/import",
             label: "Productos",
+            module: "catalog",
             allPermissions: ["products.read", "products.import"],
           },
           {
             to: "/catalog/units/import",
             label: "Unidades",
+            module: "catalog",
             allPermissions: ["products.read", "units.read", "units.import"],
           },
         ],
@@ -240,6 +256,11 @@ export const navigationSections: NavSection[] = [
             roles: ["admin", "super-admin", "superadmin"],
           },
           {
+            to: "/admin/operation",
+            label: "Operación por rubro",
+            permissions: ["companies.update"],
+          },
+          {
             to: "/admin/companies",
             label: "Empresas",
             permissions: ["companies.create"],
@@ -257,6 +278,9 @@ export const navigationSections: NavSection[] = [
   },
 ];
 
+/** Menu with the default ("general") terminology. */
+export const navigationSections = buildNavigationSections(defaultOperationTerms);
+
 export type AccessCheck = {
   canAny: (permissions: string[]) => boolean;
   canAll: (permissions: string[]) => boolean;
@@ -271,19 +295,27 @@ export const isAllowed = (access: NavAccess, check: AccessCheck) =>
   (access.roles !== undefined &&
     access.roles.some((role) => check.hasRole(role)));
 
-/** Removes entries, groups and sections the current user cannot reach. */
+const moduleEnabled = (entry: NavModule, modules?: OperationModules) =>
+  !entry.module || !modules || modules[entry.module];
+
+/**
+ * Removes entries, groups and sections the current user cannot reach, and those of
+ * modules the company turned off.
+ */
 export function filterNavigation(
   sections: NavSection[],
   check: AccessCheck,
+  modules?: OperationModules,
 ): NavSection[] {
   return sections
     .map((section) => ({
       ...section,
       entries: section.entries.flatMap<NavEntry>((entry) => {
+        if (!moduleEnabled(entry, modules)) return [];
         if (entry.kind === "link")
           return isAllowed(entry, check) ? [entry] : [];
-        const children = entry.children.filter((child) =>
-          isAllowed(child, check),
+        const children = entry.children.filter(
+          (child) => moduleEnabled(child, modules) && isAllowed(child, check),
         );
         return children.length ? [{ ...entry, children }] : [];
       }),
@@ -312,7 +344,9 @@ export function findCurrentPage(sections: NavSection[], pathname: string) {
 }
 
 /** Shortcuts for the mobile bottom bar, in priority order; the first four allowed are shown. */
-export const bottomNavCandidates: NavLinkEntry[] = [
+export const buildBottomNavCandidates = ({
+  labels: { customer, project, visit },
+}: OperationTerms): NavLinkEntry[] => [
   {
     kind: "link",
     to: "/",
@@ -330,22 +364,24 @@ export const bottomNavCandidates: NavLinkEntry[] = [
   {
     kind: "link",
     to: "/operations/active",
-    label: "Visitas",
+    label: visit.plural,
     icon: MapPin,
     permissions: ["visits.read"],
   },
   {
     kind: "link",
     to: "/customers",
-    label: "Contactos",
+    label: customer.plural,
     icon: ContactRound,
     permissions: ["customers.read"],
   },
   {
     kind: "link",
     to: "/projects",
-    label: "Seguimientos",
+    label: project.plural,
     icon: Target,
     permissions: ["projects.read"],
   },
 ];
+
+export const bottomNavCandidates = buildBottomNavCandidates(defaultOperationTerms);

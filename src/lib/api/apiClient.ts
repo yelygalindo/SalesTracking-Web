@@ -7,9 +7,11 @@ import { tokenStore, type TokenStore } from '@/lib/api/tokenStore'
 interface RetriableConfig extends InternalAxiosRequestConfig { _retry?: boolean }
 type AuthFailureHandler = () => void
 let authFailureHandler: AuthFailureHandler = () => undefined
+let trialExpiredHandler: AuthFailureHandler = () => undefined
 export function setAuthFailureHandler(handler: AuthFailureHandler) { authFailureHandler = handler }
+export function setTrialExpiredHandler(handler: AuthFailureHandler) { trialExpiredHandler = handler }
 
-export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHandler) {
+export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHandler, onTrialExpired: AuthFailureHandler = () => undefined) {
   const publicClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, withCredentials: true, headers: { Accept: 'application/json' } })
   const apiClient = axios.create({ baseURL: env.apiBaseUrl, timeout: 10_000, withCredentials: true, headers: { Accept: 'application/json' } })
   let refreshPromise: Promise<RefreshTokenResponseDto> | null = null
@@ -22,7 +24,12 @@ export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHa
   })
   apiClient.interceptors.response.use(response => response, async (error: AxiosError) => {
     const original = error.config as RetriableConfig | undefined
-    if (error.response?.status !== 401 || !original || original._retry || original.url === '/api/auth/logout' || original.url === '/api/auth/refresh') return Promise.reject(normalizeApi(error))
+    if (error.response?.status !== 401 || !original || original._retry || original.url === '/api/auth/logout' || original.url === '/api/auth/refresh') {
+      const normalized = normalizeApi(error)
+      // The trial ended while the session was open: every company endpoint now refuses access.
+      if (normalized.code === 'trialExpired') onTrialExpired()
+      return Promise.reject(normalized)
+    }
     original._retry = true
     try {
       refreshPromise ??= finalize(publicClient.post<RefreshTokenResponseDto>('/api/auth/refresh').then(response => { store.replace(response.data); return response.data }))
@@ -39,6 +46,6 @@ export function createApiClients(store: TokenStore, onAuthFailure: AuthFailureHa
   return { publicClient, apiClient }
 }
 
-const clients = createApiClients(tokenStore, () => authFailureHandler())
+const clients = createApiClients(tokenStore, () => authFailureHandler(), () => trialExpiredHandler())
 export const publicApiClient: AxiosInstance = clients.publicClient
 export const apiClient: AxiosInstance = clients.apiClient

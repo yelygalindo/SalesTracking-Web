@@ -16,6 +16,11 @@ import { Link } from "react-router-dom";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { DataState } from "@/components/data/DataState";
 import { PageHeader } from "@/components/layout/AppShell";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import {
+  gendered,
+  inSentence,
+} from "@/features/operation-settings/services/operationTerms";
 import { MapResizeHandler } from "@/components/maps/MapResizeHandler";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import {
@@ -139,6 +144,9 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
 
 export function OperationsDashboardPage() {
   const { can, user } = useAuthorization();
+  const {
+    labels: { visit },
+  } = useOperationTerms();
   const canChooseSeller = can("sellers.read");
   const [filter, setFilter] = useState<WorkerFilter>("all");
   const [sellerId, setSellerId] = useState("");
@@ -249,7 +257,7 @@ export function OperationsDashboardPage() {
       <PageHeader
         eyebrow="Monitoreo en vivo"
         title="Estado del equipo"
-        description="Jornadas, visitas e incidencias de hoy, actualizadas automáticamente."
+        description={`Jornadas, ${inSentence(visit.plural)} e incidencias de hoy, actualizadas automáticamente.`}
         action={
           <span className="operations-live-indicator">
             <Radio /> Actualización cada 30 s
@@ -334,7 +342,9 @@ export function OperationsDashboardPage() {
                 <OperationMetric
                   icon={ClipboardCheck}
                   label={
-                    effectiveSellerId ? "Visitas completadas" : "Con ubicación"
+                    effectiveSellerId
+                      ? `${visit.plural} ${gendered(visit.singular, "completados", "completadas")}`
+                      : "Con ubicación"
                   }
                   value={
                     effectiveSellerId

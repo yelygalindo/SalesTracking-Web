@@ -32,4 +32,11 @@ describe('auth interceptor', () => {
     await expect(apiClient.get('/forbidden')).rejects.toMatchObject({ code: 'forbidden', status: 403 })
     expect(publicMock.history.post).toHaveLength(0); expect(store.get()?.accessToken).toBe('valid'); expect(onFailure).not.toHaveBeenCalled()
   })
+  it('avisa cuando la prueba gratuita de la empresa venció', async () => {
+    const store = new TokenStore(new MemoryStorage()); store.replace({ accessToken: 'valid' })
+    const onFailure = vi.fn(); const onTrialExpired = vi.fn(); const { apiClient } = createApiClients(store, onFailure, onTrialExpired)
+    new MockAdapter(apiClient).onGet('/customers').reply(403, { code: 'trial_expired', message: 'Tu prueba gratuita terminó.' })
+    await expect(apiClient.get('/customers')).rejects.toMatchObject({ code: 'trialExpired', message: 'Tu prueba gratuita terminó.' })
+    expect(onTrialExpired).toHaveBeenCalledOnce(); expect(onFailure).not.toHaveBeenCalled()
+  })
 })

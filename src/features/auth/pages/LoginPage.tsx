@@ -5,28 +5,32 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { AppError } from "@/lib/api/apiError";
 import { Brand } from "@/presentation/components/Brand";
 import { env } from "@/config/env";
+import type { TrialActivatedState } from "@/features/trial-signups/pages/VerifyTrialPage";
 
 export function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("");
+  const state = location.state as ({
+    from?: string;
+    sessionExpired?: boolean;
+  } & Partial<TrialActivatedState>) | null;
+  const [email, setEmail] = useState(state?.trialActivated?.email ?? "");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const state = location.state as {
-    from?: string;
-    sessionExpired?: boolean;
-  } | null;
+  const [trialExpired, setTrialExpired] = useState(false);
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
+    setTrialExpired(false);
     try {
       await auth.login({ email, password });
       navigate(state?.from ?? "/", { replace: true });
     } catch (reason) {
+      setTrialExpired(reason instanceof AppError && reason.code === "trialExpired");
       setError(
         reason instanceof AppError || reason instanceof Error
           ? reason.message
@@ -79,6 +83,11 @@ export function LoginPage() {
           <p className="subtitle">
             Ingresa con las credenciales asignadas a tu cuenta.
           </p>
+          {state?.trialActivated && (
+            <p className="form-notice" role="status">
+              {state.trialActivated.message} Ingresa con tu nueva contraseña.
+            </p>
+          )}
           {state?.sessionExpired && (
             <p className="form-notice">
               Tu sesión expiró. Inicia sesión nuevamente.
@@ -118,16 +127,25 @@ export function LoginPage() {
                 {visible ? <EyeOff /> : <Eye />}
               </button>
             </div>
-            {error && (
+            {error && trialExpired ? (
+              <div className="form-error" role="alert">
+                {error}{" "}
+                <Link to="/trial-expired">Ver cómo continuar</Link>
+              </div>
+            ) : error ? (
               <p className="form-error" role="alert">
                 {error}
               </p>
-            )}
+            ) : null}
             <button className="primary-button" disabled={busy}>
               {busy ? "Iniciando sesión…" : "Iniciar sesión"}
               {!busy && <ChevronRight />}
             </button>
           </form>
+          <p className="help">
+            ¿Aún no usas UrbanTrack?{" "}
+            <Link to="/trial-signup">Prueba gratis 10 días</Link>
+          </p>
           <p className="help">
             ¿Necesitas ayuda?{" "}
             {env.supportEmail ? (

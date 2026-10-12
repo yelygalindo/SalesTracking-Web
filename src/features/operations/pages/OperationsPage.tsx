@@ -3,6 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Clock3, MapPin, Route, UserRoundCheck } from "lucide-react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/layout/AppShell";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import {
+  gendered,
+  inSentence,
+} from "@/features/operation-settings/services/operationTerms";
 import { DataState } from "@/components/data/DataState";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import {
@@ -58,6 +63,9 @@ export function OperationsPage() {
   const { section } = useParams();
   const location = useLocation();
   const { can, user } = useAuthorization();
+  const {
+    labels: { visit },
+  } = useOperationTerms();
   const canChooseSeller = can("sellers.read");
   const tab: "active" | "history" =
     section === "history" ? "history" : "active";
@@ -126,8 +134,8 @@ export function OperationsPage() {
   return (
     <main className="customers-content operations-page">
       <PageHeader
-        eyebrow="Visitas"
-        title={tab === "active" ? "Visitas en curso" : "Recorridos y jornadas"}
+        eyebrow={visit.plural}
+        title={tab === "active" ? `${visit.plural} en curso` : "Recorridos y jornadas"}
         description="Consulta lugares, responsables, fechas y el seguimiento registrado en cada jornada."
       />
       {!canChooseSeller && (
@@ -172,7 +180,7 @@ export function OperationsPage() {
                       <th>Hora de inicio</th>
                       <th>Última ubicación</th>
                       <th>Última actualización</th>
-                      <th>Visita actual</th>
+                      <th>{visit.singular} actual</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,7 +292,7 @@ export function OperationsPage() {
                       <th>Inicio</th>
                       <th>Fin</th>
                       <th>Duración</th>
-                      <th>Visitas</th>
+                      <th>{visit.plural}</th>
                       <th>Puntos registrados</th>
                       <th>Estado</th>
                       <th></th>
@@ -336,6 +344,9 @@ function WorkdayDetail({
   sellerExternalId: string;
   onBack: () => void;
 }) {
+  const {
+    labels: { visit },
+  } = useOperationTerms();
   const workdayId = workdaySummary.id;
   const workday = useQuery({
     queryKey: ["workday", workdayId],
@@ -442,7 +453,7 @@ function WorkdayDetail({
                   />
                   <Summary
                     icon={<UserRoundCheck />}
-                    label="Visitas"
+                    label={visit.plural}
                     value={String(workday.data.visitCount)}
                   />
                   <Summary
@@ -460,10 +471,12 @@ function WorkdayDetail({
               </aside>
             </section>
             <section className="customer-table-card">
-              <h2>Visitas</h2>
+              <h2>{visit.plural}</h2>
               {!workday.data.visits?.length ? (
                 <p className="empty-inline">
-                  No hay visitas registradas en esta jornada.
+                  No hay {inSentence(visit.plural)}{" "}
+                  {gendered(visit.singular, "registrados", "registradas")} en esta
+                  jornada.
                 </p>
               ) : (
                 <div className="table-scroll">

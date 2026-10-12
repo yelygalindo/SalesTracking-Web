@@ -1,0 +1,144 @@
+/* Free trial: public sign-up, verification and the in-app remaining days banner. */
+.simple-auth-card.trial-card {
+  width: min(100%, 640px);
+}
+.trial-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 14px;
+}
+.trial-form > :not(label) {
+  grid-column: 1 / -1;
+}
+.simple-form label > span {
+  display: block;
+  margin-bottom: 6px;
+}
+.simple-form .field-error > small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.simple-form select {
+  width: 100%;
+  height: 49px;
+  padding: 0 12px;
+  border: 1px solid #dfe4ec;
+  border-radius: 12px;
+  color: var(--ut-text);
+  background: var(--ut-surface);
+  font-weight: 400;
+  outline: none;
+}
+.simple-form select:focus {
+  border-color: var(--ut-primary);
+  box-shadow: 0 0 0 3px rgba(245, 106, 28, 0.12);
+}
+.inline-link-button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.simple-form .field-error select,
+.simple-form .field-error input {
+  border-color: #e88b83;
+}
+.simple-form input:disabled {
+  color: var(--ut-text-secondary);
+  background: var(--ut-surface-muted);
+}
+.simple-form .form-hint,
+.simple-auth-card .form-hint {
+  margin: 0;
+  color: var(--ut-text-muted);
+  font-size: 0.82rem;
+}
+.turnstile-field {
+  min-height: 65px;
+  margin-top: 6px;
+}
+.form-error a {
+  color: inherit;
+  font-weight: 700;
+}
+.trial-login {
+  margin-top: 22px;
+  color: var(--ut-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+.trial-login a {
+  color: var(--ut-primary-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+.trial-sent-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  color: var(--ut-primary-text);
+  background: var(--ut-primary-soft);
+}
+.trial-sent .link-button {
+  display: block;
+  margin: 18px auto 0;
+  padding: 0;
+  border: 0;
+  color: var(--ut-primary-text);
+  background: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.trial-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 24px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--ut-border);
+  border-radius: var(--ut-radius-md);
+  color: var(--ut-text-strong);
+  background: var(--ut-primary-soft);
+  font-size: 0.88rem;
+}
+.trial-banner.ending {
+  border-color: #fcd34d;
+  color: var(--ut-warning-text);
+  background: var(--ut-warning-soft);
+}
+.trial-banner svg {
+  flex: none;
+  width: 18px;
+}
+.trial-banner p {
+  flex: 1;
+  margin: 0;
+}
+.trial-banner span {
+  color: var(--ut-text-secondary);
+}
+.trial-banner a {
+  flex: none;
+  color: var(--ut-primary-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+@media (max-width: 640px) {
+  .trial-form {
+    grid-template-columns: 1fr;
+  }
+  .simple-auth-card.trial-card {
+    padding: 28px 20px;
+  }
+  .trial-banner {
+    margin: 10px 16px 0;
+  }
+}

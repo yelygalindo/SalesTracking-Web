@@ -1,4 +1,6 @@
 import { SpreadsheetImportWizard } from "@/components/imports/SpreadsheetImportWizard";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import { inSentence } from "@/features/operation-settings/services/operationTerms";
 import { customerService } from "../services/customerService";
 
 const text = (value: unknown) =>
@@ -14,18 +16,22 @@ const fields = [
 ];
 
 export function CustomerImportPage() {
+  const {
+    labels: { customer },
+  } = useOperationTerms();
+  const plural = inSentence(customer.plural);
   return (
     <SpreadsheetImportWizard
-      eyebrow="Contactos"
-      title="Importar base de datos de clientes"
-      description="Carga tu base de datos de clientes de forma masiva con validación previa por fila."
-      plural="clientes"
+      eyebrow={customer.plural}
+      title={`Importar base de datos de ${plural}`}
+      description={`Carga tu base de datos de ${plural} de forma masiva con validación previa por fila.`}
+      plural={plural}
       backTo="/customers"
       templateName="plantilla-clientes.xlsx"
       errorFilePrefix="clientes-no-importados"
       fields={fields}
       columns={[
-        { key: "name", label: "Cliente" },
+        { key: "name", label: customer.singular },
         { key: "companyName", label: "Empresa" },
         { key: "phone", label: "Teléfono" },
         { key: "email", label: "Correo" },

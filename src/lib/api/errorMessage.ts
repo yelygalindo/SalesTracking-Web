@@ -20,6 +20,7 @@ const descriptions: Partial<Record<AppErrorCode, Omit<ErrorDescription, "message
     retryable: true,
   },
   rateLimited: { title: "Demasiadas solicitudes", retryable: true },
+  trialExpired: { title: "Tu prueba gratuita terminó", retryable: false },
   forbidden: { title: "No tienes acceso a esta información", retryable: false },
   unauthorized: {
     title: "Tu sesión expiró",

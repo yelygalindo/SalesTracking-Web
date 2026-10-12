@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/i18n/dateTime";
 import { translateValue } from "@/lib/i18n/labels";
 import { adminApi, type CompanyResult } from "../api/adminApi";
 import { companyApi, type ManagedCompany } from "../api/companyApi";
+import { useIndustries } from "@/features/industries/hooks/useIndustries";
 
 export function CompaniesPanel() {
   const cache = useQueryClient();
@@ -16,12 +17,14 @@ export function CompaniesPanel() {
     companyName: "",
     adminFullName: "",
     adminEmail: "",
+    industryCode: "",
   });
   const [registered, setRegistered] = useState<CompanyResult[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"" | "active" | "inactive">("");
   const [page, setPage] = useState(1);
+  const industries = useIndustries();
   const companies = useQuery({
     queryKey: ["admin-companies", search, status, page],
     queryFn: () =>
@@ -33,10 +36,19 @@ export function CompaniesPanel() {
       }),
   });
   const register = useMutation({
-    mutationFn: () => adminApi.registerCompany(company),
+    mutationFn: () =>
+      adminApi.registerCompany({
+        ...company,
+        industryCode: company.industryCode || undefined,
+      }),
     onSuccess: async (result) => {
       setRegistered((current) => [result, ...current]);
-      setCompany({ companyName: "", adminFullName: "", adminEmail: "" });
+      setCompany({
+        companyName: "",
+        adminFullName: "",
+        adminEmail: "",
+        industryCode: "",
+      });
       notify("Empresa registrada correctamente.");
       await cache.invalidateQueries({ queryKey: ["admin-companies"] });
     },
@@ -68,6 +80,24 @@ export function CompaniesPanel() {
                 setCompany({ ...company, companyName: event.target.value })
               }
             />
+          </FormField>
+          <FormField label="Rubro">
+            <select
+              value={company.industryCode}
+              disabled={!industries.data}
+              onChange={(event) =>
+                setCompany({ ...company, industryCode: event.target.value })
+              }
+            >
+              <option value="">
+                {industries.isError ? "No se pudieron cargar los rubros" : "Sin rubro"}
+              </option>
+              {industries.data?.map((industry) => (
+                <option key={industry.code} value={industry.code}>
+                  {industry.name}
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="Administrador" required>
             <input
@@ -188,6 +218,7 @@ export function CompaniesPanel() {
               <thead>
                 <tr>
                   <th className="result-col-primary">Empresa</th>
+                  <th className="result-col-secondary">Rubro</th>
                   <th className="result-col-status">Estado</th>
                   <th className="result-col-secondary">Uso</th>
                   <th className="result-col-tertiary">Disponibles</th>
@@ -235,6 +266,9 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
       <td className="result-col-primary">
         <strong>{company.name}</strong>
         <small>{company.timeZoneId}</small>
+      </td>
+      <td className="result-col-secondary" data-label="Rubro">
+        {company.industryName || <small>Sin rubro</small>}
       </td>
       <td className="result-col-status" data-label="Estado">
         <span className={`status-pill ${company.status}`}>

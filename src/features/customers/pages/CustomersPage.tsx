@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import {
+  gendered,
+  inSentence,
+  newLabel,
+} from "@/features/operation-settings/services/operationTerms";
 import { customerService } from "@/features/customers/services/customerService";
 import type {
   CustomerCreateExtrasDto,
@@ -88,6 +94,9 @@ export function CustomersPage() {
     [params] = useSearchParams(),
     linked = params.get("selected");
   const { hasRole, can } = useAuthorization();
+  const {
+    labels: { customer },
+  } = useOperationTerms();
   const canExport = can("customers.export");
   const canViewTeam =
     hasRole("supervisor") ||
@@ -313,11 +322,15 @@ export function CustomersPage() {
               })
             }
           >
-            <ChevronLeft /> Volver a contactos
+            <ChevronLeft /> Volver a {inSentence(customer.plural)}
           </button>
           <div>
-            <p className="overline">Contactos</p>
-            <h1>{mode === "create" ? "Nuevo contacto" : "Editar contacto"}</h1>
+            <p className="overline">{customer.plural}</p>
+            <h1>
+              {mode === "create"
+                ? newLabel(customer.singular)
+                : `Editar ${inSentence(customer.singular)}`}
+            </h1>
             <p>
               Organiza los datos, la asignación y la ubicación en un solo lugar.
             </p>
@@ -346,8 +359,8 @@ export function CustomersPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión de contactos</p>
-          <h1>Contactos</h1>
+          <p className="overline">Gestión de {inSentence(customer.plural)}</p>
+          <h1>{customer.plural}</h1>
           <p>Administra las personas y organizaciones de tu cartera.</p>
         </div>
         <div className="heading-actions">
@@ -366,17 +379,20 @@ export function CustomersPage() {
               }}
             >
               <Plus />
-              Nuevo contacto
+              {newLabel(customer.singular)}
             </button>
           )}
         </div>
       </header>
       {notice && <p className="customer-feedback">{notice}</p>}
-      <section className="customer-metrics" aria-label="Resumen de contactos">
+      <section className="customer-metrics" aria-label={`Resumen de ${inSentence(customer.plural)}`}>
         {[
-          { label: "Total contactos", index: 0 },
+          { label: `Total ${inSentence(customer.plural)}`, index: 0 },
           { label: "Prospectos", index: 1 },
-          { label: "Contactos activos", index: 2 },
+          {
+            label: `${customer.plural} ${gendered(customer.singular, "activos", "activas")}`,
+            index: 2,
+          },
         ].map(({ label, index }) => (
           <article key={label} className={index === 1 ? "accent" : ""}>
             <span>{label}</span>
@@ -435,14 +451,14 @@ export function CustomersPage() {
       </div>
       <section className="customer-table-card">
         {list.isLoading ? (
-          <Skeleton variant="table" rows={6} label="Cargando contactos…" />
+          <Skeleton variant="table" rows={6} label={`Cargando ${inSentence(customer.plural)}…`} />
         ) : list.isError ? (
           <ErrorState error={list.error} onRetry={list.refetch} />
         ) : !list.data?.customers.length ? (
           query || status || seller ? (
             <EmptyState
               icon={<Search />}
-              title="No hay contactos que coincidan"
+              title={`No hay ${inSentence(customer.plural)} que coincidan`}
               description="Prueba con otra búsqueda o quita los filtros."
               action={
                 <button
@@ -458,8 +474,8 @@ export function CustomersPage() {
             />
           ) : (
             <EmptyState
-              title="Aún no hay contactos"
-              description="Registra tu primer contacto para empezar a darle seguimiento."
+              title={`Aún no hay ${inSentence(customer.plural)}`}
+              description={`Registra tu primer ${inSentence(customer.singular)} para empezar a darle seguimiento.`}
               action={
                 canCreate && (
                   <button
@@ -471,7 +487,7 @@ export function CustomersPage() {
                     }}
                   >
                     <Plus />
-                    Nuevo contacto
+                    {newLabel(customer.singular)}
                   </button>
                 )
               }

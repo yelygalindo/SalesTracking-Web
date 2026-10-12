@@ -16,7 +16,13 @@ function optionalEmail(value: string | undefined) {
   return email && emailPattern.test(email) ? email : undefined
 }
 
+// Optional: without a Turnstile site key the trial sign-up is sent without a captcha.
+function optionalText(value: string | undefined) {
+  return value?.trim() || undefined
+}
+
 export const env = {
   apiBaseUrl: requiredUrl(import.meta.env.VITE_API_BASE_URL, 'VITE_API_BASE_URL'),
   supportEmail: optionalEmail(import.meta.env.VITE_SUPPORT_EMAIL),
+  turnstileSiteKey: optionalText(import.meta.env.VITE_TURNSTILE_SITE_KEY),
 }
