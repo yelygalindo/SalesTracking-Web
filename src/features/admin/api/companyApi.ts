@@ -16,6 +16,7 @@ export interface CompanyUserCapacity {
 export interface ManagedCompany {
   externalId: string;
   name: string;
+  industry: string | null;
   status: "active" | "inactive";
   timeZoneId: string;
   userLimit: number;

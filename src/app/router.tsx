@@ -27,6 +27,9 @@ const AdminPage = lazyPage(() => import("@/features/admin/pages/AdminPage"), "Ad
 const AcceptInvitationPage = lazyPage(() => import("@/features/admin/pages/AcceptInvitationPage"), "AcceptInvitationPage");
 const ActivityPage = lazyPage(() => import("@/features/activity/pages/ActivityPage"), "ActivityPage");
 const SupportPage = lazyPage(() => import("@/features/support/pages/SupportPage"), "SupportPage");
+const TrialSignupPage = lazyPage(() => import("@/features/trial-signups/pages/TrialSignupPage"), "TrialSignupPage");
+const VerifyTrialPage = lazyPage(() => import("@/features/trial-signups/pages/VerifyTrialPage"), "VerifyTrialPage");
+const TrialExpiredPage = lazyPage(() => import("@/features/trial-signups/pages/TrialExpiredPage"), "TrialExpiredPage");
 const RemindersPage = lazyPage(() => import("@/features/reminders/pages/RemindersPage"), "RemindersPage");
 
 export const router = createBrowserRouter([
@@ -38,6 +41,9 @@ export const router = createBrowserRouter([
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
       { path: "/reset-password", element: <ResetPasswordPage /> },
       { path: "/accept-invitation", element: <AcceptInvitationPage /> },
+      { path: "/trial-signup", element: <TrialSignupPage /> },
+      { path: "/verify-trial", element: <VerifyTrialPage /> },
+      { path: "/trial-expired", element: <TrialExpiredPage /> },
     ],
   },
   {

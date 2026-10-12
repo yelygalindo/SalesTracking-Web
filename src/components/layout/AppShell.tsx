@@ -15,6 +15,7 @@ import { Brand } from "@/presentation/components/Brand";
 import { PageSkeleton } from "@/components/feedback/Skeleton";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import { TrialBanner } from "@/features/trial-signups/components/TrialBanner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   bottomNavCandidates,
@@ -313,6 +314,9 @@ export function AppShell() {
             )}
           </div>
         </header>
+        {user.company.trialEndsAtUtc && (
+          <TrialBanner trialEndsAtUtc={user.company.trialEndsAtUtc} />
+        )}
         <Suspense fallback={<PageSkeleton />}>
           <Outlet context={{ previousPage } satisfies ShellOutletContext} />
         </Suspense>

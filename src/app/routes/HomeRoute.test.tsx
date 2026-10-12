@@ -19,7 +19,7 @@ const platformAdminContext: AuthContextValue = {
     roles: ["platform_admin"],
     permissions: [],
   },
-  sessionExpired: false,
+  sessionExpired: false, trialExpired: false,
   login: vi.fn(),
   logout: vi.fn(),
 };

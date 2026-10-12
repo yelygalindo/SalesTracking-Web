@@ -20,6 +20,7 @@ import "@/presentation/styles/reports.css";
 import "@/presentation/styles/projects-operational.css";
 import "@/presentation/styles/activity.css";
 import "@/presentation/styles/shell.css";
+import "@/presentation/styles/trial.css";
 import "@/presentation/styles/responsive.css";
 
 createRoot(document.getElementById("root")!).render(

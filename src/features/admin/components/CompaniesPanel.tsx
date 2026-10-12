@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/i18n/dateTime";
 import { translateValue } from "@/lib/i18n/labels";
 import { adminApi, type CompanyResult } from "../api/adminApi";
 import { companyApi, type ManagedCompany } from "../api/companyApi";
+import { industrySuggestions } from "@/features/trial-signups/services/trialSignupValidation";
 
 export function CompaniesPanel() {
   const cache = useQueryClient();
@@ -16,6 +17,7 @@ export function CompaniesPanel() {
     companyName: "",
     adminFullName: "",
     adminEmail: "",
+    industry: "",
   });
   const [registered, setRegistered] = useState<CompanyResult[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -33,10 +35,19 @@ export function CompaniesPanel() {
       }),
   });
   const register = useMutation({
-    mutationFn: () => adminApi.registerCompany(company),
+    mutationFn: () =>
+      adminApi.registerCompany({
+        ...company,
+        industry: company.industry.trim() || undefined,
+      }),
     onSuccess: async (result) => {
       setRegistered((current) => [result, ...current]);
-      setCompany({ companyName: "", adminFullName: "", adminEmail: "" });
+      setCompany({
+        companyName: "",
+        adminFullName: "",
+        adminEmail: "",
+        industry: "",
+      });
       notify("Empresa registrada correctamente.");
       await cache.invalidateQueries({ queryKey: ["admin-companies"] });
     },
@@ -68,6 +79,22 @@ export function CompaniesPanel() {
                 setCompany({ ...company, companyName: event.target.value })
               }
             />
+          </FormField>
+          <FormField label="Rubro">
+            <input
+              maxLength={100}
+              list="company-industry-suggestions"
+              placeholder="Ej. Construcción"
+              value={company.industry}
+              onChange={(event) =>
+                setCompany({ ...company, industry: event.target.value })
+              }
+            />
+            <datalist id="company-industry-suggestions">
+              {industrySuggestions.map((industry) => (
+                <option key={industry} value={industry} />
+              ))}
+            </datalist>
           </FormField>
           <FormField label="Administrador" required>
             <input
@@ -188,6 +215,7 @@ export function CompaniesPanel() {
               <thead>
                 <tr>
                   <th className="result-col-primary">Empresa</th>
+                  <th className="result-col-secondary">Rubro</th>
                   <th className="result-col-status">Estado</th>
                   <th className="result-col-secondary">Uso</th>
                   <th className="result-col-tertiary">Disponibles</th>
@@ -235,6 +263,9 @@ function CompanyRow({ company }: { company: ManagedCompany }) {
       <td className="result-col-primary">
         <strong>{company.name}</strong>
         <small>{company.timeZoneId}</small>
+      </td>
+      <td className="result-col-secondary" data-label="Rubro">
+        {company.industry || <small>Sin rubro</small>}
       </td>
       <td className="result-col-status" data-label="Estado">
         <span className={`status-pill ${company.status}`}>

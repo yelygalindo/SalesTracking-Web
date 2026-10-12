@@ -59,7 +59,7 @@ export const adminApi = {
     (await apiClient.post<Invitation>(`/api/invitations/${id}/resend`)).data,
   cancel: async (id: string) =>
     (await apiClient.post<{ message: string }>(`/api/invitations/${id}/cancel`)).data,
-  registerCompany: async (input: { companyName: string; adminFullName: string; adminEmail: string }) =>
+  registerCompany: async (input: { companyName: string; adminFullName: string; adminEmail: string; industry?: string }) =>
     (await apiClient.post<CompanyResult>("/api/companies/register", input)).data,
   resendAdmin: async (id: string) =>
     (await apiClient.post<CompanyResult>(`/api/companies/${id}/admin-invitation/resend`)).data,

@@ -1,4 +1,5 @@
-export interface Company { id: number; externalId: string; name: string }
+// trialEndsAtUtc is null when the company is not on a free trial.
+export interface Company { id: number; externalId: string; name: string; trialEndsAtUtc?: string | null }
 export interface AuthUser {
   id: number; externalId: string; username: string; fullName: string; email: string
   company: Company; roles: string[]; permissions: string[]
