@@ -2,7 +2,7 @@
 .dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.project-info) button:nth-child(1),
 .dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.activity-list) button:nth-child(2),
 .dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+.attachments-section) button:nth-child(3),
-.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+div>.sub-tabs) button:nth-child(4) { color:#e65d17; background:#fff3ea; box-shadow:inset 0 -3px #f56a1c; }
+.dashboard > .customer-overlay > .project-panel > .activity-tabs:has(+div>.sub-tabs) button:nth-child(4) { color:var(--ut-primary); background:#fff3ea; box-shadow:inset 0 -3px var(--ut-primary); }
 .project-info { display:grid; gap:20px; }
 .project-info > p { order:3; margin:0; padding:20px; border:1px solid #e5eaf0; border-radius:14px; color:#59677b; background:white; line-height:1.6; }
 .project-info > p::before { display:block; margin-bottom:8px; color:#273950; font-size:.85rem; font-weight:800; content:'Descripción'; }

@@ -358,7 +358,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   color: #fff;
-  background: #e65d17;
+  background: var(--ut-primary);
   font-weight: 800;
   text-align: center;
   text-decoration: none;
@@ -384,7 +384,7 @@
 }
 .dashboard-section-header a {
   flex: none;
-  color: #e65d17;
+  color: var(--ut-primary);
   font-size: 0.78rem;
   font-weight: 800;
   text-decoration: none;
@@ -547,7 +547,7 @@
   background: #feeceb;
 }
 .dashboard-row-action {
-  color: #e65d17;
+  color: var(--ut-primary);
   font-size: 0.72rem;
   font-weight: 800;
   white-space: nowrap;
@@ -616,7 +616,7 @@
   border: 0;
   border-radius: 99px;
   overflow: hidden;
-  accent-color: #f56a1c;
+  accent-color: var(--ut-primary);
 }
 @media (max-width: 1000px) {
   .dashboard-primary-layout {
@@ -771,7 +771,7 @@
   background: #2563eb;
 }
 .seller-color-2 {
-  background: #e65d17;
+  background: var(--ut-primary);
 }
 .seller-color-3 {
   background: #7c3aed;
@@ -1008,7 +1008,7 @@
   background: #eaf2fc;
 }
 .operations-live-metric.visits > span {
-  color: #c94b08;
+  color: var(--ut-primary-hover);
   background: #fff3eb;
 }
 .operations-live-metric.incident > span {
@@ -1074,7 +1074,7 @@
 }
 .operations-team-panel nav button.active {
   color: #fff;
-  background: #11213b;
+  background: var(--ut-sidebar);
   box-shadow: 0 3px 8px rgb(17 33 59 / 16%);
 }
 .operations-worker-list {
@@ -1105,7 +1105,7 @@
   place-items: center;
   border-radius: 11px;
   color: #fff;
-  background: #11213b;
+  background: var(--ut-sidebar);
   font-size: 0.72rem;
   font-weight: 900;
 }
@@ -1161,7 +1161,7 @@
   background: #f1f3f6;
 }
 .operations-worker-detail {
-  color: #c94b08;
+  color: var(--ut-primary-hover);
   font-size: 0.72rem;
   font-weight: 800;
   text-decoration: none;
@@ -1180,7 +1180,9 @@
   gap: 16px;
 }
 .operations-live-map-card > header > span {
+  flex: none;
   padding: 4px 7px;
+  white-space: nowrap;
   border-radius: 7px;
   color: #667085;
   background: #f1f3f6;
@@ -1245,7 +1247,7 @@
 .operations-map-detail-link {
   display: block;
   margin-top: 8px;
-  color: #c94b08 !important;
+  color: var(--ut-primary-hover) !important;
   font-weight: 800;
 }
 .operations-incidents-card > header > svg {
@@ -1288,7 +1290,7 @@
   font-size: 0.68rem;
 }
 .operations-incident-row a {
-  color: #c94b08;
+  color: var(--ut-primary-hover);
   font-size: 0.7rem;
   font-weight: 800;
   text-decoration: none;

@@ -1,25 +1,53 @@
 :root {
-  --ut-sidebar: #11213b;
-  --ut-background: #f3f2ef;
+  /* Neutrals: cool slate scale that matches the navy sidebar. */
+  --ut-sidebar: #0f1b2e;
+  --ut-sidebar-hover: rgb(255 255 255 / 7%);
+  --ut-sidebar-active: rgb(255 255 255 / 11%);
+  --ut-sidebar-text: rgb(255 255 255 / 70%);
+  --ut-sidebar-muted: rgb(255 255 255 / 42%);
+  --ut-background: #f4f6f9;
   --ut-surface: #ffffff;
   --ut-surface-soft: #f8fafc;
-  --ut-text: #1d1d1b;
-  --ut-text-secondary: #6f6b65;
-  --ut-border: #e3e0da;
-  --ut-accent: #ff6b17;
-  --ut-accent-soft: #fff7ed;
-  --ut-primary: #ed6418;
-  --ut-primary-soft: #fff3eb;
+  --ut-surface-muted: #f1f4f8;
+  --ut-text: #0f172a;
+  --ut-text-strong: #1e293b;
+  --ut-text-secondary: #5b6475;
+  --ut-text-muted: #8a93a3;
+  --ut-border: #e2e7ee;
+  --ut-border-strong: #cfd6e0;
+
+  /* Brand. Accent marks context; primary is the AA-compliant action color. */
+  --ut-accent: #f97316;
+  --ut-accent-soft: #fff4ec;
+  --ut-primary: #cf4a0c;
+  --ut-primary-hover: #b23f0a;
+  --ut-primary-soft: #fff4ec;
+  --ut-primary-text: #c2410c;
+
+  /* Status */
+  --ut-info: #2563eb;
+  --ut-info-soft: #eff6ff;
   --ut-success: #10b981;
+  --ut-success-text: #047857;
   --ut-success-soft: #ecfdf5;
   --ut-warning: #f59e0b;
+  --ut-warning-text: #92400e;
   --ut-warning-soft: #fffbeb;
   --ut-error: #ef4444;
+  --ut-error-text: #b91c1c;
   --ut-error-soft: #fef2f2;
+
+  /* Shape, depth and motion */
   --ut-radius-sm: 8px;
   --ut-radius-md: 12px;
   --ut-radius-lg: 16px;
   --ut-shadow-sm: 0 1px 2px rgb(15 23 42 / 5%);
-  --ut-shadow-md: 0 10px 28px rgb(15 23 42 / 7%);
-  --ut-focus: 0 0 0 3px rgb(255 107 23 / 18%);
+  --ut-shadow-md: 0 8px 24px rgb(15 23 42 / 7%);
+  --ut-shadow-lg: 0 18px 48px rgb(15 23 42 / 14%);
+  --ut-focus: 0 0 0 3px rgb(207 74 12 / 20%);
+  --ut-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* Layout */
+  --ut-sidebar-width: 264px;
+  --ut-topbar-height: 64px;
 }

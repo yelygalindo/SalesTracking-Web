@@ -1,183 +1,16 @@
-import { useEffect, useState, type ReactNode } from "react";
-import {
-  Activity,
-  BarChart3,
-  Boxes,
-  CalendarClock,
-  CalendarDays,
-  ChevronDown,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Route,
-  Settings,
-  Users,
-  X,
-} from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronRight, LogOut, Menu, X } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "@/presentation/components/Brand";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import {
+  filterNavigation,
+  findCurrentPage,
+  matchesPath,
+  navigationSections,
+  type NavGroupEntry,
+} from "@/components/layout/navigation";
 
-const items = [
-  {
-    to: "/",
-    label: "Resumen",
-    icon: LayoutDashboard,
-    permissions: ["dashboard.read", "platform-dashboard.read"],
-    end: true,
-  },
-  {
-    to: "/operations/history",
-    label: "Recorridos y jornadas",
-    icon: Route,
-    permissions: ["visits.read"],
-  },
-  {
-    to: "/reports/commercial-activity",
-    label: "Actividades",
-    icon: Activity,
-    permissions: ["reports.read"],
-  },
-  {
-    to: "/reminders",
-    label: "Agenda",
-    icon: CalendarClock,
-    permissions: ["customers.read"],
-  },
-  {
-    to: "/admin/users",
-    label: "Equipo",
-    icon: Users,
-    permissions: ["users.read"],
-  },
-];
-const groups = [
-  {
-    id: "monitoring",
-    label: "Monitoreo en vivo",
-    icon: CalendarDays,
-    path: "/operations/dashboard",
-    children: [
-      {
-        to: "/operations/dashboard",
-        label: "Estado del equipo",
-        permissions: ["visits.read"],
-      },
-      {
-        to: "/operations/active",
-        label: "Visitas en curso",
-        permissions: ["visits.read"],
-      },
-    ],
-  },
-  {
-    id: "customers",
-    label: "Contactos",
-    icon: Users,
-    path: "/customers",
-    children: [
-      {
-        to: "/customers",
-        label: "Directorio",
-        permissions: ["customers.read"],
-      },
-      {
-        to: "/customers/import",
-        label: "Importar base de datos de clientes",
-        allPermissions: ["customers.read", "customers.import"],
-      },
-      {
-        to: "/projects",
-        label: "Seguimientos",
-        permissions: ["projects.read"],
-      },
-      {
-        to: "/projects/import",
-        label: "Importar seguimientos",
-        allPermissions: ["projects.read", "projects.import"],
-      },
-    ],
-  },
-  {
-    id: "catalog",
-    label: "Productos",
-    icon: Boxes,
-    path: "/catalog",
-    children: [
-      {
-        to: "/catalog/products",
-        label: "Catálogo",
-        permissions: ["products.read"],
-      },
-      {
-        to: "/catalog/products/import",
-        label: "Importar productos",
-        allPermissions: ["products.read", "products.import"],
-      },
-      {
-        to: "/catalog/units",
-        label: "Unidades",
-        allPermissions: ["products.read", "units.read"],
-      },
-      {
-        to: "/catalog/units/import",
-        label: "Importar unidades",
-        allPermissions: ["products.read", "units.read", "units.import"],
-      },
-      {
-        to: "/deliveries",
-        label: "Compromisos y entregas",
-        permissions: ["deliveries.read"],
-      },
-    ],
-  },
-  {
-    id: "reports",
-    label: "Reportes",
-    icon: BarChart3,
-    path: "/reports",
-    children: [
-      {
-        to: "/reports/customers",
-        label: "Contactos",
-        permissions: ["reports.read"],
-      },
-      {
-        to: "/reports/deliveries",
-        label: "Reporte de entregas",
-        permissions: ["reports.read"],
-      },
-    ],
-  },
-  {
-    id: "admin",
-    label: "Administración",
-    icon: Settings,
-    path: "/admin",
-    children: [
-      {
-        to: "/admin/invite",
-        label: "Invitar usuario",
-        permissions: ["invitations.create"],
-      },
-      {
-        to: "/admin/invitations",
-        label: "Invitaciones",
-        permissions: ["invitations.create"],
-      },
-      {
-        to: "/admin/time-zone",
-        label: "Zona horaria",
-        roles: ["admin", "super-admin", "superadmin"],
-      },
-      {
-        to: "/admin/companies",
-        label: "Empresas",
-        permissions: ["companies.create"],
-      },
-    ],
-  },
-];
 const roleNames: Record<string, string> = {
   seller: "Personal de campo",
   supervisor: "Supervisor",
@@ -187,104 +20,98 @@ const roleNames: Record<string, string> = {
 };
 const roleLabel = (role: string) => roleNames[role.toLowerCase()] || role;
 
+const groupContains = (group: NavGroupEntry, pathname: string) =>
+  group.children.some((child) => matchesPath(pathname, child.to));
+
 export function AppShell() {
   const { user, logout, canAny, canAll, hasRole } = useAuthorization(),
     [open, setOpen] = useState(false),
+    [profileOpen, setProfileOpen] = useState(false),
     [expandedGroups, setExpandedGroups] = useState<string[]>([]),
+    profileRef = useRef<HTMLDivElement>(null),
     location = useLocation();
-  useEffect(() => setOpen(false), [location.pathname, location.search]);
+
   useEffect(() => {
-    const activeGroup = groups.find(
-      (group) =>
-        location.pathname === group.path ||
-        location.pathname.startsWith(`${group.path}/`) ||
-        group.children.some(
-          (child) =>
-            location.pathname === child.to ||
-            location.pathname.startsWith(`${child.to}/`),
-        ),
-    );
-    if (activeGroup)
-      setExpandedGroups((current) =>
-        current.includes(activeGroup.id)
-          ? current
-          : [...current, activeGroup.id],
+    setOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const activeGroup = navigationSections
+      .flatMap((section) => section.entries)
+      .find(
+        (entry): entry is NavGroupEntry =>
+          entry.kind === "group" && groupContains(entry, location.pathname),
       );
+    // Accordion: navigating opens the current page's group and folds the rest.
+    setExpandedGroups(activeGroup ? [activeGroup.id] : []);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!open && !profileOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      setProfileOpen(false);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!profileRef.current?.contains(event.target as Node))
+        setProfileOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open, profileOpen]);
+
+  useEffect(() => {
+    document.body.classList.toggle("nav-locked", open);
+    return () => document.body.classList.remove("nav-locked");
+  }, [open]);
+
   if (!user) return null;
-  const allowed = items.filter((item) => canAny(item.permissions));
-  const allowedGroups = groups
-    .map((group) => ({
-      ...group,
-      children: group.children.filter(
-        (child) =>
-          ("permissions" in child &&
-            Boolean(child.permissions) &&
-            canAny(child.permissions!)) ||
-          ("allPermissions" in child &&
-            Boolean(child.allPermissions) &&
-            canAll(child.allPermissions!)) ||
-          ("roles" in child &&
-            Boolean(child.roles) &&
-            child.roles!.some((role) => hasRole(role))),
-      ),
-    }))
-    .filter((group) => group.children.length > 0);
+
+  const sections = filterNavigation(navigationSections, {
+    canAny,
+    canAll,
+    hasRole,
+  });
+  const currentPage = findCurrentPage(sections, location.pathname);
   const initials = user.fullName
     .split(" ")
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
     .toUpperCase();
-  const renderGroup = ({
-    id,
-    label,
-    icon: Icon,
-    path,
-    children,
-  }: (typeof allowedGroups)[number]) => {
+  const toggleGroup = (id: string) =>
+    setExpandedGroups((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    );
+
+  const renderGroup = (group: NavGroupEntry) => {
+    const { id, label, icon: Icon, children } = group;
     const expanded = expandedGroups.includes(id);
-    const active =
-      location.pathname === path ||
-      location.pathname.startsWith(`${path}/`) ||
-      children.some(
-        (child) =>
-          location.pathname === child.to ||
-          location.pathname.startsWith(`${child.to}/`),
-      );
+    const active = groupContains(group, location.pathname);
     return (
       <div className={`nav-group ${active ? "active" : ""}`} key={id}>
         <button
           className="nav-group-trigger"
           aria-expanded={expanded}
-          onClick={() =>
-            setExpandedGroups((current) =>
-              current.includes(id)
-                ? current.filter((value) => value !== id)
-                : [...current, id],
-            )
-          }
+          aria-controls={`nav-group-${id}`}
+          onClick={() => toggleGroup(id)}
         >
-          <Icon />
+          <Icon aria-hidden="true" />
           <span>{label}</span>
-          <ChevronDown className="nav-group-chevron" />
+          <ChevronDown className="nav-group-chevron" aria-hidden="true" />
         </button>
         {expanded && (
-          <div className="nav-submenu">
+          <div className="nav-submenu" id={`nav-group-${id}`}>
             {children.map((child) => (
-              <NavLink
-                className={() =>
-                  child.to.includes("?")
-                    ? `${location.pathname}${location.search}` === child.to
-                      ? "active"
-                      : ""
-                    : location.pathname === child.to
-                      ? "active"
-                      : ""
-                }
-                key={child.to}
-                to={child.to}
-              >
+              <NavLink end key={child.to} to={child.to}>
                 <span>{child.label}</span>
               </NavLink>
             ))}
@@ -293,86 +120,122 @@ export function AppShell() {
       </div>
     );
   };
+
   return (
     <div className="app-shell-root">
-      <button
-        className="mobile-nav-trigger"
-        onClick={() => setOpen(true)}
-        aria-label="Abrir navegación"
-      >
-        <Menu />
-      </button>
       {open && (
         <button
           className="nav-backdrop"
           onClick={() => setOpen(false)}
           aria-label="Cerrar navegación"
+          tabIndex={-1}
         />
       )}
-      <aside className={`app-navigation ${open ? "open" : ""}`}>
+      <aside
+        className={`app-navigation ${open ? "open" : ""}`}
+        aria-label="Navegación principal"
+      >
         <div className="nav-brand">
           <Brand inverse />
-          <button onClick={() => setOpen(false)} aria-label="Cerrar">
+          <button
+            className="nav-close"
+            onClick={() => setOpen(false)}
+            aria-label="Cerrar"
+          >
             <X />
           </button>
         </div>
-        <p className="nav-label">Navegación</p>
         <nav>
-          {allowed
-            .filter((item) => item.to === "/")
-            .map(({ to, label, icon: Icon, end }) => (
-              <NavLink end={end} key={to} to={to}>
-                <Icon />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          {allowedGroups
-            .filter((group) => group.id === "monitoring")
-            .map(renderGroup)}
-          {allowed
-            .filter((item) => item.to !== "/" && item.to !== "/admin/users")
-            .map(({ to, label, icon: Icon, end }) => (
-              <NavLink end={end} key={to} to={to}>
-                <Icon />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          {allowedGroups
-            .filter((group) => ["customers", "catalog"].includes(group.id))
-            .map(renderGroup)}
-          {allowed
-            .filter((item) => item.to === "/admin/users")
-            .map(({ to, label, icon: Icon, end }) => (
-              <NavLink end={end} key={to} to={to}>
-                <Icon />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          {allowedGroups
-            .filter((group) => ["reports", "admin"].includes(group.id))
-            .map(renderGroup)}
+          {sections.map((section) => (
+            <div className="nav-section" key={section.id}>
+              {section.label && <p className="nav-label">{section.label}</p>}
+              {section.entries.map((entry) =>
+                entry.kind === "group" ? (
+                  renderGroup(entry)
+                ) : (
+                  <NavLink end key={entry.to} to={entry.to}>
+                    <entry.icon aria-hidden="true" />
+                    <span>{entry.label}</span>
+                  </NavLink>
+                ),
+              )}
+            </div>
+          ))}
         </nav>
-        <button className="logout" onClick={() => void logout()}>
-          <LogOut />
-          Cerrar sesión
-        </button>
+        <div className="nav-footer">
+          <span className="avatar" aria-hidden="true">
+            {initials}
+          </span>
+          <div className="nav-footer-identity">
+            <strong>{user.fullName}</strong>
+            <small>{user.company.name}</small>
+          </div>
+          <button
+            className="logout"
+            onClick={() => void logout()}
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+          >
+            <LogOut />
+          </button>
+        </div>
       </aside>
       <section className="app-workspace">
         <header className="app-topbar">
-          <button onClick={() => setOpen(true)} aria-label="Abrir navegación">
+          <button
+            className="topbar-menu"
+            onClick={() => setOpen(true)}
+            aria-label="Abrir navegación"
+            aria-expanded={open}
+          >
             <Menu />
           </button>
-          <div className="profile">
-            <span className="avatar">{initials}</span>
-            <div className="profile-identity">
-              <strong>{user.fullName}</strong>
-              <small>{user.company.name}</small>
-              <div className="profile-roles" aria-label="Roles del usuario">
-                {user.roles.map((role) => (
-                  <span key={role}>{roleLabel(role)}</span>
+          {currentPage ? (
+            <nav className="topbar-breadcrumb" aria-label="Ubicación">
+              {[currentPage.section, currentPage.parent]
+                .filter(Boolean)
+                .map((crumb) => (
+                  <span className="crumb" key={crumb}>
+                    {crumb}
+                    <ChevronRight aria-hidden="true" />
+                  </span>
                 ))}
+              <strong aria-current="page">{currentPage.label}</strong>
+            </nav>
+          ) : (
+            <span className="topbar-spacer" />
+          )}
+          <div className="profile" ref={profileRef}>
+            <button
+              className="profile-trigger"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((value) => !value)}
+            >
+              <span className="avatar">{initials}</span>
+              <span className="profile-identity">
+                <strong>{user.fullName}</strong>
+                <small>{user.company.name}</small>
+              </span>
+              <ChevronDown className="profile-chevron" aria-hidden="true" />
+            </button>
+            {profileOpen && (
+              <div className="profile-menu" role="menu">
+                <div className="profile-menu-header">
+                  <strong>{user.fullName}</strong>
+                  <small>{user.email}</small>
+                  <div className="profile-roles" aria-label="Roles del usuario">
+                    {user.roles.map((role) => (
+                      <span key={role}>{roleLabel(role)}</span>
+                    ))}
+                  </div>
+                </div>
+                <button role="menuitem" onClick={() => void logout()}>
+                  <LogOut aria-hidden="true" />
+                  Cerrar sesión
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </header>
         <Outlet />

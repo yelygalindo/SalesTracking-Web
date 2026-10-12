@@ -32,22 +32,6 @@ body,
 }
 
 @media (max-width: 900px) {
-  .app-navigation {
-    z-index: 1400;
-    height: 100dvh;
-    padding-bottom: max(14px, env(safe-area-inset-bottom));
-  }
-
-  .nav-backdrop {
-    z-index: 1300;
-  }
-
-  .app-topbar {
-    z-index: 30;
-    height: 64px;
-    padding-inline: max(16px, env(safe-area-inset-left));
-  }
-
   .customers-content,
   .dashboard-content {
     width: 100%;

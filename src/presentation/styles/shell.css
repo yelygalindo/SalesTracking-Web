@@ -1,0 +1,491 @@
+/* Application shell: sidebar navigation, topbar and mobile drawer. */
+.app-shell-root {
+  display: grid;
+  grid-template-columns: var(--ut-sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--ut-background);
+}
+
+/* Sidebar */
+.app-navigation {
+  position: sticky;
+  z-index: 40;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  flex-direction: column;
+  color: white;
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgb(249 115 22 / 9%), transparent 55%),
+    var(--ut-sidebar);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  min-height: 72px;
+  padding: 14px 20px;
+}
+.nav-brand .brand-logo {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+.nav-close {
+  display: none;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  color: white;
+  background: rgb(255 255 255 / 8%);
+}
+.nav-close svg {
+  width: 20px;
+}
+.app-navigation > nav {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 6px 12px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgb(255 255 255 / 18%) transparent;
+  scrollbar-width: thin;
+}
+.nav-section {
+  display: grid;
+  gap: 2px;
+}
+.app-navigation .nav-label {
+  margin: 0 0 6px;
+  padding: 0 12px;
+  color: var(--ut-sidebar-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.app-navigation nav a,
+.nav-group-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ut-sidebar-text);
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+.app-navigation nav a > span,
+.nav-group-trigger > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-navigation nav svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.app-navigation nav a:hover,
+.nav-group-trigger:hover {
+  color: white;
+  background: var(--ut-sidebar-hover);
+}
+.app-navigation nav a.active {
+  color: white;
+  background: var(--ut-sidebar-active);
+  font-weight: 600;
+}
+.app-navigation nav a.active::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: -12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--ut-accent);
+  content: "";
+}
+.app-navigation nav a.active svg {
+  color: var(--ut-accent);
+}
+.nav-group {
+  display: grid;
+  gap: 2px;
+}
+.nav-group.active > .nav-group-trigger {
+  color: white;
+}
+.nav-group.active > .nav-group-trigger > svg:first-child {
+  color: var(--ut-accent);
+}
+.nav-group-trigger .nav-group-chevron {
+  width: 15px;
+  opacity: 0.6;
+  transition: transform 0.2s var(--ut-ease);
+}
+.nav-group-trigger[aria-expanded="true"] .nav-group-chevron {
+  transform: rotate(180deg);
+}
+.nav-submenu {
+  display: grid;
+  gap: 1px;
+  margin: 0 0 4px 21px;
+  padding-left: 12px;
+  border-left: 1px solid rgb(255 255 255 / 12%);
+  animation: nav-submenu-in 0.18s var(--ut-ease);
+}
+.app-navigation nav .nav-submenu a {
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+}
+.app-navigation nav .nav-submenu a.active {
+  background: var(--ut-sidebar-hover);
+}
+.app-navigation nav .nav-submenu a.active::before {
+  top: 8px;
+  bottom: 8px;
+  left: -13px;
+  width: 2px;
+}
+@keyframes nav-submenu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Sidebar footer with the signed-in user */
+.nav-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  margin: 0 12px;
+  padding: 14px 4px max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgb(255 255 255 / 9%);
+}
+.nav-footer .avatar {
+  width: 34px;
+  height: 34px;
+  color: white;
+  background: rgb(255 255 255 / 12%);
+}
+.nav-footer-identity {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.nav-footer-identity strong,
+.nav-footer-identity small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-footer-identity strong {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.nav-footer-identity small {
+  color: var(--ut-sidebar-muted);
+  font-size: 0.74rem;
+}
+.app-navigation .logout {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ut-sidebar-text);
+  background: transparent;
+}
+.app-navigation .logout:hover {
+  color: white;
+  background: var(--ut-sidebar-hover);
+}
+.app-navigation .logout svg {
+  width: 18px;
+}
+
+/* Workspace and topbar */
+.app-workspace {
+  min-width: 0;
+  overflow-x: hidden;
+  background: var(--ut-background);
+}
+.app-topbar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--ut-topbar-height);
+  padding: 0 28px;
+  border-bottom: 1px solid var(--ut-border);
+  background: rgb(255 255 255 / 88%);
+  backdrop-filter: saturate(1.4) blur(10px);
+}
+.topbar-menu {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  margin-left: -8px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ut-text);
+  background: transparent;
+}
+.topbar-menu:hover {
+  background: var(--ut-surface-muted);
+}
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+  font-size: 0.88rem;
+}
+.topbar-breadcrumb .crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ut-text-secondary);
+  white-space: nowrap;
+}
+.topbar-breadcrumb .crumb svg {
+  width: 14px;
+  color: var(--ut-text-muted);
+}
+.topbar-breadcrumb strong {
+  overflow: hidden;
+  color: var(--ut-text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar-spacer {
+  flex: 1;
+}
+
+/* Profile menu */
+.app-topbar .profile {
+  position: relative;
+  flex: none;
+}
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+  padding: 5px 8px 5px 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  text-align: left;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+.profile-trigger:hover,
+.profile-trigger[aria-expanded="true"] {
+  border-color: var(--ut-border);
+  background: var(--ut-surface);
+}
+.app-topbar .avatar {
+  width: 34px;
+  height: 34px;
+  color: white;
+  background: linear-gradient(135deg, #1e3a5f, var(--ut-sidebar));
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+.app-topbar .profile-identity {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.app-topbar .profile-identity strong,
+.app-topbar .profile-identity small {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-topbar .profile-identity strong {
+  color: var(--ut-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.app-topbar .profile-identity small {
+  color: var(--ut-text-secondary);
+  font-size: 0.74rem;
+}
+.profile-chevron {
+  width: 16px;
+  flex: none;
+  color: var(--ut-text-muted);
+}
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  padding: 6px;
+  border: 1px solid var(--ut-border);
+  border-radius: var(--ut-radius-md);
+  background: var(--ut-surface);
+  box-shadow: var(--ut-shadow-lg);
+  animation: profile-menu-in 0.16s var(--ut-ease);
+}
+.profile-menu-header {
+  display: grid;
+  gap: 2px;
+  padding: 10px 10px 12px;
+  border-bottom: 1px solid var(--ut-border);
+}
+.profile-menu-header strong {
+  color: var(--ut-text);
+  font-size: 0.9rem;
+}
+.profile-menu-header small {
+  overflow: hidden;
+  color: var(--ut-text-secondary);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+}
+.profile-menu-header .profile-roles {
+  margin-top: 8px;
+}
+.profile-menu-header .profile-roles span {
+  padding: 3px 8px;
+  color: var(--ut-primary-text);
+  background: var(--ut-primary-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.profile-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ut-text-strong);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.profile-menu > button:hover {
+  color: var(--ut-error-text);
+  background: var(--ut-error-soft);
+}
+.profile-menu > button svg {
+  width: 17px;
+}
+@keyframes profile-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.nav-backdrop {
+  display: none;
+}
+
+/* Mobile and tablet: the sidebar becomes a drawer. */
+@media (max-width: 900px) {
+  .app-shell-root {
+    grid-template-columns: 1fr;
+  }
+  .app-navigation {
+    position: fixed;
+    z-index: 1400;
+    top: 0;
+    left: 0;
+    width: min(86vw, 300px);
+    box-shadow: var(--ut-shadow-lg);
+    transform: translateX(-105%);
+    transition:
+      transform 0.24s var(--ut-ease),
+      visibility 0s linear 0.24s;
+    visibility: hidden;
+  }
+  .app-navigation.open {
+    transform: translateX(0);
+    transition: transform 0.24s var(--ut-ease);
+    visibility: visible;
+  }
+  .nav-close {
+    display: grid;
+  }
+  .nav-backdrop {
+    position: fixed;
+    z-index: 1300;
+    inset: 0;
+    display: block;
+    border: 0;
+    background: rgb(9 20 37 / 52%);
+    animation: nav-backdrop-in 0.2s ease;
+  }
+  .app-topbar {
+    gap: 10px;
+    padding: 0 max(16px, env(safe-area-inset-left));
+  }
+  .topbar-menu {
+    display: grid;
+  }
+  .app-topbar .profile-identity,
+  .profile-chevron {
+    display: none;
+  }
+  .profile-trigger {
+    padding: 3px;
+  }
+  body.nav-locked {
+    overflow: hidden;
+  }
+}
+@media (max-width: 480px) {
+  .topbar-breadcrumb .crumb {
+    display: none;
+  }
+}
+@keyframes nav-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
