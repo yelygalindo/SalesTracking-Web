@@ -160,7 +160,7 @@
   height: 38px;
   place-items: center;
   border-radius: 10px;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: #fff0e5;
 }
 .admin-card-header svg {
@@ -210,7 +210,7 @@
   grid-column: 2;
   grid-row: 1/3;
   border: 0;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: none;
   font-weight: 700;
 }
@@ -237,7 +237,7 @@
   padding: 6px 8px;
   border: 0;
   border-radius: 7px;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: #fff0e5;
   font-weight: 700;
 }
@@ -279,7 +279,7 @@
   height: 10px;
   margin-top: 5px;
   border-radius: 50%;
-  background: #e65d17;
+  background: var(--ut-primary);
 }
 .invitation-history-list li:not(:last-child) > span::after {
   position: absolute;

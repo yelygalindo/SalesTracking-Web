@@ -11,7 +11,7 @@
   justify-content: space-between;
   overflow: hidden;
   padding: 56px 7vw;
-  background: #11213b;
+  background: var(--ut-sidebar);
 }
 .orb {
   position: absolute;
@@ -110,7 +110,7 @@
 }
 .overline {
   margin: 0;
-  color: #f56a1c !important;
+  color: var(--ut-primary) !important;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.17em;
@@ -146,7 +146,7 @@
   background: white;
 }
 .login-form-wrap input:focus {
-  border-color: #f56a1c;
+  border-color: var(--ut-primary);
   box-shadow: 0 0 0 3px rgba(245, 106, 28, 0.12);
 }
 .password-label {
@@ -156,7 +156,7 @@
 }
 .password-label button {
   border: 0;
-  color: #f56a1c;
+  color: var(--ut-primary);
   background: none;
   font-size: 0.84rem;
   font-weight: 700;
@@ -224,7 +224,7 @@
   flex-direction: column;
   padding: 22px 14px 14px;
   color: white;
-  background: #11213b;
+  background: var(--ut-sidebar);
 }
 .dashboard-sidebar > .brand {
   padding: 0 8px 22px;
@@ -260,7 +260,7 @@
 }
 .dashboard-sidebar nav button.active {
   color: white;
-  background: #f56a1c;
+  background: var(--ut-primary);
 }
 .dashboard-sidebar svg {
   width: 19px;
@@ -339,7 +339,7 @@
   height: 7px;
   border: 2px solid white;
   border-radius: 50%;
-  background: #f56a1c;
+  background: var(--ut-primary);
 }
 .avatar {
   display: grid;
@@ -470,7 +470,7 @@
 }
 .activity-card header button {
   border: 0;
-  color: #f56a1c;
+  color: var(--ut-primary);
   background: none;
   font-weight: 800;
 }
@@ -616,7 +616,7 @@
   }
 }
 .password-label a {
-  color: #f56a1c;
+  color: var(--ut-primary);
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
@@ -677,7 +677,7 @@
   outline: none;
 }
 .simple-form input:focus {
-  border-color: #f56a1c;
+  border-color: var(--ut-primary);
   box-shadow: 0 0 0 3px rgba(245, 106, 28, 0.12);
 }
 .back-link {
@@ -712,7 +712,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid #dfe4ec;
-  border-top-color: #f56a1c;
+  border-top-color: var(--ut-primary);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
@@ -772,7 +772,7 @@
   transform: rotate(45deg);
   border: 3px solid #fff;
   border-radius: 50% 50% 50% 0;
-  background: #f56a1c;
+  background: var(--ut-primary);
   box-shadow: 0 4px 12px rgba(23, 45, 76, 0.3);
 }
 .location-marker::after {
@@ -819,7 +819,7 @@
   height: 36px;
   border: 0;
   border-radius: 8px;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: #fff0e5;
   font-weight: 800;
 }
@@ -829,6 +829,6 @@
 .progress-control progress {
   grid-column: 1/-1;
   width: 100%;
-  accent-color: #f56a1c;
+  accent-color: var(--ut-primary);
 }
 

@@ -29,7 +29,7 @@
   width: 17px !important;
   height: 17px !important;
   margin-top: 2px;
-  accent-color: #f56a1c;
+  accent-color: var(--ut-primary);
 }
 .catalog-option span,
 .catalog-option strong,
@@ -269,7 +269,7 @@
 .table-link,
 .back-button {
   border: 0;
-  color: #176b55;
+  color: var(--ut-primary-text);
   background: none;
   font-weight: 700;
   cursor: pointer;
@@ -428,8 +428,8 @@
   font-weight: 700;
 }
 .activity-tabs button.active {
-  border-color: #f56a1c;
-  color: #e65d17;
+  border-color: var(--ut-primary);
+  color: var(--ut-primary);
 }
 .activity-form {
   display: flex;
@@ -512,7 +512,7 @@
 }
 .dashboard-sidebar nav a.active {
   color: white;
-  background: #f56a1c;
+  background: var(--ut-primary);
 }
 .customers-content {
   max-width: 1400px;
@@ -545,7 +545,7 @@
   border: 0;
   border-radius: 11px;
   color: white;
-  background: #f56a1c;
+  background: var(--ut-primary);
   font-weight: 750;
 }
 .action-primary svg,
@@ -941,7 +941,7 @@
 }
 .location-viewer footer a {
   flex: 0 0 auto;
-  color: #e65d17;
+  color: var(--ut-primary);
   font-weight: 700;
   text-decoration: none;
 }
@@ -1004,7 +1004,7 @@
 }
 .customer-form input:focus,
 .customer-toolbar input:focus {
-  border-color: #f56a1c;
+  border-color: var(--ut-primary);
   box-shadow: 0 0 0 3px rgba(245, 106, 28, 0.1);
 }
 .submit-customer {
@@ -1186,7 +1186,7 @@
   order: 4;
 }
 .dashboard > .customer-overlay > .project-panel > .activity-tabs button:hover {
-  color: #e65d17;
+  color: var(--ut-primary);
   background: #fff4ec;
 }
 .dashboard .project-info,
@@ -1205,7 +1205,7 @@
 .dashboard .attachment-grid article.cover {
   order: -1;
   grid-column: 1/-1;
-  border: 2px solid #f56a1c;
+  border: 2px solid var(--ut-primary);
   box-shadow: 0 12px 32px rgba(25, 42, 67, 0.12);
 }
 .dashboard .attachment-grid article.cover img {
@@ -1253,7 +1253,7 @@
   height: 12px;
   border: 3px solid #fff;
   border-radius: 50%;
-  background: #f56a1c;
+  background: var(--ut-primary);
   box-shadow: 0 0 0 2px #f5a36f;
   content: "";
 }
@@ -1399,7 +1399,7 @@
   margin-top: 7px;
   padding: 0;
   border: 0;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: none;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1453,7 +1453,7 @@
   > .activity-tabs:has(+ div > .sub-tabs)
   button:nth-child(4) {
   color: #fff;
-  background: #f56a1c;
+  background: var(--ut-primary);
   box-shadow: 0 5px 14px rgba(245, 106, 28, 0.22);
 }
 .dashboard .sub-tabs button {
@@ -1527,7 +1527,7 @@
 }
 .reminder-agenda a {
   margin-top: 5px;
-  color: #e65d17;
+  color: var(--ut-primary);
   font-size: 0.82rem;
   text-decoration: none;
 }
@@ -1549,7 +1549,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  color: #e65d17;
+  color: var(--ut-primary);
   background: #fff0e5;
 }
 .reminder-icon svg {

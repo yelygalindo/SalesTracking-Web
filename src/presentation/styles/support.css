@@ -13,7 +13,7 @@
 .customer-activity > .activity-tabs button:nth-child(2):hover,
 .customer-activity > .activity-tabs button:nth-child(3):hover,
 .project-panel .sub-tabs button:nth-child(2):hover,
-.project-panel .sub-tabs button:nth-child(3):hover { color:#e65d17; border-color:#f5a36f; background:#fff5ee; }
+.project-panel .sub-tabs button:nth-child(3):hover { color:var(--ut-primary); border-color:#f5a36f; background:#fff5ee; }
 .customer-row-actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; }
 .customer-row-actions .quick { padding:6px 8px; border:1px solid #e1e6ed; border-radius:8px; color:#53647a; background:#f8fafc; }
-.customer-row-actions .quick:hover { color:#e65d17; border-color:#f5a36f; background:#fff5ee; }
+.customer-row-actions .quick:hover { color:var(--ut-primary); border-color:#f5a36f; background:#fff5ee; }
