@@ -101,10 +101,10 @@ export const projectApi = {
         `/api/projects/${externalId}/attachments`,
       )
     ).data,
-  downloadAttachmentsArchive: async (externalId: string) => {
+  downloadAttachmentsArchive: async (externalId: string, type?: string) => {
     const response = await apiClient.get<Blob>(
       `/api/projects/${externalId}/attachments/archive`,
-      { responseType: "blob" },
+      { responseType: "blob", params: { type: type || undefined } },
     );
     const disposition = String(response.headers["content-disposition"] ?? "");
     const matched = disposition.match(
@@ -122,11 +122,15 @@ export const projectApi = {
       .data,
   upload: async (externalId: string, input: AttachmentUpload) => {
     const body = new FormData();
-    body.append("file", input.file);
+    const file =
+      input.contentType && input.contentType !== input.file.type
+        ? new File([input.file], input.file.name, { type: input.contentType })
+        : input.file;
+    body.append("file", file);
     body.append("attachmentType", input.attachmentType);
     body.append("caption", input.caption);
     body.append("isCover", String(input.isCover));
-    body.append("visitExternalId", input.visitExternalId);
+    if (input.visitExternalId) body.append("visitExternalId", input.visitExternalId);
     body.append("occurredAtUtc", input.occurredAtUtc);
     body.append("clientRequestId", id());
     return (

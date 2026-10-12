@@ -51,6 +51,9 @@ export interface Workday {
 export interface ActiveSeller {
   sellerExternalId: string;
   sellerName: string;
+  /** The endpoint lists every active worker; only those with an open workday are working. */
+  hasOpenWorkday: boolean;
+  workdayStartedAtUtc?: string | null;
   workdayExternalId?: string | null;
   status?: string;
   startedAtUtc: string;
@@ -60,6 +63,11 @@ export interface ActiveSeller {
   longitude?: number | null;
   accuracyMeters?: number | null;
   lastUpdatedAtUtc?: string | null;
+  currentVisitExternalId?: string | null;
+  currentVisitTargetType?: string | null;
+  currentVisitTargetExternalId?: string | null;
+  currentVisitTargetName?: string | null;
+  currentVisitStartedAtUtc?: string | null;
   currentVisit?: { name?: string | null; startedAtUtc?: string | null } | null;
 }
 export interface OperationVisit {
@@ -85,15 +93,37 @@ export interface SellerRouteFilters {
   toUtc: string;
 }
 
-const normalizeActiveSeller = (seller: ActiveSeller): ActiveSeller => {
+// Workers without a workday arrive with startedAtUtc = 0001-01-01 (the .NET default).
+const validDate = (value?: string | null) =>
+  value && !value.startsWith("0001-") ? value : null;
+
+export const normalizeActiveSeller = (seller: ActiveSeller): ActiveSeller => {
+  const hasOpenWorkday =
+    typeof seller.hasOpenWorkday === "boolean"
+      ? seller.hasOpenWorkday
+      : Boolean(seller.workdayExternalId);
+  const startedAtUtc =
+    validDate(seller.workdayStartedAtUtc) ?? validDate(seller.startedAtUtc) ?? "";
   const hasCoordinates =
     Number.isFinite(seller.latitude) && Number.isFinite(seller.longitude);
   const capturedAtUtc =
-    seller.lastLocationAtUtc ?? seller.lastUpdatedAtUtc ?? seller.startedAtUtc;
+    seller.lastLocationAtUtc ?? seller.lastUpdatedAtUtc ?? startedAtUtc;
+  const currentVisit =
+    seller.currentVisit ??
+    (seller.currentVisitExternalId || seller.currentVisitTargetName
+      ? {
+          name: seller.currentVisitTargetName,
+          startedAtUtc: seller.currentVisitStartedAtUtc,
+        }
+      : null);
 
   return {
     ...seller,
-    status: seller.status || "open",
+    hasOpenWorkday,
+    startedAtUtc,
+    workdayExternalId: seller.workdayExternalId || null,
+    currentVisit,
+    status: hasOpenWorkday ? seller.status || "open" : "not-started",
     lastUpdatedAtUtc: seller.lastUpdatedAtUtc ?? seller.lastLocationAtUtc,
     lastLocation:
       seller.lastLocation ??

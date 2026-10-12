@@ -91,14 +91,19 @@ export function OperationsPage() {
       Boolean(from && to) &&
       (!canChooseSeller || Boolean(sellerId)),
   });
+  // The endpoint lists every active worker; this view only shows open workdays.
+  const working = useMemo(
+    () => active.data?.filter((item) => item.hasOpenWorkday) ?? [],
+    [active.data],
+  );
   const activePoints = useMemo(
     () =>
-      active.data?.flatMap((item) =>
+      working.flatMap((item) =>
         item.lastLocation
           ? [{ ...item.lastLocation, label: item.sellerName }]
           : [],
-      ) ?? [],
-    [active.data],
+      ),
+    [working],
   );
   const selectedSellerName = sellers.data?.find(
     (seller) => seller.externalId === sellerId,
@@ -144,7 +149,7 @@ export function OperationsPage() {
               loading={active.isLoading}
               error={active.error}
               onRetry={active.refetch}
-              isEmpty={!active.data?.length}
+              isEmpty={!working.length}
               empty="No hay responsables con jornada activa."
             >
               <TrackingMap points={activePoints} />
@@ -155,7 +160,7 @@ export function OperationsPage() {
               loading={active.isLoading}
               error={active.error}
               onRetry={active.refetch}
-              isEmpty={!active.data?.length}
+              isEmpty={!working.length}
               empty="No hay responsables con jornada activa."
             >
               <div className="table-scroll">
@@ -171,7 +176,7 @@ export function OperationsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {active.data?.map((item) => (
+                    {working.map((item) => (
                       <tr key={item.sellerExternalId}>
                         <td>
                           <strong>{item.sellerName}</strong>
@@ -194,7 +199,18 @@ export function OperationsPage() {
                           )}
                         </td>
                         <td>
-                          {item.currentVisit?.name || "Sin visita activa"}
+                          {item.currentVisit?.name ? (
+                            <>
+                              <strong>{item.currentVisit.name}</strong>
+                              {item.currentVisit.startedAtUtc && (
+                                <small>
+                                  Desde {dateTime(item.currentVisit.startedAtUtc)}
+                                </small>
+                              )}
+                            </>
+                          ) : (
+                            "Sin visita activa"
+                          )}
                         </td>
                       </tr>
                     ))}

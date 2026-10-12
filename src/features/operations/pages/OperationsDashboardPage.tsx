@@ -111,9 +111,9 @@ function OperationsLiveMap({ workers }: { workers: OperationsWorker[] }) {
             <Popup>
               <strong>{worker.sellerName}</strong>
               <br />
-              {worker.currentVisitName ||
-                worker.incident ||
-                "Ubicación actualizada"}
+              {worker.currentVisitName
+                ? `En ${worker.currentVisitName}`
+                : worker.incident || "Ubicación actualizada"}
               {worker.lastLocationAtUtc && (
                 <>
                   <br />
@@ -494,9 +494,9 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       <div className="operations-worker-name">
         <strong>{worker.sellerName}</strong>
         <small>
-          {worker.currentVisitName ||
-            worker.incident ||
-            statusLabels[worker.status]}
+          {worker.currentVisitName
+            ? `En ${worker.currentVisitName}${worker.currentVisitStartedAtUtc ? ` · desde ${formatTime(worker.currentVisitStartedAtUtc)}` : ""}`
+            : worker.incident || statusLabels[worker.status]}
         </small>
       </div>
       <span className={`operations-worker-status ${worker.status}`}>

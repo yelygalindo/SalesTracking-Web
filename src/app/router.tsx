@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/app/routes/ProtectedRoute";
 import { PublicOnlyRoute } from "@/app/routes/PublicOnlyRoute";
 import { PermissionRoute } from "@/app/routes/PermissionRoute";
@@ -25,6 +25,7 @@ const DeliveriesPage = lazyPage(() => import("@/features/deliveries/pages/Delive
 const ReportsPage = lazyPage(() => import("@/features/reports/pages/ReportsPageWithScope"), "ReportsPage");
 const AdminPage = lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
 const AcceptInvitationPage = lazyPage(() => import("@/features/admin/pages/AcceptInvitationPage"), "AcceptInvitationPage");
+const ActivityPage = lazyPage(() => import("@/features/activity/pages/ActivityPage"), "ActivityPage");
 const SupportPage = lazyPage(() => import("@/features/support/pages/SupportPage"), "SupportPage");
 const RemindersPage = lazyPage(() => import("@/features/reminders/pages/RemindersPage"), "RemindersPage");
 
@@ -109,6 +110,15 @@ export const router = createBrowserRouter([
           {
             element: <PermissionRoute permission="deliveries.read" />,
             children: [{ path: "/deliveries", element: <DeliveriesPage /> }],
+          },
+          {
+            element: <PermissionRoute permission="timeline.read" />,
+            children: [{ path: "/activity", element: <ActivityPage /> }],
+          },
+          {
+            // The old activity report now lives in the activity feed.
+            path: "/reports/commercial-activity",
+            element: <Navigate replace to="/activity" />,
           },
           {
             element: <PermissionRoute permission="reports.read" />,

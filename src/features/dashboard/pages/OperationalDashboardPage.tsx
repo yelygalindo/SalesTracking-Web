@@ -143,6 +143,7 @@ export function DashboardPage() {
               }}
               permissions={{
                 reports: can("reports.read"),
+                activity: can("timeline.read"),
                 deliveries: can("deliveries.read"),
                 customers: can("customers.read"),
                 projects: can("projects.read"),
@@ -196,6 +197,7 @@ function Empty({
 }
 interface DashboardPermissions {
   reports: boolean;
+  activity: boolean;
   deliveries: boolean;
   customers: boolean;
   projects: boolean;
@@ -311,7 +313,7 @@ function ActivityPanel({
     <article className="activity-card dashboard-panel dashboard-activity-panel">
       <SectionHeader
         title="Actividad reciente"
-        to={permissions.reports ? "/reports" : undefined}
+        to={permissions.activity ? "/activity" : undefined}
         label="Ver toda"
       />
       {data.recentActivity.length ? (

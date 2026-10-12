@@ -84,7 +84,10 @@ export interface AttachmentUpload {
   attachmentType: string;
   caption: string;
   isCover: boolean;
-  visitExternalId: string;
+  /** Empty attaches the file to the project itself instead of one of its visits. */
+  visitExternalId?: string;
+  /** MIME to send when the browser reports none for the file. */
+  contentType?: string;
   occurredAtUtc: string;
 }
 export interface TimelineItem {
