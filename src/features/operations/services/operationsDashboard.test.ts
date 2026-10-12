@@ -39,6 +39,7 @@ describe("buildOperationsDashboard", () => {
     const active: ActiveSeller[] = [
       {
         sellerExternalId: "seller-1",
+        hasOpenWorkday: true,
         sellerName: "Ana Pérez",
         startedAtUtc: "2026-10-09T12:00:00Z",
         lastUpdatedAtUtc: "2026-10-09T17:50:00Z",
@@ -95,6 +96,7 @@ describe("buildOperationsDashboard", () => {
     const active: ActiveSeller[] = [
       {
         sellerExternalId: "seller-1",
+        hasOpenWorkday: true,
         sellerName: "Ana Pérez",
         startedAtUtc: "2026-10-09T12:00:00Z",
         lastUpdatedAtUtc: "2026-10-09T16:45:00Z",
@@ -116,5 +118,55 @@ describe("buildOperationsDashboard", () => {
 
     expect(result.metrics.incidents).toBe(1);
     expect(result.workers[0].incident).toBe("Sin señal hace 75 min");
+  });
+});
+
+describe("trabajadores activos sin jornada", () => {
+  it("no cuenta como trabajando a quien no abrió jornada y conserva su nombre", async () => {
+    const { normalizeActiveSeller } = await import("../api/operationsApi");
+    const active = [
+      normalizeActiveSeller({
+        sellerExternalId: "seller-9",
+        sellerName: "Carla Nueva",
+        hasOpenWorkday: false,
+        workdayExternalId: "",
+        startedAtUtc: "0001-01-01T00:00:00",
+        workdayStartedAtUtc: null,
+      }),
+    ];
+
+    const result = buildOperationsDashboard([], active, [], []);
+
+    expect(result.metrics.working).toBe(0);
+    expect(result.workers).toEqual([
+      expect.objectContaining({
+        sellerName: "Carla Nueva",
+        status: "not-started",
+        incident: undefined,
+      }),
+    ]);
+  });
+
+  it("usa el nombre del lugar y el inicio de la visita en curso", async () => {
+    const { normalizeActiveSeller } = await import("../api/operationsApi");
+    const seller = normalizeActiveSeller({
+      sellerExternalId: "seller-1",
+      sellerName: "Ana Pérez",
+      hasOpenWorkday: true,
+      workdayExternalId: "wd-1",
+      startedAtUtc: "2026-10-09T12:00:00Z",
+      workdayStartedAtUtc: "2026-10-09T12:00:00Z",
+      currentVisitExternalId: "visit-7",
+      currentVisitTargetName: "Obra Torre Norte",
+      currentVisitStartedAtUtc: "2026-10-09T15:00:00Z",
+    });
+
+    expect(seller.currentVisit).toEqual({
+      name: "Obra Torre Norte",
+      startedAtUtc: "2026-10-09T15:00:00Z",
+    });
+    const [worker] = buildOperationsDashboard([], [seller], [], []).workers;
+    expect(worker.status).toBe("working");
+    expect(worker.currentVisitName).toBe("Obra Torre Norte");
   });
 });

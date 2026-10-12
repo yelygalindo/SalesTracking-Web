@@ -19,6 +19,7 @@ export interface OperationsWorker {
   longitude?: number | null;
   completedVisits: number;
   currentVisitName?: string | null;
+  currentVisitStartedAtUtc?: string | null;
   incident?: string;
 }
 
@@ -48,8 +49,11 @@ export function buildOperationsDashboard(
   visits: OperationVisit[],
   now = new Date(),
 ): OperationsDashboardData {
+  // Every active worker is listed; only an open workday means they are working now.
   const activeBySeller = new Map(
-    activeSellers.map((seller) => [seller.sellerExternalId, seller]),
+    activeSellers
+      .filter((seller) => seller.hasOpenWorkday)
+      .map((seller) => [seller.sellerExternalId, seller]),
   );
   const workdayById = new Map(workdays.map((workday) => [workday.id, workday]));
   const workdaysBySeller = new Map<string, Workday[]>();
@@ -156,6 +160,7 @@ export function buildOperationsDashboard(
         longitude: lastLocation?.longitude,
         completedVisits: completedVisitsBySeller.get(seller.externalId) ?? 0,
         currentVisitName: active?.currentVisit?.name,
+        currentVisitStartedAtUtc: active?.currentVisit?.startedAtUtc,
         incident,
       };
     },
