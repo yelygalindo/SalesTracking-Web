@@ -7,11 +7,11 @@ import { env } from "@/config/env";
 import { errorMessage } from "@/lib/api/errorMessage";
 import { formatDateTime } from "@/lib/i18n/dateTime";
 import { Brand } from "@/presentation/components/Brand";
+import { useIndustries } from "@/features/industries/hooks/useIndustries";
 import { trialSignupApi } from "../api/trialSignupApi";
 import { TurnstileWidget } from "../components/TurnstileWidget";
 import {
   emptyTrialSignup,
-  industrySuggestions,
   invalidTrialSignupFields,
   trialSignupValidators,
   type TrialSignupField,
@@ -23,7 +23,6 @@ const fields: { key: TrialSignupField; label: string; type?: string; autoComplet
   { key: "email", label: "Correo de trabajo", type: "email", autoComplete: "email", placeholder: "nombre@empresa.com", maxLength: 200 },
   { key: "phone", label: "Teléfono", type: "tel", autoComplete: "tel", placeholder: "+591 70000000", maxLength: 30 },
   { key: "companyName", label: "Empresa", autoComplete: "organization", maxLength: 200 },
-  { key: "industry", label: "Rubro", placeholder: "Ej. Construcción", maxLength: 100 },
   { key: "city", label: "Ciudad", autoComplete: "address-level2", maxLength: 100 },
   { key: "country", label: "País", autoComplete: "country-name", maxLength: 100 },
 ];
@@ -35,6 +34,7 @@ export function TrialSignupPage() {
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaAttempt, setCaptchaAttempt] = useState(0);
   const [captchaMissing, setCaptchaMissing] = useState(false);
+  const industries = useIndustries();
   const signup = useMutation({
     mutationFn: () => trialSignupApi.create({ ...form, captchaToken }),
     onError: () => {
@@ -111,7 +111,6 @@ export function TrialSignupPage() {
                 maxLength={field.maxLength}
                 autoComplete={field.autoComplete}
                 placeholder={field.placeholder}
-                list={field.key === "industry" ? "industry-suggestions" : undefined}
                 aria-invalid={!!errorFor(field.key)}
                 value={form[field.key]}
                 onChange={(event) => setForm({ ...form, [field.key]: event.target.value })}
@@ -119,11 +118,32 @@ export function TrialSignupPage() {
               />
             </FormField>
           ))}
-          <datalist id="industry-suggestions">
-            {industrySuggestions.map((industry) => (
-              <option key={industry} value={industry} />
-            ))}
-          </datalist>
+          <FormField label="Rubro" required error={errorFor("industry") ?? undefined}>
+            <select
+              name="industry"
+              required
+              disabled={!industries.data}
+              aria-invalid={!!errorFor("industry")}
+              value={form.industry}
+              onChange={(event) => setForm({ ...form, industry: event.target.value })}
+              onBlur={() => setTouched((current) => ({ ...current, industry: true }))}
+            >
+              <option value="">{industries.isLoading ? "Cargando rubros…" : "Selecciona un rubro"}</option>
+              {industries.data?.map((industry) => (
+                <option key={industry.code} value={industry.code}>
+                  {industry.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          {industries.isError && (
+            <p className="form-error" role="alert">
+              No pudimos cargar los rubros.{" "}
+              <button type="button" className="inline-link-button" onClick={() => void industries.refetch()}>
+                Reintentar
+              </button>
+            </p>
+          )}
           {env.turnstileSiteKey && (
             <TurnstileWidget
               key={captchaAttempt}

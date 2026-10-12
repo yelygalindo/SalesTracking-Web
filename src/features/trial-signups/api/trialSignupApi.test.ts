@@ -10,7 +10,7 @@ const input = {
   city: "La Paz",
   country: "Bolivia",
   companyName: "Constructora Andina",
-  industry: "Construcción",
+  industry: "construction",
   captchaToken: "",
 };
 

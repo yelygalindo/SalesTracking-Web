@@ -19,6 +19,32 @@
   font-size: 0.78rem;
   font-weight: 500;
 }
+.simple-form select {
+  width: 100%;
+  height: 49px;
+  padding: 0 12px;
+  border: 1px solid #dfe4ec;
+  border-radius: 12px;
+  color: var(--ut-text);
+  background: var(--ut-surface);
+  font-weight: 400;
+  outline: none;
+}
+.simple-form select:focus {
+  border-color: var(--ut-primary);
+  box-shadow: 0 0 0 3px rgba(245, 106, 28, 0.12);
+}
+.inline-link-button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.simple-form .field-error select,
 .simple-form .field-error input {
   border-color: #e88b83;
 }

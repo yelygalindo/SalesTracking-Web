@@ -14,22 +14,6 @@ export const emptyTrialSignup: TrialSignupForm = {
   industry: "",
 };
 
-// Suggestions only: the company can type any other industry.
-export const industrySuggestions = [
-  "Construcción",
-  "Materiales de construcción",
-  "Distribución y logística",
-  "Comercio mayorista",
-  "Comercio minorista",
-  "Inmobiliaria",
-  "Manufactura",
-  "Servicios profesionales",
-  "Tecnología",
-  "Alimentos y bebidas",
-  "Salud",
-  "Agroindustria",
-];
-
 // Same rule as the API, so the form rejects what the server would reject.
 const phonePattern = /^\+?[0-9][0-9\s\-()]{5,28}$/;
 const required = (message: string) => (value: string) => (value.trim() ? null : message);
@@ -44,7 +28,7 @@ export const trialSignupValidators: Record<TrialSignupField, (value: string) => 
   city: required("Ingresa tu ciudad."),
   country: required("Ingresa tu país."),
   companyName: required("Ingresa el nombre de tu empresa."),
-  industry: required("Indica el rubro de tu empresa."),
+  industry: required("Selecciona el rubro de tu empresa."),
 };
 
 export function invalidTrialSignupFields(form: TrialSignupForm) {

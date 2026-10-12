@@ -7,6 +7,7 @@ export interface TrialSignupInput {
   city: string;
   country: string;
   companyName: string;
+  /** Code from the industry catalog (GET /api/industries). */
   industry: string;
   captchaToken: string;
 }
