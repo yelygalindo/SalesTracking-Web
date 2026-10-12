@@ -8,21 +8,24 @@ import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { UnauthorizedPage } from "@/features/auth/pages/UnauthorizedPage";
 import { NotFoundPage } from "@/features/auth/pages/NotFoundPage";
-import { CustomersPage } from "@/features/customers/pages/CustomersPage";
-import { CustomerImportPage } from "@/features/customers/pages/CustomerImportPage";
-import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
-import { ProjectImportPage } from "@/features/projects/pages/ProjectImportPage";
-import { CatalogPage } from "@/features/catalog/pages/CatalogPage";
-import { CatalogImportPage } from "@/features/catalog/pages/CatalogImportPage";
-import { OperationsPage } from "@/features/operations/pages/OperationsPage";
-import { OperationsDashboardPage } from "@/features/operations/pages/OperationsDashboardPage";
-import { DeliveriesPage } from "@/features/deliveries/pages/DeliveriesPage";
-import { ReportsPage } from "@/features/reports/pages/ReportsPageWithScope";
-import { AdminPage } from "@/features/admin/pages/AdminPage";
-import { AcceptInvitationPage } from "@/features/admin/pages/AcceptInvitationPage";
-import { RemindersPage } from "@/features/reminders/pages/RemindersPage";
 import { AppShell } from "@/components/layout/AppShell";
 import { RouteErrorPage } from "@/components/feedback/RouteErrorPage";
+import { lazyPage } from "@/app/lazyPage";
+
+// Pages are split into their own chunks and downloaded on first visit.
+const CustomersPage = lazyPage(() => import("@/features/customers/pages/CustomersPage"), "CustomersPage");
+const CustomerImportPage = lazyPage(() => import("@/features/customers/pages/CustomerImportPage"), "CustomerImportPage");
+const ProjectsPage = lazyPage(() => import("@/features/projects/pages/ProjectsPage"), "ProjectsPage");
+const ProjectImportPage = lazyPage(() => import("@/features/projects/pages/ProjectImportPage"), "ProjectImportPage");
+const CatalogPage = lazyPage(() => import("@/features/catalog/pages/CatalogPage"), "CatalogPage");
+const CatalogImportPage = lazyPage(() => import("@/features/catalog/pages/CatalogImportPage"), "CatalogImportPage");
+const OperationsPage = lazyPage(() => import("@/features/operations/pages/OperationsPage"), "OperationsPage");
+const OperationsDashboardPage = lazyPage(() => import("@/features/operations/pages/OperationsDashboardPage"), "OperationsDashboardPage");
+const DeliveriesPage = lazyPage(() => import("@/features/deliveries/pages/DeliveriesPage"), "DeliveriesPage");
+const ReportsPage = lazyPage(() => import("@/features/reports/pages/ReportsPageWithScope"), "ReportsPage");
+const AdminPage = lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
+const AcceptInvitationPage = lazyPage(() => import("@/features/admin/pages/AcceptInvitationPage"), "AcceptInvitationPage");
+const RemindersPage = lazyPage(() => import("@/features/reminders/pages/RemindersPage"), "RemindersPage");
 
 export const router = createBrowserRouter([
   {

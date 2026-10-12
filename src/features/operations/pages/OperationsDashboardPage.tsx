@@ -1,3 +1,4 @@
+import "@/components/maps/leafletSetup";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { divIcon, latLngBounds } from "leaflet";

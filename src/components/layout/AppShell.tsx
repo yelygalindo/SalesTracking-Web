@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, LogOut, Menu, X } from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "@/presentation/components/Brand";
+import { PageSkeleton } from "@/components/feedback/Skeleton";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import {
   filterNavigation,
@@ -238,7 +239,9 @@ export function AppShell() {
             )}
           </div>
         </header>
-        <Outlet />
+        <Suspense fallback={<PageSkeleton />}>
+          <Outlet />
+        </Suspense>
       </section>
     </div>
   );
