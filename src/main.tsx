@@ -18,6 +18,7 @@ import "@/presentation/styles/customers.css";
 import "@/presentation/styles/deliveries.css";
 import "@/presentation/styles/reports.css";
 import "@/presentation/styles/projects-operational.css";
+import "@/presentation/styles/activity.css";
 import "@/presentation/styles/shell.css";
 import "@/presentation/styles/responsive.css";
 

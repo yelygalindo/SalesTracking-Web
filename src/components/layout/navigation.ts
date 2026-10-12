@@ -103,10 +103,10 @@ export const navigationSections: NavSection[] = [
       },
       {
         kind: "link",
-        to: "/reports/commercial-activity",
+        to: "/activity",
         label: "Actividades",
         icon: Activity,
-        permissions: ["reports.read"],
+        permissions: ["timeline.read"],
       },
     ],
   },
