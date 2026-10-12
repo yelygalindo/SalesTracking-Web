@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ChevronRight,
   Ellipsis,
+  LifeBuoy,
   LogOut,
   Menu,
   PanelLeftClose,
@@ -23,6 +24,7 @@ import {
   matchesPath,
   navigationSections,
   type NavGroupEntry,
+  type ShellOutletContext,
 } from "@/components/layout/navigation";
 
 const roleNames: Record<string, string> = {
@@ -54,12 +56,22 @@ export function AppShell() {
     [collapsedPreference, setCollapsed] = useState(readCollapsed),
     isDesktop = useMediaQuery("(min-width: 901px)"),
     collapsed = collapsedPreference && isDesktop,
+    [previousPage, setPreviousPage] = useState<string>(),
+    currentPath = useRef<string>(undefined),
     profileRef = useRef<HTMLDivElement>(null),
     location = useLocation();
 
   useEffect(() => {
     setOpen(false);
     setProfileOpen(false);
+  }, [location.pathname, location.search]);
+
+  // Remember the page left behind so Support can tell where a problem happened.
+  useEffect(() => {
+    const path = location.pathname + location.search;
+    if (currentPath.current && currentPath.current !== path)
+      setPreviousPage(currentPath.current);
+    currentPath.current = path;
   }, [location.pathname, location.search]);
 
   useEffect(() => {
@@ -289,6 +301,10 @@ export function AppShell() {
                     ))}
                   </div>
                 </div>
+                <NavLink className="profile-menu-link" role="menuitem" to="/support">
+                  <LifeBuoy aria-hidden="true" />
+                  Ayuda y soporte
+                </NavLink>
                 <button role="menuitem" onClick={() => void logout()}>
                   <LogOut aria-hidden="true" />
                   Cerrar sesión
@@ -298,7 +314,7 @@ export function AppShell() {
           </div>
         </header>
         <Suspense fallback={<PageSkeleton />}>
-          <Outlet />
+          <Outlet context={{ previousPage } satisfies ShellOutletContext} />
         </Suspense>
       </section>
       {shortcuts.length > 1 && (

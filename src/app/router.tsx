@@ -25,6 +25,7 @@ const DeliveriesPage = lazyPage(() => import("@/features/deliveries/pages/Delive
 const ReportsPage = lazyPage(() => import("@/features/reports/pages/ReportsPageWithScope"), "ReportsPage");
 const AdminPage = lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
 const AcceptInvitationPage = lazyPage(() => import("@/features/admin/pages/AcceptInvitationPage"), "AcceptInvitationPage");
+const SupportPage = lazyPage(() => import("@/features/support/pages/SupportPage"), "SupportPage");
 const RemindersPage = lazyPage(() => import("@/features/reminders/pages/RemindersPage"), "RemindersPage");
 
 export const router = createBrowserRouter([
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
         element: <AppShell />,
         children: [
           { path: "/", element: <HomeRoute /> },
+          { path: "/support", element: <SupportPage /> },
           {
             element: <PermissionRoute permission="customers.read" />,
             children: [{ path: "/customers", element: <CustomersPage /> }],

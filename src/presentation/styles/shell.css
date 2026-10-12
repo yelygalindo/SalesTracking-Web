@@ -819,3 +819,25 @@
     opacity: 0;
   }
 }
+.profile-menu .profile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: var(--ut-text-strong);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.profile-menu .profile-menu-link:hover {
+  background: var(--ut-surface-muted);
+}
+.profile-menu .profile-menu-link svg {
+  width: 17px;
+}
+.profile-menu .profile-menu-link + button {
+  margin-top: 2px;
+}

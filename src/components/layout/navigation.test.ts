@@ -21,7 +21,8 @@ describe("filterNavigation", () => {
     );
 
     expect(sections.map((section) => section.id)).toEqual(["settings"]);
-    const [admin] = sections[0].entries;
+    const [admin, help] = sections[0].entries;
+    expect(help.kind === "link" && help.to).toBe("/support");
     expect(admin.kind === "group" && admin.children.map((c) => c.to)).toEqual([
       "/admin/companies",
     ]);
@@ -33,7 +34,13 @@ describe("filterNavigation", () => {
       checkFor(["customers.import"]),
     );
 
-    expect(sections).toEqual([]);
+    expect(findCurrentPage(sections, "/customers/import")).toBeUndefined();
+  });
+
+  it("always offers help and support", () => {
+    const sections = filterNavigation(navigationSections, checkFor([]));
+
+    expect(findCurrentPage(sections, "/support")?.label).toBe("Ayuda y soporte");
   });
 
   it("grants role based entries", () => {
