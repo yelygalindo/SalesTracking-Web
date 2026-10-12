@@ -28,6 +28,7 @@ import { errorMessage } from "@/lib/api/errorMessage";
 import { EmptyState, ErrorState } from "@/components/data/DataState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { notify } from "@/components/feedback/toast";
 import { updateCustomerStatus } from "@/lib/api/optimisticUpdates";
 import { CustomerForm } from "@/features/customers/components/CustomerForm";
@@ -214,17 +215,36 @@ export function CustomersPage() {
     },
   });
   const state = useMutation({
-    mutationFn: (id: number) => customerService.changeStatus(selected!, id),
-    onMutate: (id) => {
+    mutationFn: ({ id, customerId }: { id: number; customerId: string; undo?: boolean }) =>
+      customerService.changeStatus(customerId, id),
+    onMutate: ({ id, customerId }) => {
       const label = statuses.data?.find((x) => x.value === id)?.label || "";
       cache.setQueriesData(
         { queryKey: ["customers"] },
         (data) =>
-          updateCustomerStatus(data as never, selected!, label) as never,
+          updateCustomerStatus(data as never, customerId, label) as never,
       );
+      return {
+        previousStatusId: detail.data?.statusId,
+        name: detail.data?.name || "cliente",
+      };
     },
-    onSuccess: async () => {
-      notify(`Se actualizó el estado de “${detail.data?.name || "cliente"}”.`);
+    onSuccess: async (_result, { undo, customerId }, context) => {
+      const name = context?.name || "cliente";
+      const previous = context?.previousStatusId;
+      if (undo) notify(`Se restauró el estado de “${name}”.`);
+      else
+        notify(
+          `Se actualizó el estado de “${name}”.`,
+          "success",
+          previous === undefined
+            ? undefined
+            : {
+                label: "Deshacer",
+                onAction: () =>
+                  state.mutate({ id: previous, customerId, undo: true }),
+              },
+        );
       await refresh();
     },
   });
@@ -240,6 +260,17 @@ export function CustomersPage() {
     },
     onError: (error) => notify(message(error)),
   });
+  // Snapshot taken when the form opens; any difference marks it as dirty.
+  const editing = mode === "create" || mode === "edit";
+  const [baseline, setBaseline] = useState("");
+  const snapshot = JSON.stringify({ form, extras });
+  useEffect(() => {
+    if (editing) setBaseline(snapshot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the form opens
+  }, [editing, selected]);
+  const { confirmLeave, dialog: unsavedDialog } = useUnsavedChanges(
+    editing && baseline !== "" && snapshot !== baseline,
+  );
   const field = <K extends keyof CustomerInputDto>(
     key: K,
     value: CustomerInputDto[K],
@@ -270,14 +301,17 @@ export function CustomersPage() {
   if (mode === "create" || mode === "edit")
     return (
       <main className="customers-content entity-form-page">
+        {unsavedDialog}
         <header className="entity-form-header">
           <button
             className="back-button"
             type="button"
-            onClick={() => {
-              setMode(mode === "edit" && selected ? "view" : null);
-              if (mode === "create") setSelected(null);
-            }}
+            onClick={() =>
+              confirmLeave(() => {
+                setMode(mode === "edit" && selected ? "view" : null);
+                if (mode === "create") setSelected(null);
+              })
+            }
           >
             <ChevronLeft /> Volver a contactos
           </button>
@@ -606,7 +640,7 @@ export function CustomersPage() {
                   canDelete={canDelete}
                   startChangingStatus={openStatusEditor}
                   changing={state.isPending}
-                  change={(id) => state.mutate(id)}
+                  change={(id) => state.mutate({ id, customerId: selected! })}
                   edit={() => {
                     setOpenStatusEditor(false);
                     setForm(formFrom(detail.data!));

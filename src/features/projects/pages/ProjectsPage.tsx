@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   useMutation,
   useQueries,
@@ -12,6 +12,7 @@ import { errorMessage } from "@/lib/api/errorMessage";
 import { EmptyState, ErrorState } from "@/components/data/DataState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 import { LocationPicker } from "@/components/maps/LocationPickerModern";
 import { notify } from "@/components/feedback/toast";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
@@ -205,21 +206,34 @@ export function ProjectsPage() {
     key: K,
     value: ProjectInput[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
+  // Snapshot taken when the form opens; any difference marks it as dirty.
+  const [baseline, setBaseline] = useState("");
+  const snapshot = JSON.stringify(form);
+  useEffect(() => {
+    if (editing) setBaseline(snapshot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the form opens
+  }, [editing, selected]);
+  const { confirmLeave, dialog: unsavedDialog } = useUnsavedChanges(
+    editing && baseline !== "" && snapshot !== baseline,
+  );
 
   if (editing)
     return (
       <main className="customers-content entity-form-page">
+        {unsavedDialog}
         <header className="entity-form-header">
           <button
             className="back-button"
             type="button"
-            onClick={() => {
-              setEditing(false);
-              if (creating) {
-                setCreating(false);
-                setSelected(null);
-              }
-            }}
+            onClick={() =>
+              confirmLeave(() => {
+                setEditing(false);
+                if (creating) {
+                  setCreating(false);
+                  setSelected(null);
+                }
+              })
+            }
           >
             <ArrowLeft /> Volver a seguimientos
           </button>

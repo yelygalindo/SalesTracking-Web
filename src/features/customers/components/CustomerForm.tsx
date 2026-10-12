@@ -1,13 +1,26 @@
-import type { Dispatch, FormEvent, SetStateAction } from "react";
+import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LocationPicker } from "@/components/maps/LocationPickerModern";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { errorMessage } from "@/lib/api/errorMessage";
 import { translateValue } from "@/lib/i18n/labels";
+import { validateOptionalEmail } from "@/lib/validation/email";
 import { customerService } from "../services/customerService";
 import type { CustomerCreateExtrasDto, CustomerInputDto, CustomerStatusDto } from "../api/customerDtos";
 
 const message = errorMessage;
+
+const phonePattern = /^[+d][ds()-]{5,}$/;
+const validators = {
+  name: (value: string) =>
+    value.trim() ? null : "Ingresa el nombre del contacto.",
+  email: (value: string) => validateOptionalEmail(value),
+  phone: (value: string) =>
+    !value.trim() || phonePattern.test(value.trim())
+      ? null
+      : "Usa solo números, espacios o el signo +, por ejemplo +591 70000000.",
+};
+type ValidatedField = keyof typeof validators;
 
 export function CustomerForm({
   form,
@@ -36,6 +49,23 @@ export function CustomerForm({
   const { user } = useAuth(),
     isSeller =
       user?.roles.some((role) => role.toLowerCase() === "seller") ?? false;
+  // Fields are validated once the user leaves them, so errors never appear mid-typing.
+  const [touched, setTouched] = useState<Partial<Record<ValidatedField, boolean>>>({});
+  const errorFor = (key: ValidatedField) =>
+    touched[key] ? validators[key](String(form[key] ?? "")) : null;
+  const blur = (key: ValidatedField) => () =>
+    setTouched((current) => ({ ...current, [key]: true }));
+  const onSubmit = (event: FormEvent) => {
+    const invalid = (Object.keys(validators) as ValidatedField[]).filter(
+      (key) => validators[key](String(form[key] ?? "")),
+    );
+    if (invalid.length) {
+      event.preventDefault();
+      setTouched(Object.fromEntries(invalid.map((key) => [key, true])));
+      return;
+    }
+    submit(event);
+  };
   const sellers = useQuery({
     queryKey: ["sellers"],
     queryFn: customerService.sellers,
@@ -45,14 +75,17 @@ export function CustomerForm({
     <>
       <p className="overline">Clientes</p>
       <h2>Datos del cliente</h2>
-      <form className="customer-form" onSubmit={submit}>
-        <label>
+      <form className="customer-form" onSubmit={onSubmit} noValidate>
+        <label className={errorFor("name") ? "field-error" : ""}>
           Nombre *
           <input
             required
             value={form.name}
             onChange={(e) => field("name", e.target.value)}
+            onBlur={blur("name")}
+            aria-invalid={Boolean(errorFor("name"))}
           />
+          {errorFor("name") && <small role="alert">{errorFor("name")}</small>}
         </label>
         <label>
           Empresa
@@ -61,20 +94,30 @@ export function CustomerForm({
             onChange={(e) => field("companyName", e.target.value)}
           />
         </label>
-        <label>
+        <label className={errorFor("phone") ? "field-error" : ""}>
           Teléfono
           <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             value={form.phone}
             onChange={(e) => field("phone", e.target.value)}
+            onBlur={blur("phone")}
+            aria-invalid={Boolean(errorFor("phone"))}
           />
+          {errorFor("phone") && <small role="alert">{errorFor("phone")}</small>}
         </label>
-        <label>
+        <label className={errorFor("email") ? "field-error" : ""}>
           Correo
           <input
             type="email"
+            autoComplete="email"
             value={form.email ?? ""}
             onChange={(e) => field("email", e.target.value)}
+            onBlur={blur("email")}
+            aria-invalid={Boolean(errorFor("email"))}
           />
+          {errorFor("email") && <small role="alert">{errorFor("email")}</small>}
         </label>
         <label>
           Dirección
