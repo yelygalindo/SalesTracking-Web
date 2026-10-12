@@ -24,7 +24,10 @@ import type {
   CustomerInputDto,
   CustomerSummaryDto,
 } from "@/features/customers/api/customerDtos";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
+import { EmptyState, ErrorState } from "@/components/data/DataState";
+import { Skeleton } from "@/components/feedback/Skeleton";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { notify } from "@/components/feedback/toast";
 import { updateCustomerStatus } from "@/lib/api/optimisticUpdates";
 import { CustomerForm } from "@/features/customers/components/CustomerForm";
@@ -56,10 +59,7 @@ const emptyExtras: CustomerCreateExtrasDto = {
   reminderText: "",
   reminderAtUtc: "",
 };
-const message = (error: unknown) =>
-  error instanceof AppError
-    ? error.message
-    : "No fue posible completar la operación.";
+const message = errorMessage;
 const formFrom = (c: CustomerDetailDto): CustomerInputDto => ({
   name: c.name,
   companyName: c.companyName,
@@ -96,11 +96,12 @@ export function CustomersPage() {
   const canCreate = usePermission("customers.create"),
     canUpdate = usePermission("customers.update"),
     canDelete = usePermission("customers.delete");
-  const [search, setSearch] = useState(""),
-    [query, setQuery] = useState(""),
-    [status, setStatus] = useState(""),
-    [seller, setSeller] = useState(""),
-    [page, setPage] = useState(1);
+  const filters = useUrlFilters(["q", "status", "seller"] as const),
+    { q: query, status, seller } = filters.values,
+    { page, setPage, update: updateFilters } = filters;
+  const [search, setSearch] = useState(query);
+  // Follow external URL changes (e.g. opening "Contactos" from the menu clears the search).
+  useEffect(() => setSearch(query), [query]);
   const [selected, setSelected] = useState<string | null>(linked),
     [mode, setMode] = useState<"view" | "create" | "edit" | null>(
       linked ? "view" : null,
@@ -116,11 +117,10 @@ export function CustomersPage() {
   const [openStatusEditor, setOpenStatusEditor] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
-      setQuery(search.trim());
-      setPage(1);
+      if (search.trim() !== query) updateFilters({ q: search.trim() });
     }, 350);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, query, updateFilters]);
   const list = useQuery({
     queryKey: ["customers", query, status, seller, page],
     queryFn: () =>
@@ -366,8 +366,7 @@ export function CustomersPage() {
           aria-label="Filtrar por estado"
           value={status}
           onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
+            updateFilters({ status: e.target.value });
           }}
         >
           <option value="">Todos los estados</option>
@@ -382,8 +381,7 @@ export function CustomersPage() {
             aria-label="Filtrar por vendedor"
             value={seller}
             onChange={(e) => {
-              setSeller(e.target.value);
-              setPage(1);
+              updateFilters({ seller: e.target.value });
             }}
           >
             <option value="">Todos los vendedores</option>
@@ -397,11 +395,48 @@ export function CustomersPage() {
       </div>
       <section className="customer-table-card">
         {list.isLoading ? (
-          <p className="table-message">Cargando clientes…</p>
+          <Skeleton variant="table" rows={6} label="Cargando contactos…" />
         ) : list.isError ? (
-          <p className="table-message error">{message(list.error)}</p>
+          <ErrorState error={list.error} onRetry={list.refetch} />
         ) : !list.data?.customers.length ? (
-          <p className="table-message">Aún no hay clientes registrados.</p>
+          query || status || seller ? (
+            <EmptyState
+              icon={<Search />}
+              title="No hay contactos que coincidan"
+              description="Prueba con otra búsqueda o quita los filtros."
+              action={
+                <button
+                  className="secondary-button"
+                  onClick={() => {
+                    setSearch("");
+                    updateFilters({ q: "", status: "", seller: "" });
+                  }}
+                >
+                  Limpiar filtros
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="Aún no hay contactos"
+              description="Registra tu primer contacto para empezar a darle seguimiento."
+              action={
+                canCreate && (
+                  <button
+                    className="action-primary"
+                    onClick={() => {
+                      setMode("create");
+                      setSelected(null);
+                      setForm(emptyForm);
+                    }}
+                  >
+                    <Plus />
+                    Nuevo contacto
+                  </button>
+                )
+              }
+            />
+          )
         ) : (
           <div className="table-scroll search-results-scroll">
             <table className="search-results-table customers-results-table">

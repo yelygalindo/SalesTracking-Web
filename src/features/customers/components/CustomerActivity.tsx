@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermission } from "@/hooks/usePermission";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
 import { CustomerTimeline } from "./CustomerTimeline";
 import { customerService } from "../services/customerService";
 import type { CustomerReminderDto } from "../api/customerDtos";
 
-const message = (error: unknown) => error instanceof AppError ? error.message : error instanceof Error ? error.message : "No fue posible completar la operación.";
+const message = errorMessage;
 
 export function CustomerActivity({
   externalId,

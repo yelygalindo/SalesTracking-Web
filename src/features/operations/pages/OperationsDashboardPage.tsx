@@ -293,6 +293,7 @@ export function OperationsDashboardPage() {
         <DataState
           loading={false}
           error={sellers.error}
+          onRetry={sellers.refetch}
           isEmpty={false}
           empty="No hay responsables disponibles."
         >
@@ -302,6 +303,7 @@ export function OperationsDashboardPage() {
         <DataState
           loading={query.isLoading}
           error={query.error}
+          onRetry={query.refetch}
           isEmpty={!query.data}
           empty="No hay información operativa disponible."
         >

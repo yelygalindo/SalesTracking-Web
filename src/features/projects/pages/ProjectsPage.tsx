@@ -8,7 +8,10 @@ import {
 import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { customerService } from "@/features/customers/services/customerService";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
+import { EmptyState, ErrorState } from "@/components/data/DataState";
+import { Skeleton } from "@/components/feedback/Skeleton";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { LocationPicker } from "@/components/maps/LocationPickerModern";
 import { notify } from "@/components/feedback/toast";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
@@ -39,10 +42,7 @@ const empty: ProjectInput = {
   latitude: null,
   longitude: null,
 };
-const message = (error: unknown) =>
-  error instanceof AppError
-    ? error.message
-    : "No fue posible completar la operación.";
+const message = errorMessage;
 const toForm = (project: ProjectDetail): ProjectInput => ({
   name: project.name,
   description: project.description,
@@ -68,10 +68,10 @@ export function ProjectsPage() {
     canUpdate = usePermission("projects.update"),
     canDelete = usePermission("projects.delete"),
     canStatus = usePermission("projects.change-status");
-  const [status, setStatus] = useState(""),
-    [sellerId, setSellerId] = useState(""),
-    [page, setPage] = useState(1),
-    [selected, setSelected] = useState<string | null>(null),
+  const filters = useUrlFilters(["status", "seller"] as const),
+    { status, seller: sellerId } = filters.values,
+    { page, setPage, update: updateFilters } = filters;
+  const [selected, setSelected] = useState<string | null>(null),
     [editing, setEditing] = useState(false),
     [creating, setCreating] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
@@ -313,8 +313,7 @@ export function ProjectsPage() {
         <select
           value={status}
           onChange={(event) => {
-            setStatus(event.target.value);
-            setPage(1);
+            updateFilters({ status: event.target.value });
           }}
         >
           <option value="">Todos los estados</option>
@@ -329,8 +328,7 @@ export function ProjectsPage() {
             aria-label="Filtrar por responsable"
             value={sellerId}
             onChange={(event) => {
-              setSellerId(event.target.value);
-              setPage(1);
+              updateFilters({ seller: event.target.value });
             }}
           >
             <option value="">Todos los responsables</option>
@@ -344,11 +342,29 @@ export function ProjectsPage() {
       </div>
       <section className="customer-table-card">
         {list.isLoading ? (
-          <p className="table-message">Cargando proyectos…</p>
+          <Skeleton variant="table" rows={6} label="Cargando seguimientos…" />
         ) : list.isError ? (
-          <p className="table-message error">{message(list.error)}</p>
+          <ErrorState error={list.error} onRetry={list.refetch} />
         ) : !list.data?.items.length ? (
-          <p className="table-message">No se encontraron proyectos.</p>
+          status || sellerId ? (
+            <EmptyState
+              title="No hay seguimientos con estos filtros"
+              description="Cambia el estado o el responsable para ver más resultados."
+              action={
+                <button
+                  className="secondary-button"
+                  onClick={() => updateFilters({ status: "", seller: "" })}
+                >
+                  Limpiar filtros
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="Aún no hay seguimientos"
+              description="Crea un seguimiento para registrar avances, visitas y productos de cada obra."
+            />
+          )
         ) : (
           <div className="table-scroll search-results-scroll">
             <table className="search-results-table projects-results-table">

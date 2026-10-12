@@ -1,9 +1,9 @@
 import type { FormEvent } from "react";
 import { ClipboardList, PackageCheck, Plus, X } from "lucide-react";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
 import type { Input } from "../api/deliveryApi";
 
-const message = (error: unknown) => error instanceof AppError ? error.message : error instanceof Error ? error.message : "No fue posible completar la operación.";
+const message = errorMessage;
 
 export function DeliveryForm({
   form,

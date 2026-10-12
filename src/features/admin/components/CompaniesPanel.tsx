@@ -178,6 +178,8 @@ export function CompaniesPanel() {
         <DataState
           loading={companies.isLoading}
           error={companies.error}
+          onRetry={companies.refetch}
+          skeleton="table"
           isEmpty={!companies.data?.items.length}
           empty="No se encontraron empresas."
         >

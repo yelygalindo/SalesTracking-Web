@@ -2,12 +2,12 @@ import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LocationPicker } from "@/components/maps/LocationPickerModern";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { AppError } from "@/lib/api/apiError";
+import { errorMessage } from "@/lib/api/errorMessage";
 import { translateValue } from "@/lib/i18n/labels";
 import { customerService } from "../services/customerService";
 import type { CustomerCreateExtrasDto, CustomerInputDto, CustomerStatusDto } from "../api/customerDtos";
 
-const message = (error: unknown) => error instanceof AppError ? error.message : error instanceof Error ? error.message : "No fue posible completar la operación.";
+const message = errorMessage;
 
 export function CustomerForm({
   form,

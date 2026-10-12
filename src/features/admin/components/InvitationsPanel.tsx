@@ -99,6 +99,7 @@ function ManagedInvitations({
       <DataState
         loading={query.isLoading}
         error={query.error}
+        onRetry={query.refetch}
         isEmpty={!query.data?.length}
         empty="No hay invitaciones registradas."
       >
@@ -205,6 +206,7 @@ export function InvitationHistory({
         <DataState
           loading={history.isLoading}
           error={history.error}
+          onRetry={history.refetch}
           isEmpty={!history.data?.events.length}
           empty="No hay eventos registrados."
         >

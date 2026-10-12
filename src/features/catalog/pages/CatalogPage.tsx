@@ -156,6 +156,8 @@ export function CatalogPage() {
           <DataState
             loading={tab === "products" ? products.isLoading : units.isLoading}
             error={tab === "products" ? products.error : units.error}
+            onRetry={tab === "products" ? products.refetch : units.refetch}
+            skeleton="table"
             isEmpty={!rows?.length}
             empty="No hay registros disponibles."
           >

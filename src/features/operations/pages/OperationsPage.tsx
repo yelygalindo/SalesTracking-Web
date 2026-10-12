@@ -143,6 +143,7 @@ export function OperationsPage() {
             <DataState
               loading={active.isLoading}
               error={active.error}
+              onRetry={active.refetch}
               isEmpty={!active.data?.length}
               empty="No hay responsables con jornada activa."
             >
@@ -153,6 +154,7 @@ export function OperationsPage() {
             <DataState
               loading={active.isLoading}
               error={active.error}
+              onRetry={active.refetch}
               isEmpty={!active.data?.length}
               empty="No hay responsables con jornada activa."
             >
@@ -249,6 +251,8 @@ export function OperationsPage() {
             <DataState
               loading={history.isLoading}
               error={history.error}
+              onRetry={history.refetch}
+              skeleton="table"
               isEmpty={!history.data?.length}
               empty={
                 canChooseSeller && !sellerId
@@ -375,6 +379,7 @@ function WorkdayDetail({
       <DataState
         loading={workday.isLoading}
         error={workday.error}
+        onRetry={workday.refetch}
         isEmpty={!workday.data}
         empty="No se encontró la jornada."
       >
@@ -394,6 +399,7 @@ function WorkdayDetail({
                 <DataState
                   loading={sellerRoute.isLoading}
                   error={sellerRoute.error}
+                  onRetry={sellerRoute.refetch}
                   isEmpty={
                     !points.length && !(sellerRoute.data?.segments?.length ?? 0)
                   }

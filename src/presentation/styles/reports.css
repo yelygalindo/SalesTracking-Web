@@ -46,7 +46,7 @@
   font-size: 1.35rem;
 }
 .report-results .data-state {
-  min-height: 240px;
+  min-height: 0;
 }
 .report-results td a {
   color: #285f9d;

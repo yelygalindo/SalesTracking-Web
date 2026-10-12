@@ -88,6 +88,8 @@ export function UsersAdministration() {
       <DataState
         loading={query.isLoading}
         error={query.error}
+        onRetry={query.refetch}
+        skeleton="table"
         isEmpty={!query.data?.items.length}
         empty="No se encontraron usuarios."
       >

@@ -232,6 +232,8 @@ export function ReportsPage() {
         <DataState
           loading={query.isLoading}
           error={query.error}
+          onRetry={query.refetch}
+          skeleton="table"
           isEmpty={!query.data?.items.length}
           empty="No hay resultados para los filtros seleccionados."
         >
