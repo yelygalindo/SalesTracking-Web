@@ -1,4 +1,11 @@
-import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -16,9 +23,11 @@ import { PageSkeleton } from "@/components/feedback/Skeleton";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { TrialBanner } from "@/features/trial-signups/components/TrialBanner";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
-  bottomNavCandidates,
+  buildBottomNavCandidates,
+  buildNavigationSections,
   filterNavigation,
   isAllowed,
   findCurrentPage,
@@ -60,7 +69,9 @@ export function AppShell() {
     [previousPage, setPreviousPage] = useState<string>(),
     currentPath = useRef<string>(undefined),
     profileRef = useRef<HTMLDivElement>(null),
-    location = useLocation();
+    location = useLocation(),
+    terms = useOperationTerms(),
+    termSections = useMemo(() => buildNavigationSections(terms), [terms]);
 
   useEffect(() => {
     setOpen(false);
@@ -121,8 +132,8 @@ export function AppShell() {
   if (!user) return null;
 
   const access = { canAny, canAll, hasRole };
-  const sections = filterNavigation(navigationSections, access);
-  const shortcuts = bottomNavCandidates
+  const sections = filterNavigation(termSections, access, terms.modules);
+  const shortcuts = buildBottomNavCandidates(terms)
     .filter((entry) => isAllowed(entry, access))
     .slice(0, 4);
   const currentPage = findCurrentPage(sections, location.pathname);

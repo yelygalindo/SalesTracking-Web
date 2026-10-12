@@ -1,5 +1,7 @@
 import { SpreadsheetImportWizard } from "@/components/imports/SpreadsheetImportWizard";
 import { normalizeSpreadsheetDate } from "@/lib/import/spreadsheetValues";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import { inSentence } from "@/features/operation-settings/services/operationTerms";
 import { projectService } from "../services/projectService";
 
 const text = (value: unknown) =>
@@ -42,20 +44,24 @@ const displayDate = (value: unknown) => {
 };
 
 export function ProjectImportPage() {
+  const {
+    labels: { customer, project },
+  } = useOperationTerms();
+  const plural = inSentence(project.plural);
   return (
     <SpreadsheetImportWizard
-      eyebrow="Seguimientos"
-      title="Importar seguimientos"
-      description="Carga seguimientos de forma masiva con validación previa por fila."
-      plural="proyectos"
+      eyebrow={project.plural}
+      title={`Importar ${plural}`}
+      description={`Carga ${plural} de forma masiva con validación previa por fila.`}
+      plural={plural}
       backTo="/projects"
       templateName="plantilla-proyectos.xlsx"
       errorFilePrefix="proyectos-no-importados"
       uploadHint="Las fechas deben tener el formato YYYY-MM-DD."
       fields={fields}
       columns={[
-        { key: "name", label: "Proyecto" },
-        { key: "customerExternalId", label: "Cliente" },
+        { key: "name", label: project.singular },
+        { key: "customerExternalId", label: customer.singular },
         { key: "estimatedAmount", label: "Monto" },
         {
           key: "startDate",
@@ -65,8 +71,8 @@ export function ProjectImportPage() {
         { key: "progressPercentage", label: "Avance" },
       ]}
       errorColumns={[
-        { key: "name", label: "Proyecto" },
-        { key: "customerExternalId", label: "Cliente" },
+        { key: "name", label: project.singular },
+        { key: "customerExternalId", label: customer.singular },
       ]}
       api={{
         template: projectService.importTemplate,

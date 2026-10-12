@@ -7,13 +7,19 @@ import { UsersAdministration } from "../components/UsersAdministration";
 import { InviteUserPanel } from "../components/InviteUserPanel";
 import { TimeZonePanel } from "../components/TimeZonePanel";
 import { CompaniesPanel } from "../components/CompaniesPanel";
+import { OperationSettingsPanel } from "@/features/operation-settings/components/OperationSettingsPanel";
 import {
   InvitationHistory,
   InvitationsPanel,
 } from "../components/InvitationsPanel";
 
 type AdminSection =
-  "invite" | "invitations" | "users" | "time-zone" | "companies";
+  | "invite"
+  | "invitations"
+  | "users"
+  | "time-zone"
+  | "operation"
+  | "companies";
 
 const sectionContent: Record<
   AdminSection,
@@ -38,6 +44,11 @@ const sectionContent: Record<
     description:
       "Define cómo se muestran las fechas y horas para toda la empresa.",
   },
+  operation: {
+    title: "Operación por rubro",
+    description:
+      "Adapta los nombres del menú y los módulos al rubro de tu empresa.",
+  },
   companies: {
     title: "Empresas",
     description: "Registra empresas y administra su capacidad de usuarios.",
@@ -49,6 +60,7 @@ export function AdminPage() {
   const { roles } = useAuthorization();
   const canInvite = usePermission("invitations.create");
   const canCompanies = usePermission("companies.create");
+  const canConfigureOperation = usePermission("companies.update");
   const canManageUsers = usePermission("users.read");
   const canConfigureTimeZone = roles.some((role) =>
     ["admin", "super-admin", "superadmin"].includes(role.toLowerCase()),
@@ -58,6 +70,7 @@ export function AdminPage() {
     invitations: canInvite,
     users: canManageUsers,
     "time-zone": canConfigureTimeZone,
+    operation: canConfigureOperation,
     companies: canCompanies,
   };
   const firstAllowed = (Object.keys(allowed) as AdminSection[]).find(
@@ -89,6 +102,7 @@ export function AdminPage() {
       )}
       {current === "users" && <UsersAdministration />}
       {current === "time-zone" && <TimeZonePanel />}
+      {current === "operation" && <OperationSettingsPanel />}
       {current === "companies" && <CompaniesPanel />}
       {historyId && (
         <InvitationHistory

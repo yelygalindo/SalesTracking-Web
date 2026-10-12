@@ -133,7 +133,12 @@ export const router = createBrowserRouter([
           {
             element: (
               <PermissionRoute
-                anyOf={["invitations.create", "companies.create", "users.read"]}
+                anyOf={[
+                  "invitations.create",
+                  "companies.create",
+                  "companies.update",
+                  "users.read",
+                ]}
               />
             ),
             children: [{ path: "/admin/:section?", element: <AdminPage /> }],

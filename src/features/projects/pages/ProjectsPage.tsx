@@ -7,6 +7,12 @@ import {
 } from "@tanstack/react-query";
 import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
+import {
+  gendered,
+  inSentence,
+  newLabel,
+} from "@/features/operation-settings/services/operationTerms";
 import { customerService } from "@/features/customers/services/customerService";
 import { errorMessage } from "@/lib/api/errorMessage";
 import { EmptyState, ErrorState } from "@/components/data/DataState";
@@ -61,6 +67,11 @@ const toForm = (project: ProjectDetail): ProjectInput => ({
 
 export function ProjectsPage() {
   const { hasRole, can } = useAuthorization();
+  const {
+    labels: { project, visit },
+  } = useOperationTerms();
+  const projectName = inSentence(project.singular),
+    projectsName = inSentence(project.plural);
   const canChooseSeller = !hasRole("seller") && can("sellers.read");
   const canExport =
     hasRole("admin") || hasRole("administrator") || hasRole("super-admin");
@@ -235,14 +246,16 @@ export function ProjectsPage() {
               })
             }
           >
-            <ArrowLeft /> Volver a seguimientos
+            <ArrowLeft /> Volver a {projectsName}
           </button>
           <div>
-            <p className="overline">Seguimientos</p>
-            <h1>{creating ? "Nuevo seguimiento" : "Editar seguimiento"}</h1>
+            <p className="overline">{project.plural}</p>
+            <h1>
+              {creating ? newLabel(project.singular) : `Editar ${projectName}`}
+            </h1>
             <p>
-              Completa la planificación, el avance y la ubicación del
-              seguimiento.
+              Completa la planificación, el avance y la ubicación{" "}
+              {gendered(project.singular, "del", "de la")} {projectName}.
             </p>
           </div>
         </header>
@@ -267,9 +280,9 @@ export function ProjectsPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión de seguimientos</p>
-          <h1>Seguimientos</h1>
-          <p>Administra la planificación y el avance de cada seguimiento.</p>
+          <p className="overline">Gestión de {projectsName}</p>
+          <h1>{project.plural}</h1>
+          <p>Administra la planificación y el avance de cada {projectName}.</p>
         </div>
         <div className="heading-actions">
           {canExport && (
@@ -295,19 +308,25 @@ export function ProjectsPage() {
               }}
             >
               <Plus />
-              Nuevo seguimiento
+              {newLabel(project.singular)}
             </button>
           )}
         </div>
       </header>
       <section
         className="customer-metrics"
-        aria-label="Resumen de seguimientos"
+        aria-label={`Resumen de ${projectsName}`}
       >
         {[
-          { label: "Total seguimientos", index: 0 },
-          { label: "Seguimientos activos", index: 1 },
-          { label: "Seguimientos completados", index: 2 },
+          { label: `Total ${projectsName}`, index: 0 },
+          {
+            label: `${project.plural} ${gendered(project.singular, "activos", "activas")}`,
+            index: 1,
+          },
+          {
+            label: `${project.plural} ${gendered(project.singular, "completados", "completadas")}`,
+            index: 2,
+          },
         ].map(({ label, index }) => (
           <article key={label} className={index === 1 ? "accent" : ""}>
             <span>{label}</span>
@@ -356,13 +375,13 @@ export function ProjectsPage() {
       </div>
       <section className="customer-table-card">
         {list.isLoading ? (
-          <Skeleton variant="table" rows={6} label="Cargando seguimientos…" />
+          <Skeleton variant="table" rows={6} label={`Cargando ${projectsName}…`} />
         ) : list.isError ? (
           <ErrorState error={list.error} onRetry={list.refetch} />
         ) : !list.data?.items.length ? (
           status || sellerId ? (
             <EmptyState
-              title="No hay seguimientos con estos filtros"
+              title={`No hay ${projectsName} con estos filtros`}
               description="Cambia el estado o el responsable para ver más resultados."
               action={
                 <button
@@ -375,8 +394,8 @@ export function ProjectsPage() {
             />
           ) : (
             <EmptyState
-              title="Aún no hay seguimientos"
-              description="Crea un seguimiento para registrar avances, visitas y productos de cada obra."
+              title={`Aún no hay ${projectsName}`}
+              description={`Crea ${gendered(project.singular, "un", "una")} ${projectName} para registrar avances, ${inSentence(visit.plural)} y productos.`}
             />
           )
         ) : (
