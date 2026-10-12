@@ -302,20 +302,20 @@ export function DeliveriesPage() {
                           {delivery.items.length === 1 ? "" : "s"}
                         </small>
                       </td>
-                      <td className="result-col-secondary result-cell-nowrap">
+                      <td className="result-col-secondary result-cell-nowrap" data-label="Fecha comprometida">
                         {formatDateTime(delivery.committedDateUtc)}
                       </td>
-                      <td className="result-col-tertiary">
+                      <td className="result-col-tertiary" data-label="Vendedor">
                         {delivery.sellerName || "Sin asignar"}
                       </td>
-                      <td className="result-col-status">
+                      <td className="result-col-status" data-label="Estado">
                         <span
                           className={`status-pill ${statusClass(delivery.statusName)}`}
                         >
                           {translateValue(delivery.statusName)}
                         </span>
                       </td>
-                      <td className="result-col-secondary">
+                      <td className="result-col-secondary" data-label="Avance">
                         <div className="delivery-list-progress">
                           <progress max="100" value={progress} />
                           <span>{Math.round(progress)}%</span>

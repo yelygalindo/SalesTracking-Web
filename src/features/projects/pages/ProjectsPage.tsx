@@ -388,13 +388,13 @@ export function ProjectsPage() {
                         <small>{project.description}</small>
                       )}
                     </td>
-                    <td className="result-col-secondary">
+                    <td className="result-col-secondary" data-label="Cliente">
                       {project.customerName || "Sin cliente"}
                     </td>
-                    <td className="result-col-tertiary">
+                    <td className="result-col-tertiary" data-label="Responsable">
                       {project.sellerName || "Sin asignar"}
                     </td>
-                    <td className="result-col-secondary">
+                    <td className="result-col-secondary" data-label="Avance">
                       <div className="project-list-progress">
                         <span>{project.progressPercentage}%</span>
                         <progress
@@ -403,12 +403,12 @@ export function ProjectsPage() {
                         />
                       </div>
                     </td>
-                    <td className="result-col-status">
+                    <td className="result-col-status" data-label="Estado">
                       <span className="status-pill">
                         {translateValue(project.status)}
                       </span>
                     </td>
-                    <td className="result-col-tertiary result-cell-nowrap">
+                    <td className="result-col-tertiary result-cell-nowrap" data-label="Fecha estimada">
                       {project.expectedCloseDateUtc
                         ? formatProjectDate(project.expectedCloseDateUtc)
                         : "Sin fecha"}

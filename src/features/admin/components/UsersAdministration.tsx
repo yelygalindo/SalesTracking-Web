@@ -125,7 +125,7 @@ export function UsersAdministration() {
                         </small>
                       </div>
                     </td>
-                    <td className="result-col-secondary">
+                    <td className="result-col-secondary" data-label="Roles">
                       <div
                         className="role-badges"
                         title={item.roles.join(", ") || "Sin rol"}
@@ -146,14 +146,14 @@ export function UsersAdministration() {
                         )}
                       </div>
                     </td>
-                    <td className="result-col-status">
+                    <td className="result-col-status" data-label="Estado">
                       <span
                         className={`status-pill ${item.isActive ? "active" : "inactive"}`}
                       >
                         {item.isActive ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td className="result-col-tertiary result-cell-nowrap">
+                    <td className="result-col-tertiary result-cell-nowrap" data-label="Creado">
                       {formatDateTime(item.createdAtUtc)}
                     </td>
                     <td className="result-col-actions">

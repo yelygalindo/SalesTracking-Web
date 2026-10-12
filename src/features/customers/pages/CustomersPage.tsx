@@ -458,17 +458,17 @@ export function CustomersPage() {
                       <strong>{c.name}</strong>
                       <small>{c.companyName || "Sin empresa"}</small>
                     </td>
-                    <td className="result-col-secondary">
+                    <td className="result-col-secondary" data-label="Contacto">
                       {c.phone || "—"}
                       <small>{c.email || "Sin correo"}</small>
                     </td>
-                    <td className="result-col-status">
+                    <td className="result-col-status" data-label="Estado">
                       <span className={`status-pill ${c.status.toLowerCase()}`}>
                         {translateValue(c.status)}
                       </span>
                     </td>
                     {canViewTeam && (
-                      <td className="result-col-tertiary">
+                      <td className="result-col-tertiary" data-label="Responsable">
                         {c.seller?.name || "Sin asignar"}
                       </td>
                     )}

@@ -207,3 +207,137 @@ body,
     text-align: center;
   }
 }
+
+/* Result tables become stacked cards on phones. */
+@media (max-width: 640px) {
+  .customer-table-card:has(.search-results-table) {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .search-results-scroll {
+    overflow: visible;
+  }
+  .search-results-table,
+  .search-results-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .search-results-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .search-results-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+  .search-results-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--ut-border);
+    border-radius: var(--ut-radius-md);
+    background: var(--ut-surface);
+    box-shadow: var(--ut-shadow-sm);
+  }
+  .search-results-table tbody tr:hover td {
+    background: transparent;
+  }
+  .search-results-table td,
+  .search-results-table td + td {
+    display: block;
+    width: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    white-space: normal;
+  }
+  .search-results-table .result-col-secondary,
+  .search-results-table .result-col-tertiary {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 96px minmax(0, 1fr);
+    width: auto;
+    align-items: baseline;
+    gap: 2px 8px;
+    color: var(--ut-text-secondary);
+    font-size: 0.84rem;
+  }
+  .search-results-table td[data-label] > * {
+    grid-column: 2;
+  }
+  .search-results-table td:not([data-label]) > * {
+    grid-column: 1 / -1;
+  }
+  .search-results-table td[data-label]::before {
+    color: var(--ut-text-muted);
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .search-results-table .result-col-primary {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+  .search-results-table .result-col-status {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: auto;
+  }
+  .search-results-table .result-col-status::before {
+    display: none;
+  }
+  .search-results-table .result-col-actions {
+    grid-column: 1 / -1;
+    width: auto;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--ut-border);
+  }
+  .search-results-table .result-col-actions:empty {
+    display: none;
+  }
+  .search-results-table .customer-row-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .search-results-table .customer-row-actions button {
+    width: auto;
+  }
+  .customer-table-card:has(.search-results-table) .pagination {
+    margin-top: 12px;
+  }
+}
+
+/* Compact metric strip on phones so the list stays above the fold. */
+@media (max-width: 640px) {
+  .customer-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 18px 0 14px;
+  }
+  .customer-metrics article {
+    padding: 12px;
+  }
+  .customer-metrics span {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+  .customer-metrics strong {
+    margin-top: 6px;
+    font-size: 1.3rem;
+  }
+}

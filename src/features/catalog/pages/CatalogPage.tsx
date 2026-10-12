@@ -181,12 +181,12 @@ export function CatalogPage() {
                       <td className="result-col-primary">
                         <strong>{item.name}</strong>
                       </td>
-                      <td className="result-col-secondary">
+                      <td className="result-col-secondary" data-label={tab === "products" ? "Código / Precio" : "Símbolo"}>
                         {"code" in item
                           ? `${item.code} · ${item.price}`
                           : item.symbol}
                       </td>
-                      <td className="result-col-status">
+                      <td className="result-col-status" data-label="Estado">
                         {item.isActive ? "Activo" : "Inactivo"}
                       </td>
                       {(canUpdate || canDelete) && !isSeller && (
