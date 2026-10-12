@@ -111,6 +111,12 @@ export function CustomersPage() {
     ),
     [form, setForm] = useState(emptyForm),
     [notice, setNotice] = useState("");
+  // Opening a contact from the global search changes ?selected while the page stays mounted.
+  useEffect(() => {
+    if (!linked) return;
+    setSelected(linked);
+    setMode("view");
+  }, [linked]);
   const [extras, setExtras] = useState(emptyExtras);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTargetName, setDeleteTargetName] = useState("");

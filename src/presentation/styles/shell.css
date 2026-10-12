@@ -426,6 +426,181 @@
   display: none;
 }
 
+/* Global search (Ctrl+K) */
+.command-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(280px, 32vw);
+  height: 38px;
+  flex: none;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--ut-border);
+  border-radius: 10px;
+  color: var(--ut-text-muted);
+  background: var(--ut-surface-soft);
+  font-size: 0.86rem;
+}
+.command-trigger:hover {
+  border-color: var(--ut-border-strong);
+  color: var(--ut-text-secondary);
+}
+.command-trigger svg {
+  width: 16px;
+  flex: none;
+}
+.command-trigger span {
+  flex: 1;
+  text-align: left;
+}
+.app-topbar kbd,
+.command-palette kbd {
+  padding: 2px 6px;
+  border: 1px solid var(--ut-border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: var(--ut-text-secondary);
+  background: var(--ut-surface);
+  font: 600 0.68rem/1.4 inherit;
+  font-family: inherit;
+}
+.command-backdrop {
+  position: fixed;
+  z-index: 1500;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgb(9 20 37 / 45%);
+  animation: nav-backdrop-in 0.15s ease;
+}
+.command-palette {
+  display: flex;
+  width: min(100%, 600px);
+  max-height: 70vh;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--ut-border);
+  border-radius: var(--ut-radius-lg);
+  background: var(--ut-surface);
+  box-shadow: var(--ut-shadow-lg);
+  animation: profile-menu-in 0.16s var(--ut-ease);
+}
+.command-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ut-border);
+}
+.command-input > svg {
+  width: 18px;
+  flex: none;
+  color: var(--ut-text-muted);
+}
+.command-input input,
+.command-input input:focus {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+}
+.command-results {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+.command-group {
+  margin: 8px 10px 4px;
+  color: var(--ut-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.command-results button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--ut-text);
+  background: transparent;
+  text-align: left;
+}
+.command-results button.active {
+  background: var(--ut-surface-muted);
+}
+.command-results button > svg {
+  width: 18px;
+  flex: none;
+  color: var(--ut-text-secondary);
+}
+.command-results button.active > svg:first-child {
+  color: var(--ut-primary-text);
+}
+.command-results button > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.command-results strong,
+.command-results small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-results strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.command-results small {
+  color: var(--ut-text-secondary);
+  font-size: 0.76rem;
+}
+.command-enter {
+  width: 15px;
+  color: var(--ut-text-muted);
+}
+.command-empty,
+.command-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 18px 18px 22px;
+  color: var(--ut-text-secondary);
+  font-size: 0.88rem;
+}
+.command-empty p {
+  margin: 0;
+}
+.command-empty svg {
+  width: 18px;
+}
+.command-footer {
+  display: flex;
+  gap: 16px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--ut-border);
+  color: var(--ut-text-muted);
+  background: var(--ut-surface-soft);
+  font-size: 0.74rem;
+}
+.command-footer kbd {
+  margin-right: 3px;
+}
+
 /* Collapse toggle and collapsed icon rail (desktop only). */
 .nav-collapse {
   display: grid;
@@ -607,8 +782,25 @@
     display: grid;
   }
   .app-topbar .profile-identity,
-  .profile-chevron {
+  .profile-chevron,
+  .command-trigger span,
+  .command-trigger kbd,
+  .command-footer {
     display: none;
+  }
+  .command-trigger {
+    width: 40px;
+    justify-content: center;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    color: var(--ut-text);
+  }
+  .command-trigger svg {
+    width: 20px;
+  }
+  .command-backdrop {
+    padding-top: 8px;
   }
   .profile-trigger {
     padding: 3px;

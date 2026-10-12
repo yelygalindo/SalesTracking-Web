@@ -12,6 +12,7 @@ import {
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "@/presentation/components/Brand";
 import { PageSkeleton } from "@/components/feedback/Skeleton";
+import { CommandPalette } from "@/components/layout/CommandPalette";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
@@ -259,6 +260,10 @@ export function AppShell() {
           ) : (
             <span className="topbar-spacer" />
           )}
+          <CommandPalette
+            sections={sections}
+            canSearchCustomers={canAny(["customers.read"])}
+          />
           <div className="profile" ref={profileRef}>
             <button
               className="profile-trigger"
