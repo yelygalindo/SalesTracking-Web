@@ -1,11 +1,23 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, ChevronRight, LogOut, Menu, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Ellipsis,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
+} from "lucide-react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Brand } from "@/presentation/components/Brand";
 import { PageSkeleton } from "@/components/feedback/Skeleton";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
+  bottomNavCandidates,
   filterNavigation,
+  isAllowed,
   findCurrentPage,
   matchesPath,
   navigationSections,
@@ -21,6 +33,15 @@ const roleNames: Record<string, string> = {
 };
 const roleLabel = (role: string) => roleNames[role.toLowerCase()] || role;
 
+const collapsedKey = "urbantrack:nav-collapsed";
+const readCollapsed = () => {
+  try {
+    return localStorage.getItem(collapsedKey) === "1";
+  } catch {
+    return false;
+  }
+};
+
 const groupContains = (group: NavGroupEntry, pathname: string) =>
   group.children.some((child) => matchesPath(pathname, child.to));
 
@@ -29,6 +50,9 @@ export function AppShell() {
     [open, setOpen] = useState(false),
     [profileOpen, setProfileOpen] = useState(false),
     [expandedGroups, setExpandedGroups] = useState<string[]>([]),
+    [collapsedPreference, setCollapsed] = useState(readCollapsed),
+    isDesktop = useMediaQuery("(min-width: 901px)"),
+    collapsed = collapsedPreference && isDesktop,
     profileRef = useRef<HTMLDivElement>(null),
     location = useLocation();
 
@@ -68,17 +92,25 @@ export function AppShell() {
   }, [open, profileOpen]);
 
   useEffect(() => {
+    try {
+      localStorage.setItem(collapsedKey, collapsedPreference ? "1" : "0");
+    } catch {
+      // Storage can be unavailable (private mode); the preference just is not kept.
+    }
+  }, [collapsedPreference]);
+
+  useEffect(() => {
     document.body.classList.toggle("nav-locked", open);
     return () => document.body.classList.remove("nav-locked");
   }, [open]);
 
   if (!user) return null;
 
-  const sections = filterNavigation(navigationSections, {
-    canAny,
-    canAll,
-    hasRole,
-  });
+  const access = { canAny, canAll, hasRole };
+  const sections = filterNavigation(navigationSections, access);
+  const shortcuts = bottomNavCandidates
+    .filter((entry) => isAllowed(entry, access))
+    .slice(0, 4);
   const currentPage = findCurrentPage(sections, location.pathname);
   const initials = user.fullName
     .split(" ")
@@ -103,13 +135,20 @@ export function AppShell() {
           className="nav-group-trigger"
           aria-expanded={expanded}
           aria-controls={`nav-group-${id}`}
-          onClick={() => toggleGroup(id)}
+          title={collapsed ? label : undefined}
+          onClick={() => {
+            // A collapsed rail has no room for submenus: expand it first.
+            if (collapsed) {
+              setCollapsed(false);
+              setExpandedGroups([id]);
+            } else toggleGroup(id);
+          }}
         >
           <Icon aria-hidden="true" />
           <span>{label}</span>
           <ChevronDown className="nav-group-chevron" aria-hidden="true" />
         </button>
-        {expanded && (
+        {expanded && !collapsed && (
           <div className="nav-submenu" id={`nav-group-${id}`}>
             {children.map((child) => (
               <NavLink end key={child.to} to={child.to}>
@@ -123,7 +162,7 @@ export function AppShell() {
   };
 
   return (
-    <div className="app-shell-root">
+    <div className={`app-shell-root${collapsed ? " nav-collapsed" : ""}`}>
       {open && (
         <button
           className="nav-backdrop"
@@ -138,6 +177,15 @@ export function AppShell() {
       >
         <div className="nav-brand">
           <Brand inverse />
+          <button
+            className="nav-collapse"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+            title={collapsed ? "Expandir menú" : "Contraer menú"}
+            aria-pressed={collapsed}
+          >
+            {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+          </button>
           <button
             className="nav-close"
             onClick={() => setOpen(false)}
@@ -154,7 +202,12 @@ export function AppShell() {
                 entry.kind === "group" ? (
                   renderGroup(entry)
                 ) : (
-                  <NavLink end key={entry.to} to={entry.to}>
+                  <NavLink
+                    end
+                    key={entry.to}
+                    to={entry.to}
+                    title={collapsed ? entry.label : undefined}
+                  >
                     <entry.icon aria-hidden="true" />
                     <span>{entry.label}</span>
                   </NavLink>
@@ -243,6 +296,24 @@ export function AppShell() {
           <Outlet />
         </Suspense>
       </section>
+      {shortcuts.length > 1 && (
+        <nav className="bottom-nav" aria-label="Accesos rápidos">
+          {shortcuts.map(({ to, label, icon: Icon }) => (
+            <NavLink end key={to} to={to}>
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Más opciones de navegación"
+          >
+            <Ellipsis aria-hidden="true" />
+            <span>Más</span>
+          </button>
+        </nav>
+      )}
     </div>
   );
 }
