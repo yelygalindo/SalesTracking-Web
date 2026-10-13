@@ -29,6 +29,8 @@ import { translateValue } from "@/lib/i18n/labels";
 import { exportExcel } from "@/lib/export/exportExcel";
 import { ProjectDetailView } from "../components/ProjectDetailView";
 import { projectService } from "../services/projectService";
+import { ImportLink } from "@/components/imports/ImportLink";
+import { formatMoney } from "@/lib/i18n/money";
 import type {
   ProjectDetail,
   ProjectInput,
@@ -280,11 +282,12 @@ export function ProjectsPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión de {projectsName}</p>
+          <p className="overline">Comercial</p>
           <h1>{project.plural}</h1>
           <p>Administra la planificación y el avance de cada {projectName}.</p>
         </div>
         <div className="heading-actions">
+          {can("projects.import") && <ImportLink to="/projects/import" />}
           {canExport && (
             <button
               className="excel-export-button"
@@ -403,9 +406,10 @@ export function ProjectsPage() {
             <table className="search-results-table projects-results-table">
               <thead>
                 <tr>
-                  <th className="result-col-primary">Proyecto</th>
+                  <th className="result-col-primary">{project.singular}</th>
                   <th className="result-col-secondary">Cliente</th>
                   <th className="result-col-tertiary">Responsable</th>
+                  <th className="result-col-secondary">Monto estimado</th>
                   <th className="result-col-secondary">Avance</th>
                   <th className="result-col-status">Estado</th>
                   <th className="result-col-tertiary">Fecha estimada</th>
@@ -426,6 +430,9 @@ export function ProjectsPage() {
                     </td>
                     <td className="result-col-tertiary" data-label="Responsable">
                       {project.sellerName || "Sin asignar"}
+                    </td>
+                    <td className="result-col-secondary result-cell-nowrap" data-label="Monto estimado">
+                      {formatMoney(project.estimatedAmount)}
                     </td>
                     <td className="result-col-secondary" data-label="Avance">
                       <div className="project-list-progress">

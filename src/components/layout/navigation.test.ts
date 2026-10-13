@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBottomNavCandidates,
+  findPageTabs,
   buildNavigationSections,
   filterNavigation,
   findCurrentPage,
@@ -62,7 +63,7 @@ describe("findCurrentPage", () => {
     expect(findCurrentPage(navigationSections, "/operations/dashboard")).toEqual(
       {
         section: "Operación",
-        parent: "Monitoreo en vivo",
+        parent: "Equipo en vivo",
         label: "Estado del equipo",
       },
     );
@@ -135,9 +136,7 @@ describe("filterNavigation with modules", () => {
 
     expect(findCurrentPage(sections, "/catalog/products")).toBeUndefined();
     expect(findCurrentPage(sections, "/catalog/products/import")).toBeUndefined();
-    expect(findCurrentPage(sections, "/deliveries")?.label).toBe(
-      "Compromisos y entregas",
-    );
+    expect(findCurrentPage(sections, "/deliveries")?.label).toBe("Entregas");
   });
 
   it("hides deliveries and their report when the module is off", () => {
@@ -169,5 +168,42 @@ describe("filterNavigation with modules", () => {
         "/admin/operation",
       ),
     ).toBeUndefined();
+  });
+});
+
+describe("page tabs", () => {
+  it("groups live monitoring pages under one entry shown as tabs", () => {
+    const tabs = findPageTabs(navigationSections, "/operations/active");
+
+    expect(tabs.map((tab) => tab.to)).toEqual([
+      "/operations/dashboard",
+      "/operations/active",
+    ]);
+    expect(findPageTabs(navigationSections, "/customers")).toEqual([]);
+  });
+
+  it("opens the first reachable tab and hides tabs without permission", () => {
+    const sections = filterNavigation(
+      navigationSections,
+      checkFor(["products.read"]),
+    );
+    const catalog = sections
+      .flatMap((section) => section.entries)
+      .find((entry) => entry.label === "Catálogo");
+
+    expect(catalog?.kind === "link" && catalog.to).toBe("/catalog/products");
+    // A single remaining tab is not worth a tab bar.
+    expect(findPageTabs(sections, "/catalog/products")).toEqual([]);
+  });
+
+  it("keeps hidden entries reachable for the breadcrumb", () => {
+    const imports = navigationSections
+      .flatMap((section) => section.entries)
+      .find((entry) => entry.label === "Importar datos");
+
+    expect(imports?.hidden).toBe(true);
+    expect(findCurrentPage(navigationSections, "/customers/import")?.parent).toBe(
+      "Importar datos",
+    );
   });
 });

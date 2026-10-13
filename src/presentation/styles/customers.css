@@ -7,7 +7,8 @@
   gap: 14px;
   margin: 24px 0 18px;
 }
-.customer-metrics article {
+.customer-metrics article,
+.customer-metrics .metric-filter {
   position: relative;
   overflow: hidden;
   padding: 18px 20px;
@@ -16,14 +17,16 @@
   background: #fff;
   box-shadow: 0 7px 22px rgba(15, 23, 42, 0.04);
 }
-.customer-metrics article::before {
+.customer-metrics article::before,
+.customer-metrics .metric-filter::before {
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
   background: #cbd5e1;
   content: "";
 }
-.customer-metrics article.accent::before {
+.customer-metrics article.accent::before,
+.customer-metrics .metric-filter.accent::before {
   background: var(--ut-primary);
 }
 .customer-metrics span {
@@ -897,4 +900,50 @@
     justify-content: center;
     text-align: center;
   }
+}
+.excel-export-button.import-link {
+  padding: 5px 16px;
+  text-decoration: none;
+}
+.excel-export-button.import-link svg {
+  width: 18px;
+}
+/* Metric cards that also filter the listing by their status. */
+.customer-metrics .metric-filter {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.customer-metrics .metric-filter:hover {
+  border-color: var(--ut-border-strong);
+}
+.customer-metrics .metric-filter[aria-pressed="true"] {
+  border-color: var(--ut-primary);
+  box-shadow: 0 0 0 3px var(--ut-primary-soft);
+}
+.customer-follow-up small.overdue {
+  color: #b42318;
+  font-weight: 700;
+}
+.customer-follow-up small {
+  display: block;
+  white-space: nowrap;
+}
+.row-actions-menu > div button:has(svg) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.row-actions-menu > div button svg {
+  width: 16px;
+  height: 16px;
+}
+.detail-actions .row-actions-menu summary {
+  width: 44px;
+  height: 44px;
 }

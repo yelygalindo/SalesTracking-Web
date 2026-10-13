@@ -27,6 +27,39 @@ const empty: Input = {
 const message = errorMessage;
 
 const statusClass = (value: string) => value.toLowerCase().replaceAll(" ", "-");
+const dayMs = 24 * 60 * 60 * 1000;
+
+/** Whether the delivery met its committed date, or how far along it is while open. */
+function DeliveryCompliance({
+  delivery,
+  progress,
+}: {
+  delivery: Delivery;
+  progress: number;
+}) {
+  const committed = new Date(delivery.committedDateUtc).getTime();
+  if (delivery.deliveredDateUtc) {
+    const lateDays = Math.floor(
+      (new Date(delivery.deliveredDateUtc).getTime() - committed) / dayMs,
+    );
+    return lateDays > 0 ? (
+      <span className="delivery-compliance late">
+        Con retraso ({lateDays} {lateDays === 1 ? "día" : "días"})
+      </span>
+    ) : (
+      <span className="delivery-compliance on-time">A tiempo</span>
+    );
+  }
+  return (
+    <div className="delivery-list-progress">
+      <progress max="100" value={progress} />
+      <span>{Math.round(progress)}%</span>
+      {committed < Date.now() && (
+        <span className="delivery-compliance late">Vencida</span>
+      )}
+    </div>
+  );
+}
 
 export function DeliveriesPage() {
   const cache = useQueryClient();
@@ -152,7 +185,7 @@ export function DeliveriesPage() {
             <ArrowLeft /> {creating ? "Volver a entregas" : "Volver al detalle"}
           </button>
           <div>
-            <p className="overline">Logística</p>
+            <p className="overline">Comercial</p>
             <h1>{creating ? "Nueva entrega" : "Editar entrega"}</h1>
             <p>
               Define el proyecto, la fecha comprometida y los materiales que
@@ -222,7 +255,7 @@ export function DeliveriesPage() {
   return (
     <main className="customers-content delivery-page">
       <PageHeader
-        eyebrow="Logística"
+        eyebrow="Comercial"
         title="Entregas"
         description="Compromisos, recepción y cumplimiento de materiales."
         action={
@@ -274,9 +307,9 @@ export function DeliveriesPage() {
                 <tr>
                   <th className="result-col-primary">Proyecto</th>
                   <th className="result-col-secondary">Fecha comprometida</th>
-                  <th className="result-col-tertiary">Vendedor</th>
+                  <th className="result-col-tertiary">Responsable</th>
                   <th className="result-col-status">Estado</th>
-                  <th className="result-col-secondary">Avance</th>
+                  <th className="result-col-secondary">Cumplimiento</th>
                   <th className="result-col-actions" />
                 </tr>
               </thead>
@@ -305,7 +338,7 @@ export function DeliveriesPage() {
                       <td className="result-col-secondary result-cell-nowrap" data-label="Fecha comprometida">
                         {formatDateTime(delivery.committedDateUtc)}
                       </td>
-                      <td className="result-col-tertiary" data-label="Vendedor">
+                      <td className="result-col-tertiary" data-label="Responsable">
                         {delivery.sellerName || "Sin asignar"}
                       </td>
                       <td className="result-col-status" data-label="Estado">
@@ -315,11 +348,8 @@ export function DeliveriesPage() {
                           {translateValue(delivery.statusName)}
                         </span>
                       </td>
-                      <td className="result-col-secondary" data-label="Avance">
-                        <div className="delivery-list-progress">
-                          <progress max="100" value={progress} />
-                          <span>{Math.round(progress)}%</span>
-                        </div>
+                      <td className="result-col-secondary" data-label="Cumplimiento">
+                        <DeliveryCompliance delivery={delivery} progress={progress} />
                       </td>
                       <td className="result-col-actions">
                         <button

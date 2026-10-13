@@ -14,6 +14,7 @@ import {
   localDayEndUtc,
   localDayStartUtc,
   formatDateTime,
+  formatRelativeTime,
 } from "@/lib/i18n/dateTime";
 import { operationsApi, type Workday } from "../api/operationsApi";
 import { TrackingMap } from "../components/TrackingMap";
@@ -25,11 +26,18 @@ const inputDate = (date: Date) =>
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
 const today = () => inputDate(new Date());
-const yesterday = () => {
+const daysAgo = (days: number) => {
   const date = new Date();
-  date.setDate(date.getDate() - 1);
+  date.setDate(date.getDate() - days);
   return inputDate(date);
 };
+const yesterday = () => daysAgo(1);
+/** Ranges supervisors check most, as [label, from, to]. */
+const datePresets = (): [string, string, string][] => [
+  ["Hoy", today(), today()],
+  ["Ayer", yesterday(), yesterday()],
+  ["Últimos 7 días", daysAgo(6), today()],
+];
 const dateTime = formatDateTime;
 const duration = (start?: string | null, end?: string | null) => {
   if (!start) return "—";
@@ -116,14 +124,6 @@ export function OperationsPage() {
   const selectedSellerName = sellers.data?.find(
     (seller) => seller.externalId === sellerId,
   )?.displayName;
-  // Workdays may arrive without the seller's name; the query is always for one seller.
-  const workdaySellerName = (item: Workday) =>
-    item.sellerName ||
-    sellers.data?.find((seller) => seller.externalId === item.sellerExternalId)
-      ?.displayName ||
-    selectedSellerName ||
-    (canChooseSeller ? undefined : user?.fullName) ||
-    "Sin nombre";
   if (!section) return <Navigate replace to="/operations/active" />;
   if (
     !(["active", "history"] as const).includes(section as "active" | "history")
@@ -142,7 +142,7 @@ export function OperationsPage() {
   return (
     <main className="customers-content operations-page">
       <PageHeader
-        eyebrow={tab === "active" ? "Monitoreo en vivo" : "Operación"}
+        eyebrow="Operación"
         title={tab === "active" ? `${visit.plural} en curso` : "Recorridos y jornadas"}
         description={
           tab === "active"
@@ -208,12 +208,25 @@ export function OperationsPage() {
                         </td>
                         <td>{dateTime(item.startedAtUtc)}</td>
                         <td>
-                          {item.lastLocation
-                            ? `${item.lastLocation.latitude.toFixed(5)}, ${item.lastLocation.longitude.toFixed(5)}`
-                            : "—"}
+                          {item.lastLocation ? (
+                            <a
+                              className="table-link"
+                              href={`https://www.google.com/maps/search/?api=1&query=${item.lastLocation.latitude},${item.lastLocation.longitude}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={coordinates(
+                                item.lastLocation.latitude,
+                                item.lastLocation.longitude,
+                              )}
+                            >
+                              Ver en el mapa
+                            </a>
+                          ) : (
+                            "Sin ubicación"
+                          )}
                         </td>
                         <td>
-                          {dateTime(
+                          {formatRelativeTime(
                             item.lastUpdatedAtUtc ??
                               item.lastLocation?.capturedAtUtc,
                           )}
@@ -242,6 +255,21 @@ export function OperationsPage() {
         </>
       ) : (
         <>
+          <div className="date-presets" role="group" aria-label="Rango rápido">
+            {datePresets().map(([label, presetFrom, presetTo]) => (
+              <button
+                type="button"
+                key={label}
+                aria-pressed={from === presetFrom && to === presetTo}
+                onClick={() => {
+                  setFrom(presetFrom);
+                  setTo(presetTo);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="customer-toolbar operations-filters">
             <label>
               Desde
@@ -305,7 +333,7 @@ export function OperationsPage() {
                       <th>Fin</th>
                       <th>Duración</th>
                       <th>{visit.plural}</th>
-                      <th>Puntos registrados</th>
+                      <th>Ubicaciones registradas</th>
                       <th>Estado</th>
                       <th></th>
                     </tr>
@@ -314,7 +342,7 @@ export function OperationsPage() {
                     {history.data?.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          <strong>{workdaySellerName(item)}</strong>
+                          <strong>{item.sellerName || "Sin nombre"}</strong>
                         </td>
                         <td>{dateTime(item.startedAtUtc)}</td>
                         <td>{dateTime(item.endedAtUtc)}</td>
@@ -470,7 +498,7 @@ function WorkdayDetail({
                   />
                   <Summary
                     icon={<Route />}
-                    label="Puntos registrados"
+                    label="Ubicaciones registradas"
                     value={String(workday.data.locationCount)}
                   />
                 </section>

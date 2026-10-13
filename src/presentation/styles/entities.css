@@ -1661,3 +1661,44 @@
     grid-column: 1 !important;
   }
 }
+.date-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.date-presets button {
+  padding: 6px 12px;
+  border: 1px solid var(--ut-border);
+  border-radius: 99px;
+  color: var(--ut-text-secondary);
+  background: var(--ut-surface);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.date-presets button:hover {
+  border-color: var(--ut-border-strong);
+  color: var(--ut-text-strong);
+}
+.date-presets button[aria-pressed="true"] {
+  border-color: var(--ut-sidebar);
+  color: #fff;
+  background: var(--ut-sidebar);
+}
+.delivery-compliance {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.delivery-compliance.on-time {
+  color: #047857;
+  background: #e8f7ef;
+}
+.delivery-compliance.late {
+  color: #b42318;
+  background: #feeceb;
+}

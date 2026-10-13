@@ -28,7 +28,6 @@ import type {
   CustomerCreateExtrasDto,
   CustomerDetailDto,
   CustomerInputDto,
-  CustomerSellerDto,
   CustomerSummaryDto,
 } from "@/features/customers/api/customerDtos";
 import { errorMessage } from "@/lib/api/errorMessage";
@@ -45,6 +44,8 @@ import { translateValue } from "@/lib/i18n/labels";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { Pagination } from "@/components/data/Pagination";
 import { CustomerCsvActions } from "@/features/customers/components/CustomerCsvActions";
+import { ImportLink } from "@/components/imports/ImportLink";
+import { formatDate } from "@/lib/i18n/dateTime";
 
 const emptyForm: CustomerInputDto = {
   name: "",
@@ -99,6 +100,7 @@ export function CustomersPage() {
     labels: { customer },
   } = useOperationTerms();
   const canExport = can("customers.export");
+  const canImport = can("customers.import");
   const canViewTeam =
     hasRole("supervisor") ||
     hasRole("admin") ||
@@ -174,10 +176,6 @@ export function CustomersPage() {
     queryFn: customerService.sellers,
     enabled: canViewTeam,
   });
-  // The customer API sends the seller's username (sometimes an email); prefer the seller's display name.
-  const sellerName = (seller?: CustomerSellerDto | null) =>
-    sellers.data?.find((item) => item.externalId === seller?.externalId)
-      ?.displayName || seller?.name;
   const detail = useQuery({
     queryKey: ["customer", selected],
     queryFn: () => customerService.detail(selected!),
@@ -364,11 +362,12 @@ export function CustomersPage() {
     <main className="customers-content">
       <header className="customers-heading">
         <div>
-          <p className="overline">Gestión de {inSentence(customer.plural)}</p>
+          <p className="overline">Comercial</p>
           <h1>{customer.plural}</h1>
           <p>Administra las personas y organizaciones de tu cartera.</p>
         </div>
         <div className="heading-actions">
+          {canImport && <ImportLink to="/customers/import" />}
           <CustomerCsvActions
             canImport={false}
             canExport={canExport}
@@ -392,14 +391,22 @@ export function CustomersPage() {
       {notice && <p className="customer-feedback">{notice}</p>}
       <section className="customer-metrics" aria-label={`Resumen de ${inSentence(customer.plural)}`}>
         {[
-          { label: `Total ${inSentence(customer.plural)}`, index: 0 },
-          { label: "Prospectos", index: 1 },
+          { label: `Total ${inSentence(customer.plural)}`, index: 0, filter: "" },
+          { label: "Prospectos", index: 1, filter: "Prospect" },
           {
             label: `${customer.plural} ${gendered(customer.singular, "activos", "activas")}`,
             index: 2,
+            filter: "Active",
           },
-        ].map(({ label, index }) => (
-          <article key={label} className={index === 1 ? "accent" : ""}>
+        ].map(({ label, index, filter }) => (
+          <button
+            type="button"
+            key={label}
+            className={`metric-filter${index === 1 ? " accent" : ""}`}
+            aria-pressed={status === filter}
+            title={filter ? `Ver solo ${label.toLowerCase()}` : "Ver todos"}
+            onClick={() => updateFilters({ status: filter })}
+          >
             <span>{label}</span>
             <strong>
               {metrics[index].isLoading
@@ -410,7 +417,7 @@ export function CustomersPage() {
                       "es-BO",
                     )}
             </strong>
-          </article>
+          </button>
         ))}
       </section>
       <div className="customer-toolbar">
@@ -506,6 +513,7 @@ export function CustomersPage() {
                   <th className="result-col-primary">Cliente</th>
                   <th className="result-col-secondary">Contacto</th>
                   <th className="result-col-status">Estado</th>
+                  <th className="result-col-tertiary">Seguimiento</th>
                   {canViewTeam && (
                     <th className="result-col-tertiary">Responsable</th>
                   )}
@@ -528,9 +536,33 @@ export function CustomersPage() {
                         {translateValue(c.status)}
                       </span>
                     </td>
+                    <td
+                      className="result-col-tertiary customer-follow-up"
+                      data-label="Seguimiento"
+                    >
+                      <small>
+                        Último:{" "}
+                        {c.lastContactAtUtc
+                          ? formatDate(c.lastContactAtUtc)
+                          : "sin registro"}
+                      </small>
+                      <small
+                        className={
+                          c.nextContactAtUtc &&
+                          new Date(c.nextContactAtUtc) < new Date()
+                            ? "overdue"
+                            : ""
+                        }
+                      >
+                        Próximo:{" "}
+                        {c.nextContactAtUtc
+                          ? formatDate(c.nextContactAtUtc)
+                          : "sin programar"}
+                      </small>
+                    </td>
                     {canViewTeam && (
                       <td className="result-col-tertiary" data-label="Responsable">
-                        {sellerName(c.seller) || "Sin asignar"}
+                        {c.seller?.name || "Sin asignar"}
                       </td>
                     )}
                     <td className="result-col-actions">
@@ -654,13 +686,7 @@ export function CustomersPage() {
             ) : (
               detail.data && (
                 <CustomerDetail
-                  customer={{
-                    ...detail.data,
-                    seller: {
-                      ...detail.data.seller,
-                      name: sellerName(detail.data.seller) ?? null,
-                    },
-                  }}
+                  customer={detail.data}
                   initialTab={quickTab}
                   statuses={crmStatuses}
                   canUpdate={canUpdate}

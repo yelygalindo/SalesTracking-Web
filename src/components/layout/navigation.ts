@@ -33,16 +33,24 @@ export type NavAccess = {
 /** Optional module the entry belongs to; it is hidden when the company turns that module off. */
 export type NavModule = { module?: keyof OperationModules };
 
-export type NavLinkEntry = NavAccess & NavModule & {
+export type NavChild = NavAccess & NavModule & { to: string; label: string };
+
+/** Kept for the breadcrumb and the search palette, but not drawn in the sidebar. */
+export type NavVisibility = { hidden?: boolean };
+
+export type NavLinkEntry = NavAccess & NavModule & NavVisibility & {
   kind: "link";
   to: string;
   label: string;
   icon: LucideIcon;
+  /**
+   * Sibling pages shown as tabs in the page header instead of a submenu. When present,
+   * the entry is reachable if any tab is, and it opens the first reachable tab.
+   */
+  tabs?: NavChild[];
 };
 
-export type NavChild = NavAccess & NavModule & { to: string; label: string };
-
-export type NavGroupEntry = NavModule & {
+export type NavGroupEntry = NavModule & NavVisibility & {
   kind: "group";
   id: string;
   label: string;
@@ -88,11 +96,11 @@ export const buildNavigationSections = ({
     label: "Operación",
     entries: [
       {
-        kind: "group",
-        id: "monitoring",
-        label: "Monitoreo en vivo",
+        kind: "link",
+        to: "/operations/dashboard",
+        label: "Equipo en vivo",
         icon: Radar,
-        children: [
+        tabs: [
           {
             to: "/operations/dashboard",
             label: "Estado del equipo",
@@ -140,12 +148,20 @@ export const buildNavigationSections = ({
         permissions: ["projects.read"],
       },
       {
-        kind: "group",
-        id: "catalog",
+        kind: "link",
+        to: "/deliveries",
+        label: "Entregas",
+        module: "deliveries",
+        icon: Truck,
+        permissions: ["deliveries.read"],
+      },
+      {
+        kind: "link",
+        to: "/catalog/products",
         label: "Catálogo",
         module: "catalog",
         icon: Boxes,
-        children: [
+        tabs: [
           {
             to: "/catalog/products",
             label: "Productos",
@@ -157,14 +173,6 @@ export const buildNavigationSections = ({
             allPermissions: ["products.read", "units.read"],
           },
         ],
-      },
-      {
-        kind: "link",
-        to: "/deliveries",
-        label: "Compromisos y entregas",
-        module: "deliveries",
-        icon: Truck,
-        permissions: ["deliveries.read"],
       },
     ],
   },
@@ -200,7 +208,7 @@ export const buildNavigationSections = ({
       {
         kind: "link",
         to: "/admin/users",
-        label: "Equipo",
+        label: "Usuarios",
         icon: UsersRound,
         permissions: ["users.read"],
       },
@@ -209,6 +217,8 @@ export const buildNavigationSections = ({
         id: "imports",
         label: "Importar datos",
         icon: FileUp,
+        // Reached from the "Importar" button of each listing.
+        hidden: true,
         children: [
           {
             to: "/customers/import",
@@ -273,6 +283,8 @@ export const buildNavigationSections = ({
         label: "Ayuda y soporte",
         icon: LifeBuoy,
         everyone: true,
+        // Offered from the profile menu.
+        hidden: true,
       },
     ],
   },
@@ -312,11 +324,14 @@ export function filterNavigation(
       ...section,
       entries: section.entries.flatMap<NavEntry>((entry) => {
         if (!moduleEnabled(entry, modules)) return [];
-        if (entry.kind === "link")
-          return isAllowed(entry, check) ? [entry] : [];
-        const children = entry.children.filter(
-          (child) => moduleEnabled(child, modules) && isAllowed(child, check),
-        );
+        const reachable = (child: NavChild) =>
+          moduleEnabled(child, modules) && isAllowed(child, check);
+        if (entry.kind === "link") {
+          if (!entry.tabs) return isAllowed(entry, check) ? [entry] : [];
+          const tabs = entry.tabs.filter(reachable);
+          return tabs.length ? [{ ...entry, to: tabs[0].to, tabs }] : [];
+        }
+        const children = entry.children.filter(reachable);
         return children.length ? [{ ...entry, children }] : [];
       }),
     }))
@@ -326,21 +341,41 @@ export function filterNavigation(
 export const matchesPath = (pathname: string, to: string) =>
   to === "/" ? pathname === "/" : pathname === to;
 
+/** Pages grouped under an entry: a group's submenu or a link's tabs. */
+export const subpagesOf = (entry: NavEntry): NavChild[] =>
+  entry.kind === "group" ? entry.children : (entry.tabs ?? []);
+
+/** Whether the entry represents the current page, directly or through one of its subpages. */
+export const entryContains = (entry: NavEntry, pathname: string) =>
+  (entry.kind === "link" && matchesPath(pathname, entry.to)) ||
+  subpagesOf(entry).some((child) => matchesPath(pathname, child.to));
+
 /** Finds the navigation entry that represents the current page, for the topbar breadcrumb. */
 export function findCurrentPage(sections: NavSection[], pathname: string) {
   for (const section of sections)
     for (const entry of section.entries) {
+      const child = subpagesOf(entry).find((item) =>
+        matchesPath(pathname, item.to),
+      );
+      if (child)
+        return { section: section.label, parent: entry.label, label: child.label };
       if (entry.kind === "link" && matchesPath(pathname, entry.to))
         return { section: section.label, parent: undefined, label: entry.label };
-      if (entry.kind === "group") {
-        const child = entry.children.find((item) =>
-          matchesPath(pathname, item.to),
-        );
-        if (child)
-          return { section: section.label, parent: entry.label, label: child.label };
-      }
     }
   return undefined;
+}
+
+/** Tabs to show in the header of the current page, when it belongs to a tabbed entry. */
+export function findPageTabs(sections: NavSection[], pathname: string) {
+  for (const section of sections)
+    for (const entry of section.entries)
+      if (
+        entry.kind === "link" &&
+        entry.tabs &&
+        entry.tabs.some((tab) => matchesPath(pathname, tab.to))
+      )
+        return entry.tabs.length > 1 ? entry.tabs : [];
+  return [];
 }
 
 /** Shortcuts for the mobile bottom bar, in priority order; the first four allowed are shown. */

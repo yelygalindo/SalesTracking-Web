@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Download, Mail, MapPin, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
+import { Download, Mail, MapPin, MoreVertical, Pencil, Phone, RefreshCw, Trash2, UserRound } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
 import { notify } from "@/components/feedback/toast";
 import { LocationViewer } from "@/components/maps/LocationViewer";
@@ -86,16 +86,6 @@ export function CustomerDetail({
           </div>
         </div>
         <div className="detail-actions">
-          {canReadDeliveries && (
-            <button
-              className="secondary-button"
-              disabled={deliveryArchive.isPending}
-              onClick={() => deliveryArchive.mutate()}
-            >
-              <Download />{" "}
-              {deliveryArchive.isPending ? "Preparando…" : "Comprobantes ZIP"}
-            </button>
-          )}
           {canUpdate && (
             <button
               className="secondary-button"
@@ -111,11 +101,33 @@ export function CustomerDetail({
               Editar
             </button>
           )}
-          {canDelete && (
-            <button className="danger-button" onClick={remove}>
-              <Trash2 />
-              Eliminar
-            </button>
+          {/* Rare or destructive actions stay out of reach of a misclick. */}
+          {(canReadDeliveries || canDelete) && (
+            <details className="row-actions-menu" name="customer-detail-actions">
+              <summary aria-label={`Más acciones para ${customer.name}`}>
+                <MoreVertical />
+              </summary>
+              <div role="menu">
+                {canReadDeliveries && (
+                  <button
+                    role="menuitem"
+                    disabled={deliveryArchive.isPending}
+                    onClick={() => deliveryArchive.mutate()}
+                  >
+                    <Download />
+                    {deliveryArchive.isPending
+                      ? "Preparando…"
+                      : "Descargar comprobantes (ZIP)"}
+                  </button>
+                )}
+                {canDelete && (
+                  <button role="menuitem" className="danger" onClick={remove}>
+                    <Trash2 />
+                    Eliminar
+                  </button>
+                )}
+              </div>
+            </details>
           )}
         </div>
       </header>
@@ -170,7 +182,10 @@ export function CustomerDetail({
               <dt>Dirección</dt>
               <dd>
                 <MapPin />
-                {customer.address || "Sin dirección registrada"}
+                {customer.address ||
+                  (customer.latitude != null && customer.longitude != null
+                    ? "Sin dirección escrita; la ubicación está marcada en el mapa"
+                    : "Sin dirección registrada")}
               </dd>
             </div>
           </dl>

@@ -1424,3 +1424,56 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Metric cards open the listing behind their number. */
+.metric-card-link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+.metric-card-link:hover {
+  border-color: var(--ut-border-strong);
+  box-shadow: var(--ut-shadow-md, 0 8px 22px rgb(15 23 42 / 8%));
+  transform: translateY(-1px);
+}
+.metric-card-link:focus-visible {
+  outline: 3px solid var(--ut-primary-soft);
+  outline-offset: 2px;
+}
+.metric-icon.danger {
+  color: #b42318;
+  background: #feeceb;
+}
+/* The sellers legend folds so it does not cover the map. */
+.dashboard-map-legend > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #344054;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+.dashboard-map-legend > summary::-webkit-details-marker {
+  display: none;
+}
+.dashboard-map-legend[open] > summary {
+  margin-bottom: 7px;
+}
+.dashboard-map-legend:not([open]) {
+  width: auto;
+}
+.dashboard-map-legend > summary svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 160ms ease;
+}
+.dashboard-map-legend[open] > summary svg {
+  transform: rotate(180deg);
+}

@@ -80,7 +80,8 @@ export function RemindersPage() {
   const [sellerId, setSellerId] = useState("");
   const [selected, setSelected] = useState<SellerReminder | null>(null);
   const [rescheduling, setRescheduling] = useState<SellerReminder | null>(null);
-  const [creating, setCreating] = useState(false);
+  // Day the new reminder starts on; "" opens the dialog without a date, null keeps it closed.
+  const [creating, setCreating] = useState<string | null>(null);
   const days = useMemo(() => monthDays(month), [month]);
   const filters = useMemo<ReminderFilters>(
     () => ({
@@ -157,7 +158,7 @@ export function RemindersPage() {
           canCreateReminder ? (
             <button
               className="action-primary"
-              onClick={() => setCreating(true)}
+              onClick={() => setCreating("")}
             >
               <Plus /> Programar recordatorio
             </button>
@@ -285,6 +286,17 @@ export function RemindersPage() {
                     {dayReminders.length > 0 && (
                       <span>{dayReminders.length}</span>
                     )}
+                    {canCreateReminder && key >= dateKey(now) && (
+                      <button
+                        type="button"
+                        className="reminder-day-add"
+                        aria-label={`Programar recordatorio el ${day.getDate()}`}
+                        title="Programar recordatorio este día"
+                        onClick={() => setCreating(key)}
+                      >
+                        <Plus />
+                      </button>
+                    )}
                   </header>
                   <div className="reminder-day-events">
                     {dayReminders.map((reminder) => {
@@ -405,11 +417,12 @@ export function RemindersPage() {
           }
         />
       )}
-      {creating && (
+      {creating !== null && (
         <CreateReminderDialog
-          onClose={() => setCreating(false)}
+          initialDate={creating}
+          onClose={() => setCreating(null)}
           onCreated={async () => {
-            setCreating(false);
+            setCreating(null);
             notify("Recordatorio programado correctamente.");
             await cache.invalidateQueries({ queryKey: ["reminders"] });
           }}
@@ -420,16 +433,19 @@ export function RemindersPage() {
 }
 
 function CreateReminderDialog({
+  initialDate,
   onClose,
   onCreated,
 }: {
+  /** Day picked in the calendar (YYYY-MM-DD), or "" when there is none. */
+  initialDate: string;
   onClose: () => void;
   onCreated: () => Promise<void>;
 }) {
   const [customerId, setCustomerId] = useState("");
   const [sellerId, setSellerId] = useState("");
   const [text, setText] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(initialDate ? `${initialDate}T09:00` : "");
   const customers = useQuery({
     queryKey: ["reminder-customers"],
     queryFn: () =>

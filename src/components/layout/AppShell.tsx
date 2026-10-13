@@ -1,7 +1,6 @@
 import {
   Suspense,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -27,15 +26,16 @@ import { useOperationTerms } from "@/features/operation-settings/hooks/useOperat
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   buildBottomNavCandidates,
-  buildNavigationSections,
-  filterNavigation,
+  entryContains,
   isAllowed,
   findCurrentPage,
+  findPageTabs,
   matchesPath,
   navigationSections,
   type NavGroupEntry,
   type ShellOutletContext,
 } from "@/components/layout/navigation";
+import { useNavigationSections } from "@/components/layout/useNavigationSections";
 
 const roleNames: Record<string, string> = {
   seller: "Personal de campo",
@@ -71,7 +71,7 @@ export function AppShell() {
     profileRef = useRef<HTMLDivElement>(null),
     location = useLocation(),
     terms = useOperationTerms(),
-    termSections = useMemo(() => buildNavigationSections(terms), [terms]);
+    sections = useNavigationSections();
 
   useEffect(() => {
     setOpen(false);
@@ -132,7 +132,6 @@ export function AppShell() {
   if (!user) return null;
 
   const access = { canAny, canAll, hasRole };
-  const sections = filterNavigation(termSections, access, terms.modules);
   const shortcuts = buildBottomNavCandidates(terms)
     .filter((entry) => isAllowed(entry, access))
     .slice(0, 4);
@@ -220,10 +219,12 @@ export function AppShell() {
           </button>
         </div>
         <nav>
-          {sections.map((section) => (
+          {sections.map((section) => {
+            const visibleEntries = section.entries.filter((entry) => !entry.hidden);
+            return visibleEntries.length > 0 && (
             <div className="nav-section" key={section.id}>
               {section.label && <p className="nav-label">{section.label}</p>}
-              {section.entries.map((entry) =>
+              {visibleEntries.map((entry) =>
                 entry.kind === "group" ? (
                   renderGroup(entry)
                 ) : (
@@ -231,6 +232,11 @@ export function AppShell() {
                     end
                     key={entry.to}
                     to={entry.to}
+                    className={({ isActive }) =>
+                      isActive || entryContains(entry, location.pathname)
+                        ? "active"
+                        : ""
+                    }
                     title={collapsed ? entry.label : undefined}
                   >
                     <entry.icon aria-hidden="true" />
@@ -239,7 +245,8 @@ export function AppShell() {
                 ),
               )}
             </div>
-          ))}
+            );
+          })}
         </nav>
         <div className="nav-footer">
           <span className="avatar" aria-hidden="true">
@@ -365,14 +372,27 @@ export function PageHeader({
   description?: string;
   action?: ReactNode;
 }) {
+  const { pathname } = useLocation();
+  const tabs = findPageTabs(useNavigationSections(), pathname);
   return (
-    <header className="shared-page-header">
-      <div>
-        {eyebrow && <p className="overline">{eyebrow}</p>}
-        <h1>{title}</h1>
-        {description && <p>{description}</p>}
-      </div>
-      {action}
-    </header>
+    <>
+      <header className={`shared-page-header${tabs.length ? " with-tabs" : ""}`}>
+        <div>
+          {eyebrow && <p className="overline">{eyebrow}</p>}
+          <h1>{title}</h1>
+          {description && <p>{description}</p>}
+        </div>
+        {action}
+      </header>
+      {tabs.length > 0 && (
+        <nav className="page-tabs" aria-label="Secciones de esta página">
+          {tabs.map((tab) => (
+            <NavLink end key={tab.to} to={tab.to}>
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
+    </>
   );
 }
