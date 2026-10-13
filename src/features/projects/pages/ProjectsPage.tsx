@@ -333,17 +333,38 @@ export function ProjectsPage() {
         aria-label={`Resumen de ${projectsName}`}
       >
         {[
-          { label: `Total ${projectsName}`, index: 0 },
+          { label: `Total ${projectsName}`, index: 0, name: "" },
           {
             label: `${project.plural} ${gendered(project.singular, "activos", "activas")}`,
             index: 1,
+            name: "Active",
           },
           {
             label: `${project.plural} ${gendered(project.singular, "completados", "completadas")}`,
             index: 2,
+            name: "Completed",
           },
-        ].map(({ label, index }) => (
-          <article key={label} className={index === 1 ? "accent" : ""}>
+        ].map(({ label, index, name }) => {
+          // The select filters by status id; the metrics are counted by status name.
+          const filter = name
+            ? String(
+                statuses.data?.find(
+                  (item) =>
+                  [name, translateValue(name)].some(
+                    (label) => label.toLowerCase() === item.label.toLowerCase(),
+                  ),
+                )?.value ?? name,
+              )
+            : "";
+          return (
+          <button
+            type="button"
+            key={label}
+            className={`metric-filter${index === 1 ? " accent" : ""}`}
+            aria-pressed={status === filter}
+            title={filter ? `Ver solo ${label.toLowerCase()}` : "Ver todos"}
+            onClick={() => updateFilters({ status: filter })}
+          >
             <span>{label}</span>
             <strong>
               {metrics[index].isLoading
@@ -354,8 +375,9 @@ export function ProjectsPage() {
                       metrics[index].data?.pagination.totalItems ?? 0
                     ).toLocaleString("es-BO")}
             </strong>
-          </article>
-        ))}
+          </button>
+          );
+        })}
       </section>
       <div className="customer-toolbar">
         <select
