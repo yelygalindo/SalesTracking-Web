@@ -567,3 +567,8 @@
     grid-auto-columns: minmax(230px, 85%);
   }
 }
+.productivity-chart-note {
+  margin: 12px 0 0;
+  color: var(--ut-text-muted);
+  font-size: 0.78rem;
+}

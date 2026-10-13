@@ -12,7 +12,6 @@ import {
   inSentence,
   type OperationTerms,
 } from "@/features/operation-settings/services/operationTerms";
-import { formatMoney } from "@/lib/i18n/money";
 import {
   reportApi,
   type SellerProductivity,
@@ -93,7 +92,9 @@ function Change({
   );
 }
 
-type ChartMetric = "visits" | "contactedCustomers" | "closedProjects" | "closedAmount";
+type ChartMetric = "visits" | "contactedCustomers" | "activeHours" | "workedDays";
+
+const hours = (value: number) => `${number.format(value)} h`;
 
 /** Metric names in the company's terminology ("Obras cerradas", "Clientes atendidos"…). */
 const metricLabels = ({ customer, project, visit }: OperationTerms["labels"]) => ({
@@ -103,7 +104,6 @@ const metricLabels = ({ customer, project, visit }: OperationTerms["labels"]) =>
   contacted: `${customer.plural} ${gendered(customer.singular, "atendidos", "atendidas")}`,
   newCustomers: `${customer.plural} ${gendered(customer.singular, "nuevos", "nuevas")}`,
   closedProjects: `${project.plural} ${gendered(project.singular, "cerrados", "cerradas")}`,
-  conversionHint: `${project.plural} ${gendered(project.singular, "cerrados", "cerradas")} por cada ${inSentence(customer.singular)} ${gendered(customer.singular, "atendido", "atendida")}`,
   projectsOf: `Ver sus ${inSentence(project.plural)}`,
 });
 
@@ -117,11 +117,11 @@ const chartMetricsFor = (
     label: labels.contacted,
     format: (value) => number.format(value),
   },
-  closedProjects: {
-    label: labels.closedProjects,
+  activeHours: { label: "Horas de jornada", format: hours },
+  workedDays: {
+    label: "Jornadas trabajadas",
     format: (value) => number.format(value),
   },
-  closedAmount: { label: "Monto cerrado", format: formatMoney },
 });
 
 export function SellerProductivityPage() {
@@ -235,27 +235,26 @@ export function SellerProductivityPage() {
               }
             />
             <Kpi
-              label="Conversión"
-              hint={labels.conversionHint}
-              value={percent(team.current.conversionRate)}
+              label="Horas de jornada"
+              hint="Tiempo total con la jornada iniciada en el celular"
+              value={hours(team.current.activeHours)}
               change={
                 <Change
-                  unit=" pp"
-                  value={pointChange(
-                    team.current.conversionRate,
-                    team.previous.conversionRate,
+                  value={percentChange(
+                    team.current.activeHours,
+                    team.previous.activeHours,
                   )}
                 />
               }
             />
             <Kpi
-              label="Monto cerrado"
-              value={formatMoney(team.current.closedAmount)}
+              label="Jornadas trabajadas"
+              value={number.format(team.current.workedDays)}
               change={
                 <Change
                   value={percentChange(
-                    team.current.closedAmount,
-                    team.previous.closedAmount,
+                    team.current.workedDays,
+                    team.previous.workedDays,
                   )}
                 />
               }
@@ -335,7 +334,10 @@ function SellerComparison({
   onMetricChange: (metric: ChartMetric) => void;
 }) {
   const { label, format } = metrics[metric];
-  const sorted = [...rows].sort((a, b) => b.current[metric] - a.current[metric]);
+  const sorted = rows
+    .filter((row) => row.current[metric] > 0)
+    .sort((a, b) => b.current[metric] - a.current[metric]);
+  const idle = rows.length - sorted.length;
   const max = Math.max(...sorted.map((row) => row.current[metric]), 0);
   return (
     <section className="productivity-chart" aria-labelledby="productivity-chart-title">
@@ -375,6 +377,18 @@ function SellerComparison({
           );
         })}
       </ul>
+      {!sorted.length ? (
+        <p className="productivity-chart-note">
+          Ningún responsable registró {inSentence(label)} en este período.
+        </p>
+      ) : (
+        idle > 0 && (
+          <p className="productivity-chart-note">
+            {idle} {idle === 1 ? "responsable" : "responsables"} sin{" "}
+            {inSentence(label)} en el período no se muestran.
+          </p>
+        )
+      )}
     </section>
   );
 }
@@ -387,7 +401,7 @@ const columnsFor = (labels: MetricLabels): Array<{
   lowerIsBetter?: boolean;
 }> => [
   { label: "Jornadas", key: "workedDays", format: number.format },
-  { label: "Horas activas", key: "activeHours", format: number.format },
+  { label: "Horas de jornada", key: "activeHours", format: hours },
   { label: labels.visits, key: "visits", format: number.format },
   {
     label: labels.visitsPerDay,
@@ -408,9 +422,7 @@ const columnsFor = (labels: MetricLabels): Array<{
     format: number.format,
     lowerIsBetter: true,
   },
-  { label: "Conversión", key: "conversionRate", format: percent, rate: true },
   { label: labels.closedProjects, key: "closedProjects", format: number.format },
-  { label: "Monto cerrado", key: "closedAmount", format: formatMoney },
 ];
 
 function SellerTable({
