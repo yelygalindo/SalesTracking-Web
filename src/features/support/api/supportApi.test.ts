@@ -46,4 +46,19 @@ describe("supportApi", () => {
 
     expect(JSON.parse(api.history.post[0].data).context).toBeUndefined();
   });
+
+  it("sube los adjuntos a la consulta ya registrada", async () => {
+    api.onPost("/api/support/requests/SOP-3/attachments").reply(200, {});
+
+    await supportApi.uploadAttachments("SOP-3", [
+      new File(["a"], "captura.png", { type: "image/png" }),
+      new File(["b"], "error.pdf", { type: "application/pdf" }),
+    ]);
+
+    const body = api.history.post[0].data as FormData;
+    expect(body.getAll("files").map((file) => (file as File).name)).toEqual([
+      "captura.png",
+      "error.pdf",
+    ]);
+  });
 });

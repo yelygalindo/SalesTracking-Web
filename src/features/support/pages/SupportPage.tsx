@@ -17,6 +17,7 @@ import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { translateValue } from "@/lib/i18n/labels";
 import { AppError } from "@/lib/api/apiError";
 import { supportApi } from "../api/supportApi";
+import { SupportAttachments } from "../components/SupportAttachments";
 import {
   buildSupportMail,
   describeBrowser,
@@ -47,7 +48,11 @@ export function SupportPage() {
     [includeContext, setIncludeContext] = useState(true),
     [touched, setTouched] = useState({ subject: false, message: false }),
     [opened, setOpened] = useState(false),
-    [sent, setSent] = useState<string | null>(null),
+    [sent, setSent] = useState<{
+      reference: string;
+      attachmentsFailed: number;
+    } | null>(null),
+    [files, setFiles] = useState<File[]>([]),
     // Same id while the message is retried, a new one once it was registered.
     [clientRequestId, setClientRequestId] = useState(() => crypto.randomUUID());
   const browser = describeBrowser(navigator.userAgent);
@@ -90,20 +95,30 @@ export function SupportPage() {
   };
 
   const send = useMutation({
-    mutationFn: () =>
-      supportApi.create({
+    mutationFn: async () => {
+      const { reference } = await supportApi.create({
         category,
         subject,
         message,
         includeTechnicalData: includeContext,
         context: { page: previousPage, browser },
         clientRequestId,
-      }),
-    onSuccess: ({ reference }) => {
-      setSent(reference);
+      });
+      // The request is already registered: a failed upload is reported, not thrown.
+      const attachmentsFailed = files.length
+        ? await supportApi
+            .uploadAttachments(reference, files)
+            .then(() => 0)
+            .catch(() => files.length)
+        : 0;
+      return { reference, attachmentsFailed };
+    },
+    onSuccess: (result) => {
+      setSent(result);
       setOpened(false);
       setSubject("");
       setMessage("");
+      setFiles([]);
       setTouched({ subject: false, message: false });
       setClientRequestId(crypto.randomUUID());
     },
@@ -199,6 +214,12 @@ export function SupportPage() {
             </span>
           </label>
 
+          <SupportAttachments
+            files={files}
+            onChange={setFiles}
+            disabled={send.isPending}
+          />
+
           <label className="support-check">
             <input
               type="checkbox"
@@ -224,8 +245,21 @@ export function SupportPage() {
               <CheckCircle2 aria-hidden="true" />
               <p>
                 Recibimos tu consulta. Tu número de referencia es{" "}
-                <strong>{sent}</strong>; te responderemos a{" "}
+                <strong>{sent.reference}</strong>; te responderemos a{" "}
                 <strong>{user?.email}</strong>.
+              </p>
+            </div>
+          )}
+          {sent && sent.attachmentsFailed > 0 && (
+            <div className="support-notice" role="alert">
+              <Paperclip aria-hidden="true" />
+              <p>
+                No pudimos subir{" "}
+                {sent.attachmentsFailed === 1
+                  ? "el archivo adjunto"
+                  : `los ${sent.attachmentsFailed} archivos adjuntos`}
+                . Envíalos a <strong>{supportEmail}</strong> mencionando la
+                referencia <strong>{sent.reference}</strong>.
               </p>
             </div>
           )}
@@ -234,7 +268,10 @@ export function SupportPage() {
               <CheckCircle2 aria-hidden="true" />
               <p>
                 Abrimos tu programa de correo con el mensaje listo: revísalo y
-                presiona <strong>Enviar</strong>. ¿No se abrió? Escríbenos a{" "}
+                presiona <strong>Enviar</strong>.
+                {files.length > 0 &&
+                  " Adjunta allí tus archivos: el correo no los lleva solo."}{" "}
+                ¿No se abrió? Escríbenos a{" "}
                 <strong>{supportEmail}</strong>.
               </p>
             </div>
@@ -295,8 +332,8 @@ export function SupportPage() {
               <li>Indica los pasos que seguiste antes del problema.</li>
               <li>Menciona el contacto, seguimiento o entrega involucrado.</li>
               <li>
-                <Paperclip aria-hidden="true" /> ¿Quieres adjuntar una captura?
-                Usa <strong>Usar mi correo</strong> y agrégala antes de enviarlo.
+                <Paperclip aria-hidden="true" /> Adjunta una captura de pantalla
+                de lo que ves: nos ahorra varias preguntas.
               </li>
             </ul>
           </section>

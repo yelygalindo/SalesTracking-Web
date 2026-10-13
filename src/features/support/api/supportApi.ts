@@ -27,4 +27,13 @@ export const supportApi = {
         context: input.includeTechnicalData ? context : undefined,
       })
     ).data,
+  /** Sent after the request exists, so a failed upload never loses the message. */
+  uploadAttachments: async (reference: string, files: File[]) => {
+    const form = new FormData();
+    files.forEach((file) => form.append("files", file));
+    await apiClient.post(
+      `/api/support/requests/${encodeURIComponent(reference)}/attachments`,
+      form,
+    );
+  },
 };
