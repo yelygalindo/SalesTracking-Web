@@ -23,7 +23,9 @@ const OperationsPage = lazyPage(() => import("@/features/operations/pages/Operat
 const OperationsDashboardPage = lazyPage(() => import("@/features/operations/pages/OperationsDashboardPage"), "OperationsDashboardPage");
 const DeliveriesPage = lazyPage(() => import("@/features/deliveries/pages/DeliveriesPage"), "DeliveriesPage");
 const ReportsPage = lazyPage(() => import("@/features/reports/pages/ReportsPageWithScope"), "ReportsPage");
-const AdminPage = lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
+const SellerProductivityPage = lazyPage(() => import("@/features/reports/pages/SellerProductivityPage"), "SellerProductivityPage");
+const ProjectPipelinePage = lazyPage(() => import("@/features/reports/pages/ProjectPipelinePage"), "ProjectPipelinePage");
+const AdminPage =lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
 const AcceptInvitationPage = lazyPage(() => import("@/features/admin/pages/AcceptInvitationPage"), "AcceptInvitationPage");
 const ActivityPage = lazyPage(() => import("@/features/activity/pages/ActivityPage"), "ActivityPage");
 const SupportPage = lazyPage(() => import("@/features/support/pages/SupportPage"), "SupportPage");
@@ -128,7 +130,14 @@ export const router = createBrowserRouter([
           },
           {
             element: <PermissionRoute permission="reports.read" />,
-            children: [{ path: "/reports/:type?", element: <ReportsPage /> }],
+            children: [
+              {
+                path: "/reports/productivity",
+                element: <SellerProductivityPage />,
+              },
+              { path: "/reports/pipeline", element: <ProjectPipelinePage /> },
+              { path: "/reports/:type?", element: <ReportsPage /> },
+            ],
           },
           {
             element: (

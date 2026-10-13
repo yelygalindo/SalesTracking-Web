@@ -103,6 +103,8 @@ export interface ProjectNote {
   content: string;
   createdBy: { name: string | null } | null;
   occurredAtUtc: string;
+  updatedBy?: { name: string | null } | null;
+  updatedAtUtc?: string | null;
 }
 export interface ProjectReminder {
   externalId: string;
