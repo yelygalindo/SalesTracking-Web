@@ -219,3 +219,37 @@
   background: var(--ut-sidebar);
   box-shadow: 0 3px 8px rgb(17 33 59 / 16%);
 }
+
+/* Reversible actions (deactivate…) warn in amber instead of the destructive red. */
+.confirm-dialog-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  place-items: center;
+  border-radius: 12px;
+  color: #b45309;
+  background: var(--ut-warning-soft);
+}
+.confirm-dialog-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.warning-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 11px;
+  color: white;
+  background: #d97706;
+  font-weight: 750;
+}
+.warning-button:hover:not(:disabled) {
+  background: #b45309;
+}
+.warning-button:disabled {
+  opacity: 0.65;
+}

@@ -62,3 +62,23 @@
   .support-actions { flex-direction:column-reverse; }
   .support-actions > * { width:100%; justify-content:center; }
 }
+
+/* Attachments */
+.support-attachments { display:grid; gap:8px; }
+.support-attachments-label { color:var(--ut-text-strong); font-size:.86rem; font-weight:600; }
+.support-dropzone { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1.5px dashed var(--ut-border-strong); border-radius:var(--ut-radius-md); color:var(--ut-text-secondary); background:var(--ut-surface-soft); transition:border-color .15s ease, background .15s ease; }
+.support-dropzone > svg { width:20px; height:20px; flex:none; color:var(--ut-text-muted); }
+.support-dropzone p { display:grid; gap:2px; margin:0; font-size:.86rem; }
+.support-dropzone small { color:var(--ut-text-muted); font-size:.76rem; }
+.support-dropzone button { padding:0; border:0; color:var(--ut-primary); background:none; font:inherit; font-weight:700; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+.support-dropzone.dragging { border-color:var(--ut-primary); background:var(--ut-primary-soft); }
+.support-dropzone.full { border-style:solid; }
+.support-attachment-list,.support-attachment-problems { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.support-attachment-list li { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:8px 8px 8px 12px; border:1px solid var(--ut-border); border-radius:10px; background:var(--ut-surface); font-size:.84rem; }
+.support-attachment-list li > svg { width:16px; height:16px; color:var(--ut-text-secondary); }
+.support-attachment-list span { overflow:hidden; color:var(--ut-text-strong); text-overflow:ellipsis; white-space:nowrap; }
+.support-attachment-list small { color:var(--ut-text-muted); font-size:.76rem; }
+.support-attachment-list button { display:grid; width:28px; height:28px; place-items:center; border:0; border-radius:7px; color:var(--ut-text-muted); background:none; }
+.support-attachment-list button:hover { color:var(--ut-error-text); background:var(--ut-error-soft); }
+.support-attachment-list button svg { width:15px; height:15px; }
+.support-attachment-problems li { color:var(--ut-error-text); font-size:.78rem; }

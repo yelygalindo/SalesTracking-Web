@@ -9,8 +9,10 @@ export function Brand({ inverse = false }: { inverse?: boolean }) {
         height="48"
       />
       <div className="brand-copy">
-        <span className="brand-name">UrbanTrack</span>
-        <small>CRM + operación en campo</small>
+        <span className="brand-name">
+          UrbanTrack<span className="brand-name-accent">CRM</span>
+        </span>
+        <small>Operaciones en campo</small>
       </div>
     </div>
   );
