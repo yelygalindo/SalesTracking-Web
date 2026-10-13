@@ -35,7 +35,6 @@
   justify-content: center;
   gap: 9px;
   color: var(--ut-sidebar);
-  text-transform: capitalize;
 }
 
 .reminder-month-navigation svg {

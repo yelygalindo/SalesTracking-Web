@@ -28,6 +28,7 @@ import type {
   CustomerCreateExtrasDto,
   CustomerDetailDto,
   CustomerInputDto,
+  CustomerSellerDto,
   CustomerSummaryDto,
 } from "@/features/customers/api/customerDtos";
 import { errorMessage } from "@/lib/api/errorMessage";
@@ -173,6 +174,10 @@ export function CustomersPage() {
     queryFn: customerService.sellers,
     enabled: canViewTeam,
   });
+  // The customer API sends the seller's username (sometimes an email); prefer the seller's display name.
+  const sellerName = (seller?: CustomerSellerDto | null) =>
+    sellers.data?.find((item) => item.externalId === seller?.externalId)
+      ?.displayName || seller?.name;
   const detail = useQuery({
     queryKey: ["customer", selected],
     queryFn: () => customerService.detail(selected!),
@@ -525,7 +530,7 @@ export function CustomersPage() {
                     </td>
                     {canViewTeam && (
                       <td className="result-col-tertiary" data-label="Responsable">
-                        {c.seller?.name || "Sin asignar"}
+                        {sellerName(c.seller) || "Sin asignar"}
                       </td>
                     )}
                     <td className="result-col-actions">
@@ -649,7 +654,13 @@ export function CustomersPage() {
             ) : (
               detail.data && (
                 <CustomerDetail
-                  customer={detail.data}
+                  customer={{
+                    ...detail.data,
+                    seller: {
+                      ...detail.data.seller,
+                      name: sellerName(detail.data.seller) ?? null,
+                    },
+                  }}
                   initialTab={quickTab}
                   statuses={crmStatuses}
                   canUpdate={canUpdate}
