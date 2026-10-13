@@ -59,6 +59,76 @@ export interface ReportPage {
   };
 }
 
+export interface SellerProductivityMetrics {
+  workedDays: number;
+  activeHours: number;
+  visits: number;
+  completedVisits: number;
+  contactedCustomers: number;
+  newCustomers: number;
+  completedReminders: number;
+  overdueReminders: number;
+  averageVisitsPerWorkedDay: number;
+  /** Percentage from 0 to 100. */
+  reminderComplianceRate: number;
+  /** Percentage from 0 to 100. */
+  conversionRate: number;
+  closedProjects: number;
+  closedAmount: number;
+}
+
+export interface SellerProductivity {
+  sellerExternalId: string;
+  sellerName: string;
+  current: SellerProductivityMetrics;
+  /** Same metrics for the period of equal length right before `from`. */
+  previous: SellerProductivityMetrics;
+  /** Missing when the previous value was zero. */
+  variationPercentage: Partial<Record<keyof SellerProductivityMetrics, number>>;
+}
+
+export interface ProjectReportItem {
+  projectExternalId: string;
+  name: string;
+  description?: string | null;
+  customerExternalId?: string | null;
+  customerName?: string | null;
+  sellerExternalId: string;
+  sellerName: string;
+  statusId: number;
+  statusName: string;
+  estimatedAmount?: number | null;
+  startDateUtc?: string | null;
+  expectedCloseDateUtc?: string | null;
+  actualCloseDateUtc?: string | null;
+  progressPercentage: number;
+  createdAtUtc: string;
+  updatedAtUtc?: string | null;
+}
+
+interface Paged<T> {
+  items: T[];
+  pagination: ReportPage["pagination"];
+}
+
+/** The API serves at most 100 rows per page, so analytic views read every page. */
+const getAllPages = async <T>(
+  path: string,
+  params: Record<string, unknown>,
+) => {
+  const pageSize = 100;
+  const read = async (page: number) =>
+    (await apiClient.get<Paged<T>>(path, { params: { ...params, page, pageSize } }))
+      .data;
+  const first = await read(1);
+  const rest = await Promise.all(
+    Array.from({ length: Math.max(0, first.pagination.totalPages - 1) }, (_, index) =>
+      read(index + 2),
+    ),
+  );
+  return [first, ...rest].flatMap((page) => page.items);
+};
+
 const endpoints: Record<ReportType, string> = {
   customers: "customers-pending-contact",
   deliveries: "deliveries",
@@ -114,6 +184,19 @@ const deliveryCsv = (rows: ReportRow[]) => {
 
 export const reportApi = {
   get: getReport,
+
+  /** `from` and `to` are calendar days (yyyy-mm-dd), both included. */
+  sellerProductivity: (filters: { from: string; to: string; sellerId?: string }) =>
+    getAllPages<SellerProductivity>("/api/reports/seller-productivity", {
+      from: filters.from,
+      to: filters.to,
+      sellerExternalId: filters.sellerId || undefined,
+    }),
+
+  projects: (filters: { sellerId?: string }) =>
+    getAllPages<ProjectReportItem>("/api/reports/projects", {
+      sellerExternalId: filters.sellerId || undefined,
+    }),
 
   exportDeliveries: async (filters: ReportFilters) => {
     try {

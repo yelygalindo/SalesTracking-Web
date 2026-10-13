@@ -167,6 +167,19 @@ export const projectApi = {
         clientRequestId: crypto.randomUUID(),
       })
     ).data,
+  updateNote: async (id: string, noteId: string, content: string) =>
+    (
+      await apiClient.put<MessageResponse>(
+        `/api/projects/${id}/notes/${noteId}`,
+        { content, clientRequestId: crypto.randomUUID() },
+      )
+    ).data,
+  deleteNote: async (id: string, noteId: string) =>
+    (
+      await apiClient.delete<MessageResponse>(
+        `/api/projects/${id}/notes/${noteId}`,
+      )
+    ).data,
   reminders: async (id: string) =>
     (await apiClient.get<ProjectReminder[]>(`/api/projects/${id}/reminders`))
       .data,

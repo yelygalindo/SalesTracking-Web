@@ -20,6 +20,7 @@ import type {
 import { projectService } from "../services/projectService";
 import { ProjectProducts } from "./ProjectProducts";
 import { ProjectAttachments } from "./ProjectAttachments";
+import { ProjectNotes } from "./ProjectNotes";
 import { formatMoney } from "@/lib/i18n/money";
 
 type MainTab = "summary" | "activity" | "attachments" | "products";
@@ -386,7 +387,10 @@ function ProjectActivity({
       onSuccess: async () => {
         setText("");
         setAction(null);
-        await cache.invalidateQueries({ queryKey: ["project-timeline", id] });
+        await Promise.all([
+          cache.invalidateQueries({ queryKey: ["project-timeline", id] }),
+          cache.invalidateQueries({ queryKey: ["project-notes", id] }),
+        ]);
       },
     }),
     addReminder = useMutation({
@@ -466,6 +470,11 @@ function ProjectActivity({
           </button>
         </form>
       )}
+      {filter === "notes" ? (
+        <div className="project-timeline">
+          <ProjectNotes projectId={id} canUpdate={canUpdate} />
+        </div>
+      ) : (
       <div className="project-timeline">
         {items.map((item) => {
           const info = activityInfo(item);
@@ -497,6 +506,7 @@ function ProjectActivity({
           <p className="form-error">No fue posible cargar la actividad.</p>
         )}
       </div>
+      )}
     </section>
   );
 }

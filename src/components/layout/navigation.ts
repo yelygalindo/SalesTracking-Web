@@ -19,6 +19,7 @@ import {
 import type { OperationModules } from "@/features/operation-settings/api/operationSettingsApi";
 import {
   defaultOperationTerms,
+  inSentence,
   type OperationTerms,
 } from "@/features/operation-settings/services/operationTerms";
 
@@ -186,6 +187,16 @@ export const buildNavigationSections = ({
         label: "Reportes",
         icon: BarChart3,
         children: [
+          {
+            to: "/reports/productivity",
+            label: "Productividad",
+            permissions: ["reports.read"],
+          },
+          {
+            to: "/reports/pipeline",
+            label: `Embudo de ${inSentence(project.plural)}`,
+            permissions: ["reports.read"],
+          },
           {
             to: "/reports/customers",
             label: customer.plural,
