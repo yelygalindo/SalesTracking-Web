@@ -30,7 +30,7 @@ import {
   localDayKey,
   localDayStartUtc,
 } from "@/lib/i18n/dateTime";
-import { operationsApi } from "../api/operationsApi";
+import { operationsApi, type TrackingHealth } from "../api/operationsApi";
 import {
   buildOperationsDashboard,
   type OperationsWorker,
@@ -494,6 +494,28 @@ function OperationMetric({
   );
 }
 
+/** Shows the last diagnostic the seller's phone sent about location tracking. */
+function TrackingHealthBadge({ health }: { health?: TrackingHealth | null }) {
+  if (!health) return <span className="tracking-health unknown">Celular sin reportes</span>;
+  const detail = [
+    health.message || "Sin detalle",
+    `Ocurrió: ${formatDateTime(health.occurredAtUtc)}`,
+    `Recibido: ${formatDateTime(health.receivedAtUtc)}`,
+    health.installationId ? `Dispositivo: ${health.installationId}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <span
+      className={`tracking-health ${health.isError ? "error" : "ok"}`}
+      title={detail}
+      aria-label={`${health.isError ? "Error en el celular" : "Celular correcto"}. ${detail}`}
+    >
+      {health.isError ? "Error en el celular" : "Celular correcto"}
+    </span>
+  );
+}
+
 function WorkerRow({ worker }: { worker: OperationsWorker }) {
   const initials = workerInitials(worker.sellerName);
   return (
@@ -503,6 +525,7 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       <span className="operations-worker-avatar">{initials}</span>
       <div className="operations-worker-name">
         <strong>{worker.sellerName}</strong>
+        <TrackingHealthBadge health={worker.trackingHealth} />
         <small>
           {worker.currentVisitName
             ? `En ${worker.currentVisitName}${worker.currentVisitStartedAtUtc ? ` · desde ${formatTime(worker.currentVisitStartedAtUtc)}` : ""}`
