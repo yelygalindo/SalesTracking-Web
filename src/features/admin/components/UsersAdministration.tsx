@@ -195,7 +195,7 @@ export function UsersAdministration() {
                               <div role="menu">
                                 {item.isActive ? (
                                   <button
-                                    className="danger"
+                                    className="warning"
                                     onClick={(event) => {
                                       closeMenu(event.currentTarget);
                                       setDeactivating(item);
@@ -239,6 +239,7 @@ export function UsersAdministration() {
         title="Desactivar usuario"
         description={`${deactivating?.fullName ?? "Este usuario"} ya no podrá iniciar sesión en la web ni en el celular. Puedes volver a activarlo cuando quieras.`}
         confirmLabel="Desactivar"
+        tone="warning"
         busy={status.isPending}
         onConfirm={() => deactivating && status.mutate(deactivating)}
         onCancel={() => setDeactivating(null)}

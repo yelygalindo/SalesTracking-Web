@@ -1051,3 +1051,83 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* Location picker: the map only takes the wheel and panning after "Ajustar mapa". */
+.location-map {
+  position: relative;
+}
+.location-map-toggle {
+  position: absolute;
+  z-index: 1000;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--ut-border-strong);
+  border-radius: 9px;
+  color: var(--ut-text-strong);
+  background: var(--ut-surface);
+  box-shadow: var(--ut-shadow-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.location-map-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+.location-map-toggle:hover {
+  border-color: var(--ut-primary);
+  color: var(--ut-primary);
+}
+.location-map.adjusting .location-map-toggle {
+  border-color: var(--ut-primary);
+  color: white;
+  background: var(--ut-primary);
+}
+.location-map.adjusting .leaflet-container {
+  outline: 2px solid var(--ut-primary);
+  outline-offset: -2px;
+}
+.row-actions-menu > div button.warning {
+  color: #b45309;
+}
+.row-actions-menu > div button.warning:hover {
+  color: #92400e;
+  background: var(--ut-warning-soft);
+}
+
+/* Action cells never clip their buttons; each listing sizes the column to its actions. */
+.search-results-table td.result-col-actions {
+  overflow: visible;
+}
+.customers-results-table .result-col-primary {
+  width: 24%;
+}
+.customers-results-table .result-col-secondary {
+  width: 15%;
+}
+.customers-results-table .result-col-tertiary {
+  width: 14%;
+}
+.customers-results-table .result-col-actions {
+  width: 262px;
+}
+/* Eight columns: fixed widths only where needed, the rest share the remaining space. */
+.projects-results-table .result-col-primary {
+  width: 24%;
+}
+.projects-results-table .result-col-secondary,
+.projects-results-table .result-col-tertiary {
+  width: auto;
+}
+.projects-results-table .result-col-actions {
+  width: 150px;
+}
+@media (max-width: 760px) {
+  .customers-results-table .result-col-actions {
+    width: 220px;
+  }
+}
