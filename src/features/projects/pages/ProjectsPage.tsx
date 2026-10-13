@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
 import {
@@ -85,11 +86,20 @@ export function ProjectsPage() {
   const filters = useUrlFilters(["status", "seller"] as const),
     { status, seller: sellerId } = filters.values,
     { page, setPage, update: updateFilters } = filters;
-  const [selected, setSelected] = useState<string | null>(null),
+  const [params] = useSearchParams(),
+    linked = params.get("selected");
+  const [selected, setSelected] = useState<string | null>(linked),
     [editing, setEditing] = useState(false),
     [creating, setCreating] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
     [form, setForm] = useState(empty);
+  // Links from reports, the dashboard or the search open the project with ?selected.
+  useEffect(() => {
+    if (!linked) return;
+    setCreating(false);
+    setEditing(false);
+    setSelected(linked);
+  }, [linked]);
   const list = useQuery({
       queryKey: ["projects", status, sellerId, page],
       queryFn: () =>
