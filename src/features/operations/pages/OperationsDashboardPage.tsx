@@ -30,7 +30,7 @@ import {
   localDayKey,
   localDayStartUtc,
 } from "@/lib/i18n/dateTime";
-import { operationsApi, type TrackingHealth } from "../api/operationsApi";
+import { operationsApi } from "../api/operationsApi";
 import {
   buildOperationsDashboard,
   type OperationsWorker,
@@ -44,6 +44,11 @@ const statusLabels: Record<WorkerOperationStatus, string> = {
   finished: "Jornada finalizada",
   "not-started": "Sin actividad en vivo",
 };
+// Times from a previous day need their date, or an old workday looks like today's.
+const formatTimeOrDate = (value: string) =>
+  localDayKey(value) === localDayKey(new Date())
+    ? formatTime(value)
+    : formatDateTime(value);
 const workerInitials = (name: string) =>
   name
     .split(/\s+/)
@@ -425,7 +430,7 @@ export function OperationsDashboardPage() {
                     <header>
                       <div>
                         <h2>Incidencias</h2>
-                        <p>Jornadas sin ubicación o con señal atrasada.</p>
+                        <p>Jornadas sin cerrar, sin ubicación o con señal atrasada.</p>
                       </div>
                       <TriangleAlert />
                     </header>
@@ -495,8 +500,13 @@ function OperationMetric({
 }
 
 /** Shows the last diagnostic the seller's phone sent about location tracking. */
-function TrackingHealthBadge({ health }: { health?: TrackingHealth | null }) {
-  if (!health) return <span className="tracking-health unknown">Celular sin reportes</span>;
+function TrackingHealthBadge({ worker }: { worker: OperationsWorker }) {
+  const health = worker.trackingHealth;
+  if (!health)
+    // Locations arriving on time already prove the phone works; only flag the gap when tracking fails.
+    return worker.status === "working" && worker.incident ? (
+      <span className="tracking-health unknown">Celular sin reportes</span>
+    ) : null;
   const detail = [
     health.message || "Sin detalle",
     `Ocurrió: ${formatDateTime(health.occurredAtUtc)}`,
@@ -525,7 +535,7 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       <span className="operations-worker-avatar">{initials}</span>
       <div className="operations-worker-name">
         <strong>{worker.sellerName}</strong>
-        <TrackingHealthBadge health={worker.trackingHealth} />
+        <TrackingHealthBadge worker={worker} />
         <small>
           {worker.currentVisitName
             ? `En ${worker.currentVisitName}${worker.currentVisitStartedAtUtc ? ` · desde ${formatTime(worker.currentVisitStartedAtUtc)}` : ""}`
@@ -538,14 +548,14 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
       <div className="operations-worker-fact">
         <small>Inicio</small>
         <strong>
-          {worker.startedAtUtc ? formatTime(worker.startedAtUtc) : "—"}
+          {worker.startedAtUtc ? formatTimeOrDate(worker.startedAtUtc) : "—"}
         </strong>
       </div>
       <div className="operations-worker-fact">
         <small>Última señal</small>
         <strong>
           {worker.lastLocationAtUtc
-            ? formatTime(worker.lastLocationAtUtc)
+            ? formatTimeOrDate(worker.lastLocationAtUtc)
             : "—"}
         </strong>
       </div>

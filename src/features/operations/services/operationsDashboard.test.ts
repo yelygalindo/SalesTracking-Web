@@ -120,6 +120,30 @@ describe("buildOperationsDashboard", () => {
     expect(result.workers[0].incident).toBe("Sin señal hace 75 min");
   });
 
+  it("marca como incidencia una jornada abierta desde un día anterior", () => {
+    const active: ActiveSeller[] = [
+      {
+        sellerExternalId: "seller-1",
+        hasOpenWorkday: true,
+        sellerName: "Ana Pérez",
+        startedAtUtc: "2026-09-05T16:33:00Z",
+      },
+    ];
+
+    const result = buildOperationsDashboard(
+      sellers,
+      active,
+      [],
+      [],
+      new Date("2026-10-13T18:00:00Z"),
+    );
+
+    const ana = result.workers.find((worker) => worker.sellerExternalId === "seller-1");
+    expect(ana?.status).toBe("working");
+    expect(ana?.incident).toMatch(/^Jornada sin cerrar desde el /);
+    expect(result.metrics.incidents).toBe(1);
+  });
+
   it("marca como incidencia el error de seguimiento que reportó el celular", () => {
     const active: ActiveSeller[] = [
       {

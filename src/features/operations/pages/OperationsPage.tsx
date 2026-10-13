@@ -46,7 +46,7 @@ const duration = (start?: string | null, end?: string | null) => {
 const statusLabel = (status?: string) =>
   ({
     open: "Activa",
-    active: "Activo",
+    active: "Activa",
     closed: "Finalizada",
     completed: "Finalizada",
   })[status?.toLowerCase() ?? ""] ??
@@ -116,6 +116,14 @@ export function OperationsPage() {
   const selectedSellerName = sellers.data?.find(
     (seller) => seller.externalId === sellerId,
   )?.displayName;
+  // Workdays may arrive without the seller's name; the query is always for one seller.
+  const workdaySellerName = (item: Workday) =>
+    item.sellerName ||
+    sellers.data?.find((seller) => seller.externalId === item.sellerExternalId)
+      ?.displayName ||
+    selectedSellerName ||
+    (canChooseSeller ? undefined : user?.fullName) ||
+    "Sin nombre";
   if (!section) return <Navigate replace to="/operations/active" />;
   if (
     !(["active", "history"] as const).includes(section as "active" | "history")
@@ -134,9 +142,13 @@ export function OperationsPage() {
   return (
     <main className="customers-content operations-page">
       <PageHeader
-        eyebrow={visit.plural}
+        eyebrow={tab === "active" ? "Monitoreo en vivo" : "Operación"}
         title={tab === "active" ? `${visit.plural} en curso` : "Recorridos y jornadas"}
-        description="Consulta lugares, responsables, fechas y el seguimiento registrado en cada jornada."
+        description={
+          tab === "active"
+            ? `Quién tiene una jornada abierta ahora, dónde estuvo por última vez y qué ${inSentence(visit.singular)} atiende.`
+            : "Consulta las jornadas de cada responsable por fechas: duración, recorrido y lo registrado en cada una."
+        }
       />
       {!canChooseSeller && (
         <p className="assignment-note">
@@ -149,7 +161,7 @@ export function OperationsPage() {
             <header>
               <div>
                 <h2>Actividad en curso</h2>
-                <p>Últimas coordenadas recibidas, sin posiciones simuladas.</p>
+                <p>Última posición real que envió el celular de cada responsable.</p>
               </div>
               <MapPin />
             </header>
@@ -302,7 +314,7 @@ export function OperationsPage() {
                     {history.data?.map((item) => (
                       <tr key={item.id}>
                         <td>
-                          <strong>{item.sellerName || "Responsable"}</strong>
+                          <strong>{workdaySellerName(item)}</strong>
                         </td>
                         <td>{dateTime(item.startedAtUtc)}</td>
                         <td>{dateTime(item.endedAtUtc)}</td>

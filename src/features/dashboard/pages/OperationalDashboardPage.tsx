@@ -43,13 +43,26 @@ const formatDateTime = (value: string) => {
     time: formatTime(date),
   };
 };
+const greeting = () => {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone: getDisplayTimeZone(),
+    }).format(new Date()),
+  );
+  if (hour >= 5 && hour < 12) return "Buenos días";
+  if (hour >= 12 && hour < 19) return "Buenas tardes";
+  return "Buenas noches";
+};
 const metricDefinitions: Array<{
   key: keyof DashboardMetrics;
   label: string;
   Icon: LucideIcon;
 }> = [
   { key: "activeCustomers", label: "Contactos activos", Icon: Users },
-  { key: "activeProjects", label: "Seguimientos activos", Icon: Building2 },
+  // Counts every project not closed yet, not only the "Activo" status.
+  { key: "activeProjects", label: "Seguimientos abiertos", Icon: Building2 },
   {
     key: "pendingDeliveries",
     label: "Entregas pendientes",
@@ -99,7 +112,7 @@ export function DashboardPage() {
     <main className="dashboard-content">
       <PageHeader
         eyebrow="Resumen de actividad"
-        title={`Buenos días, ${user?.fullName.split(" ")[0] || "equipo"}`}
+        title={`${greeting()}, ${user?.fullName.split(" ")[0] || "equipo"}`}
         description="Resumen actualizado del trabajo del equipo."
       />
       <DataState
@@ -378,7 +391,13 @@ function FollowUpsPanel({
   return (
     <article className="activity-card dashboard-panel">
       <SectionHeader
-        title="Próximos seguimientos"
+        title={
+          data.upcomingFollowUps.some(
+            (item) => new Date(item.reminderAtUtc) < new Date(),
+          )
+            ? "Seguimientos pendientes"
+            : "Próximos seguimientos"
+        }
         to={permissions.customers ? "/reminders" : undefined}
         label="Ver todos"
       />
@@ -386,9 +405,13 @@ function FollowUpsPanel({
         <div className="dashboard-list">
           {data.upcomingFollowUps.slice(0, 4).map((item) => {
             const reminder = formatDateTime(item.reminderAtUtc);
+            // The API also returns pending reminders whose date already passed.
+            const isOverdue = new Date(item.reminderAtUtc) < new Date();
             const content = (
               <>
-                <span className="list-icon warning">
+                <span
+                  className={`list-icon ${isOverdue ? "danger" : "warning"}`}
+                >
                   <CalendarClock />
                 </span>
                 <div>
@@ -399,6 +422,7 @@ function FollowUpsPanel({
                     {reminder.day} · <span>{reminder.time}</span>
                   </time>
                 </div>
+                {isOverdue && <em className="overdue">Vencido</em>}
               </>
             );
             return permissions.customers ? (

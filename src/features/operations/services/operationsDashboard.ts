@@ -5,6 +5,7 @@ import type {
   TrackingHealth,
   Workday,
 } from "../api/operationsApi";
+import { formatDate, localDayKey } from "@/lib/i18n/dateTime";
 
 export type WorkerOperationStatus = "working" | "finished" | "not-started";
 
@@ -132,9 +133,17 @@ export function buildOperationsDashboard(
       const lastLocationAtUtc =
         active?.lastUpdatedAtUtc ?? lastLocation?.capturedAtUtc ?? null;
       const trackingHealth = healthBySeller.get(seller.externalId) ?? null;
+      const startedAtUtc = active?.startedAtUtc || workday?.startedAtUtc;
       let incident: string | undefined;
 
-      if (isWorking && !lastLocation) incident = "Sin ubicación reportada";
+      // A workday left open since a previous day explains any missing signal.
+      if (
+        isWorking &&
+        startedAtUtc &&
+        localDayKey(startedAtUtc) < localDayKey(now)
+      )
+        incident = `Jornada sin cerrar desde el ${formatDate(startedAtUtc)}`;
+      else if (isWorking && !lastLocation) incident = "Sin ubicación reportada";
       else if (isWorking && lastLocationAtUtc) {
         const elapsed = now.getTime() - new Date(lastLocationAtUtc).getTime();
         if (elapsed > staleAfterMilliseconds) {
@@ -162,7 +171,7 @@ export function buildOperationsDashboard(
                 locationCount: active.lastLocation ? 1 : 0,
               }
             : undefined),
-        startedAtUtc: active?.startedAtUtc ?? workday?.startedAtUtc,
+        startedAtUtc,
         endedAtUtc: workday?.endedAtUtc,
         lastLocationAtUtc,
         latitude: lastLocation?.latitude,

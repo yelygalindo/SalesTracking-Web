@@ -179,7 +179,9 @@ export function RemindersPage() {
           </button>
           <div>
             <CalendarDays />
-            <strong>{monthLabel(month)}</strong>
+            <strong>
+              {monthLabel(month).replace(/^./, (letter) => letter.toUpperCase())}
+            </strong>
           </div>
           <button
             type="button"
@@ -235,14 +237,18 @@ export function RemindersPage() {
       >
         <span>
           <CalendarClock />
-          <strong>{pendingCount}</strong> pendientes
+          <strong>{pendingCount}</strong>{" "}
+          {pendingCount === 1 ? "pendiente" : "pendientes"}
         </span>
         <span className={overdueCount ? "overdue" : ""}>
           <Clock3 />
-          <strong>{overdueCount}</strong> vencidos
+          <strong>{overdueCount}</strong>{" "}
+          {overdueCount === 1 ? "vencido" : "vencidos"}
         </span>
         <small>
-          {monthReminders.length} recordatorios en {monthLabel(month)}
+          {monthReminders.length}{" "}
+          {monthReminders.length === 1 ? "recordatorio" : "recordatorios"} en{" "}
+          {monthLabel(month)}
         </small>
       </section>
 
