@@ -1,7 +1,7 @@
 export const supportCategories = [
   { value: "technical", label: "Problema técnico" },
   { value: "usage", label: "Duda de uso" },
-  { value: "access", label: "Cuenta y accesos" },
+  { value: "account", label: "Cuenta y accesos" },
   { value: "suggestion", label: "Sugerencia" },
 ] as const;
 

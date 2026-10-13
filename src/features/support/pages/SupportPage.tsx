@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
   CheckCircle2,
   ClipboardCopy,
-  Info,
   LifeBuoy,
   Mail,
   Paperclip,
@@ -15,13 +15,14 @@ import { notify } from "@/components/feedback/toast";
 import { env } from "@/config/env";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { translateValue } from "@/lib/i18n/labels";
+import { AppError } from "@/lib/api/apiError";
+import { supportApi } from "../api/supportApi";
 import {
   buildSupportMail,
   describeBrowser,
   maxMessageLength,
   supportCategories,
   supportMailHref,
-  supportMailText,
   type SupportCategory,
 } from "../services/supportMail";
 
@@ -45,7 +46,11 @@ export function SupportPage() {
     [message, setMessage] = useState(""),
     [includeContext, setIncludeContext] = useState(true),
     [touched, setTouched] = useState({ subject: false, message: false }),
-    [opened, setOpened] = useState(false);
+    [opened, setOpened] = useState(false),
+    [sent, setSent] = useState<string | null>(null),
+    // Same id while the message is retried, a new one once it was registered.
+    [clientRequestId, setClientRequestId] = useState(() => crypto.randomUUID());
+  const browser = describeBrowser(navigator.userAgent);
 
   const errors = {
     subject: subject.trim() ? null : "Escribe un asunto breve.",
@@ -66,7 +71,7 @@ export function SupportPage() {
             company: user.company.name,
             roles: user.roles.map((role) => translateValue(role)),
             page: previousPage,
-            browser: describeBrowser(navigator.userAgent),
+            browser,
             sentAt: new Date().toLocaleString("es-BO"),
           }
         : undefined,
@@ -77,24 +82,42 @@ export function SupportPage() {
     return !errors.subject && !errors.message;
   };
 
-  const openMail = (event: FormEvent) => {
-    event.preventDefault();
+  const openMail = () => {
     if (!supportEmail || !validate()) return;
     window.location.href = supportMailHref(supportEmail, mail);
+    setSent(null);
     setOpened(true);
   };
 
-  const copyMail = async () => {
-    if (!validate()) return;
-    const copied = await copyText(
-      supportMailText(supportEmail ?? "(correo de soporte)", mail),
-    );
-    notify(
-      copied
-        ? "Mensaje copiado. Pégalo en un correo nuevo y envíalo."
-        : "No pudimos copiar el mensaje. Selecciónalo y cópialo manualmente.",
-      copied ? "success" : "error",
-    );
+  const send = useMutation({
+    mutationFn: () =>
+      supportApi.create({
+        category,
+        subject,
+        message,
+        includeTechnicalData: includeContext,
+        context: { page: previousPage, browser },
+        clientRequestId,
+      }),
+    onSuccess: ({ reference }) => {
+      setSent(reference);
+      setOpened(false);
+      setSubject("");
+      setMessage("");
+      setTouched({ subject: false, message: false });
+      setClientRequestId(crypto.randomUUID());
+    },
+    onError: (error: Error) => {
+      // Servers without the support endpoint yet: fall back to the mail client.
+      if (error instanceof AppError && error.code === "notFound" && supportEmail)
+        return openMail();
+      notify(error.message, "error");
+    },
+  });
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (validate()) send.mutate();
   };
 
   const copyAddress = async () => {
@@ -114,10 +137,10 @@ export function SupportPage() {
       <PageHeader
         eyebrow="Ayuda"
         title="Ayuda y soporte"
-        description="Cuéntanos qué necesitas y prepararemos el correo para el equipo de soporte con los datos que nos ayudan a responderte más rápido."
+        description="Cuéntanos qué necesitas y el equipo de soporte te responderá a tu correo."
       />
       <div className="support-layout">
-        <form className="support-card support-form" onSubmit={openMail} noValidate>
+        <form className="support-card support-form" onSubmit={submit} noValidate>
           <fieldset className="support-categories">
             <legend>Tipo de consulta</legend>
             {supportCategories.map((item) => (
@@ -141,7 +164,7 @@ export function SupportPage() {
             Asunto *
             <input
               value={subject}
-              maxLength={120}
+              maxLength={150}
               placeholder="Ej.: No puedo registrar una visita"
               onChange={(event) => setSubject(event.target.value)}
               onBlur={() => setTouched((value) => ({ ...value, subject: true }))}
@@ -191,47 +214,49 @@ export function SupportPage() {
           </label>
           {includeContext && (
             <details className="support-preview">
-              <summary>Ver el correo que se enviará</summary>
+              <summary>Ver lo que recibirá soporte</summary>
               <pre>{mail.body || "Escribe tu mensaje para ver la vista previa."}</pre>
             </details>
           )}
 
+          {sent && (
+            <div className="support-notice success" role="status">
+              <CheckCircle2 aria-hidden="true" />
+              <p>
+                Recibimos tu consulta. Tu número de referencia es{" "}
+                <strong>{sent}</strong>; te responderemos a{" "}
+                <strong>{user?.email}</strong>.
+              </p>
+            </div>
+          )}
           {opened && (
             <div className="support-notice success" role="status">
               <CheckCircle2 aria-hidden="true" />
               <p>
                 Abrimos tu programa de correo con el mensaje listo: revísalo y
-                presiona <strong>Enviar</strong>. ¿No se abrió? Usa{" "}
-                <strong>Copiar mensaje</strong> y envíalo desde tu correo web a{" "}
+                presiona <strong>Enviar</strong>. ¿No se abrió? Escríbenos a{" "}
                 <strong>{supportEmail}</strong>.
-              </p>
-            </div>
-          )}
-          {!supportEmail && (
-            <div className="support-notice" role="note">
-              <Info aria-hidden="true" />
-              <p>
-                El correo de soporte aún no está configurado en esta instalación.
-                Puedes copiar el mensaje y enviarlo al responsable de UrbanTrack
-                en tu empresa.
               </p>
             </div>
           )}
 
           <footer className="support-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => void copyMail()}
-            >
-              <ClipboardCopy aria-hidden="true" /> Copiar mensaje
-            </button>
+            {supportEmail && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={openMail}
+              >
+                <Mail aria-hidden="true" /> Usar mi correo
+              </button>
+            )}
             <button
               type="submit"
               className="action-primary"
-              disabled={!supportEmail}
+              disabled={send.isPending}
             >
-              <Send aria-hidden="true" /> Abrir mi correo
+              <Send aria-hidden="true" />
+              {send.isPending ? "Enviando…" : "Enviar consulta"}
             </button>
           </footer>
         </form>
@@ -270,8 +295,8 @@ export function SupportPage() {
               <li>Indica los pasos que seguiste antes del problema.</li>
               <li>Menciona el contacto, seguimiento o entrega involucrado.</li>
               <li>
-                <Paperclip aria-hidden="true" /> Adjunta una captura de pantalla
-                en tu correo antes de enviarlo.
+                <Paperclip aria-hidden="true" /> ¿Quieres adjuntar una captura?
+                Usa <strong>Usar mi correo</strong> y agrégala antes de enviarlo.
               </li>
             </ul>
           </section>
