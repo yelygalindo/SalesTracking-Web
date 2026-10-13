@@ -5,7 +5,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
+import { ArrowLeft, Eye, FileSpreadsheet, Plus, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
 import {
@@ -30,6 +31,7 @@ import { exportExcel } from "@/lib/export/exportExcel";
 import { ProjectDetailView } from "../components/ProjectDetailView";
 import { projectService } from "../services/projectService";
 import { ImportLink } from "@/components/imports/ImportLink";
+import { PageTabs } from "@/components/layout/AppShell";
 import { formatMoney } from "@/lib/i18n/money";
 import type {
   ProjectDetail,
@@ -85,11 +87,20 @@ export function ProjectsPage() {
   const filters = useUrlFilters(["status", "seller"] as const),
     { status, seller: sellerId } = filters.values,
     { page, setPage, update: updateFilters } = filters;
-  const [selected, setSelected] = useState<string | null>(null),
+  const [params] = useSearchParams(),
+    linked = params.get("selected");
+  const [selected, setSelected] = useState<string | null>(linked),
     [editing, setEditing] = useState(false),
     [creating, setCreating] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
     [form, setForm] = useState(empty);
+  // Links from reports, the dashboard or the search open the project with ?selected.
+  useEffect(() => {
+    if (!linked) return;
+    setCreating(false);
+    setEditing(false);
+    setSelected(linked);
+  }, [linked]);
   const list = useQuery({
       queryKey: ["projects", status, sellerId, page],
       queryFn: () =>
@@ -316,6 +327,7 @@ export function ProjectsPage() {
           )}
         </div>
       </header>
+      <PageTabs />
       <section
         className="customer-metrics"
         aria-label={`Resumen de ${projectsName}`}
@@ -454,12 +466,14 @@ export function ProjectsPage() {
                         : "Sin fecha"}
                     </td>
                     <td className="result-col-actions">
-                      <button
-                        className="row-action"
-                        onClick={() => setSelected(project.externalId)}
-                      >
-                        Ver detalle
-                      </button>
+                      <div className="customer-row-actions">
+                        <button
+                          className="row-action"
+                          onClick={() => setSelected(project.externalId)}
+                        >
+                          <Eye /> Ver detalle
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -1,8 +1,6 @@
 import { apiClient } from "@/lib/api/apiClient";
 import { AppError } from "@/lib/api/apiError";
 
-export type ReportType = "customers" | "deliveries" | "commercial-activity";
-
 export interface ReportFilters {
   from?: string;
   to?: string;
@@ -10,47 +8,20 @@ export interface ReportFilters {
   status?: string;
 }
 
-export interface ReportRow {
-  [key: string]: unknown;
-  externalId?: string;
-  customerExternalId?: string;
-  customerName?: string;
-  projectExternalId?: string;
-  projectName?: string;
+/** Row of the deliveries report, used for the CSV fallback of the export. */
+interface DeliveryReportRow {
   deliveryExternalId?: string;
+  projectName?: string;
+  customerName?: string;
   sellerName?: string;
-  status?: string;
   statusName?: string;
-  statusId?: number;
-  zoneName?: string;
-  companyName?: string;
-  phone?: string;
-  email?: string;
-  productName?: string;
-  title?: string;
-  eventTypeName?: string;
-  description?: string;
   committedDateUtc?: string;
-  occurredAtUtc?: string;
-  createdAtUtc?: string;
-  lastContactAtUtc?: string;
-  nextContactAtUtc?: string;
-  reminderAtUtc?: string;
-  text?: string;
-  name?: string;
-  progressPercentage?: number;
-  expectedCloseDateUtc?: string;
   totalQuantity?: number;
   deliveredQuantity?: number;
-  completedCount?: number;
-  pendingCount?: number;
-  totalCount?: number;
 }
 
-export interface ReportPage {
-  items: ReportRow[];
-  summary?: Record<string, string | number | null>;
-  chart?: unknown;
+interface ReportPage {
+  items: DeliveryReportRow[];
   pagination: {
     page: number;
     pageSize: number;
@@ -129,18 +100,11 @@ const getAllPages = async <T>(
   return [first, ...rest].flatMap((page) => page.items);
 };
 
-const endpoints: Record<ReportType, string> = {
-  customers: "customers-pending-contact",
-  deliveries: "deliveries",
-  "commercial-activity": "commercial-activity",
-};
-
-const paramsFor = (type: ReportType, filters: ReportFilters) => ({
+const deliveryParams = (filters: ReportFilters) => ({
   from: filters.from,
   to: filters.to,
   sellerExternalId: filters.sellerId,
   statusId:
-    type !== "commercial-activity" &&
     filters.status &&
     /^\d+$/.test(filters.status)
       ? Number(filters.status)
@@ -149,16 +113,9 @@ const paramsFor = (type: ReportType, filters: ReportFilters) => ({
   pageSize: 100,
 });
 
-const getReport = async (type: ReportType, filters: ReportFilters) =>
-  (
-    await apiClient.get<ReportPage>(`/api/reports/${endpoints[type]}`, {
-      params: paramsFor(type, filters),
-    })
-  ).data;
-
 const csvCell = (value: unknown) =>
   `"${String(value ?? "").replaceAll('"', '""')}"`;
-const deliveryCsv = (rows: ReportRow[]) => {
+const deliveryCsv = (rows: DeliveryReportRow[]) => {
   const header = [
     "Entrega",
     "Proyecto",
@@ -183,8 +140,6 @@ const deliveryCsv = (rows: ReportRow[]) => {
 };
 
 export const reportApi = {
-  get: getReport,
-
   /** `from` and `to` are calendar days (yyyy-mm-dd), both included. */
   sellerProductivity: (filters: { from: string; to: string; sellerId?: string }) =>
     getAllPages<SellerProductivity>("/api/reports/seller-productivity", {
@@ -203,7 +158,7 @@ export const reportApi = {
       const response = await apiClient.get<Blob>(
         "/api/reports/deliveries/export",
         {
-          params: paramsFor("deliveries", filters),
+          params: deliveryParams(filters),
           responseType: "blob",
         },
       );
@@ -222,7 +177,7 @@ export const reportApi = {
         throw error;
       const report = await apiClient.get<ReportPage>(
         "/api/reports/deliveries",
-        { params: paramsFor("deliveries", filters) },
+        { params: deliveryParams(filters) },
       );
       return {
         blob: new Blob([deliveryCsv(report.data.items)], {

@@ -22,7 +22,6 @@ const CatalogImportPage = lazyPage(() => import("@/features/catalog/pages/Catalo
 const OperationsPage = lazyPage(() => import("@/features/operations/pages/OperationsPage"), "OperationsPage");
 const OperationsDashboardPage = lazyPage(() => import("@/features/operations/pages/OperationsDashboardPage"), "OperationsDashboardPage");
 const DeliveriesPage = lazyPage(() => import("@/features/deliveries/pages/DeliveriesPage"), "DeliveriesPage");
-const ReportsPage = lazyPage(() => import("@/features/reports/pages/ReportsPageWithScope"), "ReportsPage");
 const SellerProductivityPage = lazyPage(() => import("@/features/reports/pages/SellerProductivityPage"), "SellerProductivityPage");
 const ProjectPipelinePage = lazyPage(() => import("@/features/reports/pages/ProjectPipelinePage"), "ProjectPipelinePage");
 const AdminPage =lazyPage(() => import("@/features/admin/pages/AdminPage"), "AdminPage");
@@ -124,21 +123,27 @@ export const router = createBrowserRouter([
             children: [{ path: "/activity", element: <ActivityPage /> }],
           },
           {
-            // The old activity report now lives in the activity feed.
-            path: "/reports/commercial-activity",
-            element: <Navigate replace to="/activity" />,
-          },
-          {
             element: <PermissionRoute permission="reports.read" />,
             children: [
               {
-                path: "/reports/productivity",
+                path: "/operations/productivity",
                 element: <SellerProductivityPage />,
               },
-              { path: "/reports/pipeline", element: <ProjectPipelinePage /> },
-              { path: "/reports/:type?", element: <ReportsPage /> },
+              { path: "/projects/pipeline", element: <ProjectPipelinePage /> },
             ],
           },
+          // The old "Reportes" section was folded into the module each report belongs to.
+          ...Object.entries({
+            "/reports": "/operations/productivity",
+            "/reports/productivity": "/operations/productivity",
+            "/reports/pipeline": "/projects/pipeline",
+            "/reports/customers": "/reminders",
+            "/reports/deliveries": "/deliveries",
+            "/reports/commercial-activity": "/activity",
+          }).map(([path, to]) => ({
+            path,
+            element: <Navigate replace to={to} />,
+          })),
           {
             element: (
               <PermissionRoute

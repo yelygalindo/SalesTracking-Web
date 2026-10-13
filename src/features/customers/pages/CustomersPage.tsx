@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   Eye,
   Mail,
-  MessageCircle,
   MoreVertical,
   Plus,
   Search,
@@ -45,6 +44,7 @@ import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { Pagination } from "@/components/data/Pagination";
 import { CustomerCsvActions } from "@/features/customers/components/CustomerCsvActions";
 import { ImportLink } from "@/components/imports/ImportLink";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { formatDate } from "@/lib/i18n/dateTime";
 
 const emptyForm: CustomerInputDto = {
@@ -576,7 +576,7 @@ export function CustomersPage() {
                             aria-label={`Contactar a ${c.name} por WhatsApp`}
                             title="Contactar por WhatsApp"
                           >
-                            <MessageCircle />
+                            <WhatsAppIcon />
                           </a>
                         )}
                         {c.email && (

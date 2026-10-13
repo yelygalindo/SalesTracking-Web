@@ -13,13 +13,11 @@ import {
   Settings,
   Target,
   Truck,
-  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 import type { OperationModules } from "@/features/operation-settings/api/operationSettingsApi";
 import {
   defaultOperationTerms,
-  inSentence,
   type OperationTerms,
 } from "@/features/operation-settings/services/operationTerms";
 
@@ -128,6 +126,13 @@ export const buildNavigationSections = ({
         icon: Activity,
         permissions: ["timeline.read"],
       },
+      {
+        kind: "link",
+        to: "/operations/productivity",
+        label: "Productividad",
+        icon: BarChart3,
+        permissions: ["reports.read"],
+      },
     ],
   },
   {
@@ -146,7 +151,14 @@ export const buildNavigationSections = ({
         to: "/projects",
         label: project.plural,
         icon: Target,
-        permissions: ["projects.read"],
+        tabs: [
+          { to: "/projects", label: project.plural, permissions: ["projects.read"] },
+          {
+            to: "/projects/pipeline",
+            label: "Embudo",
+            allPermissions: ["projects.read", "reports.read"],
+          },
+        ],
       },
       {
         kind: "link",
@@ -178,51 +190,9 @@ export const buildNavigationSections = ({
     ],
   },
   {
-    id: "analysis",
-    label: "Análisis",
-    entries: [
-      {
-        kind: "group",
-        id: "reports",
-        label: "Reportes",
-        icon: BarChart3,
-        children: [
-          {
-            to: "/reports/productivity",
-            label: "Productividad",
-            permissions: ["reports.read"],
-          },
-          {
-            to: "/reports/pipeline",
-            label: `Embudo de ${inSentence(project.plural)}`,
-            permissions: ["reports.read"],
-          },
-          {
-            to: "/reports/customers",
-            label: customer.plural,
-            permissions: ["reports.read"],
-          },
-          {
-            to: "/reports/deliveries",
-            label: "Entregas",
-            module: "deliveries",
-            permissions: ["reports.read"],
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: "settings",
     label: "Configuración",
     entries: [
-      {
-        kind: "link",
-        to: "/admin/users",
-        label: "Usuarios",
-        icon: UsersRound,
-        permissions: ["users.read"],
-      },
       {
         kind: "group",
         id: "imports",
@@ -261,6 +231,11 @@ export const buildNavigationSections = ({
         label: "Administración",
         icon: Settings,
         children: [
+          {
+            to: "/admin/users",
+            label: "Usuarios",
+            permissions: ["users.read"],
+          },
           {
             to: "/admin/invite",
             label: "Invitar usuario",

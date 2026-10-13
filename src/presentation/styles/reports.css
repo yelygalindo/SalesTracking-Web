@@ -497,8 +497,32 @@
   font-weight: 750;
   text-decoration: none;
 }
-.pipeline-card > a:hover {
+/* The name link covers the whole card, so any point of it opens the project. */
+.pipeline-card:has(> a) {
+  position: relative;
+  cursor: pointer;
+  transition:
+    border-color 0.15s var(--ut-ease),
+    box-shadow 0.15s var(--ut-ease);
+}
+.pipeline-card > a::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+}
+.pipeline-card:has(> a):hover {
+  border-color: var(--ut-border-strong);
+  box-shadow: var(--ut-shadow-md);
+}
+.pipeline-card:has(> a):hover > a {
   color: var(--ut-primary);
+}
+.pipeline-card > a:focus-visible {
+  outline: none;
+}
+.pipeline-card:has(> a:focus-visible) {
+  box-shadow: var(--ut-focus);
 }
 .pipeline-card > span {
   color: var(--ut-text-secondary);
@@ -542,4 +566,9 @@
   .pipeline-board {
     grid-auto-columns: minmax(230px, 85%);
   }
+}
+.productivity-chart-note {
+  margin: 12px 0 0;
+  color: var(--ut-text-muted);
+  font-size: 0.78rem;
 }

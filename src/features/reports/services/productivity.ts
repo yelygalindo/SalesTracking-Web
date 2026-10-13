@@ -13,10 +13,9 @@ type Totals = Pick<
   | "completedReminders"
   | "overdueReminders"
   | "closedProjects"
-  | "closedAmount"
-> & { conversionRate: number };
+>;
 
-const summed: Exclude<keyof Totals, "conversionRate">[] = [
+const summed: (keyof Totals)[] = [
   "workedDays",
   "activeHours",
   "visits",
@@ -25,19 +24,12 @@ const summed: Exclude<keyof Totals, "conversionRate">[] = [
   "completedReminders",
   "overdueReminders",
   "closedProjects",
-  "closedAmount",
 ];
 
-const totalsOf = (metrics: SellerProductivityMetrics[]): Totals => {
-  const totals = Object.fromEntries(
+const totalsOf = (metrics: SellerProductivityMetrics[]): Totals =>
+  Object.fromEntries(
     summed.map((key) => [key, metrics.reduce((sum, item) => sum + item[key], 0)]),
-  ) as Omit<Totals, "conversionRate">;
-  // Same formula as the API: closed projects per contacted customer.
-  const conversionRate = totals.contactedCustomers
-    ? (totals.closedProjects * 100) / totals.contactedCustomers
-    : 0;
-  return { ...totals, conversionRate };
-};
+  ) as Totals;
 
 /** Team totals for the period and the one before it. */
 export const teamProductivity = (rows: SellerProductivity[]) => ({

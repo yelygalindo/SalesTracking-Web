@@ -36,28 +36,23 @@ const seller = (
 });
 
 describe("teamProductivity", () => {
-  it("suma los indicadores y recalcula la conversión del equipo", () => {
+  it("suma los indicadores del equipo en ambos períodos", () => {
     const team = teamProductivity([
       seller(
-        { visits: 10, contactedCustomers: 10, closedProjects: 1, closedAmount: 500, conversionRate: 10 },
-        { visits: 4, contactedCustomers: 5, closedProjects: 1 },
+        { visits: 10, activeHours: 7.5, workedDays: 2 },
+        { visits: 4, activeHours: 3 },
       ),
       seller(
-        { visits: 6, contactedCustomers: 2, closedProjects: 2, closedAmount: 1500, conversionRate: 100 },
-        { visits: 4, contactedCustomers: 5, closedProjects: 0 },
+        { visits: 6, activeHours: 4.25, workedDays: 1 },
+        { visits: 4, activeHours: 2 },
       ),
     ]);
 
     expect(team.current.visits).toBe(16);
-    expect(team.current.closedAmount).toBe(2000);
-    // 3 closed out of 12 contacted, not the average of 10% and 100%.
-    expect(team.current.conversionRate).toBe(25);
+    expect(team.current.activeHours).toBe(11.75);
+    expect(team.current.workedDays).toBe(3);
     expect(team.previous.visits).toBe(8);
-    expect(team.previous.conversionRate).toBe(10);
-  });
-
-  it("deja la conversión en cero cuando no hubo contactos", () => {
-    expect(teamProductivity([seller({ closedProjects: 2 })]).current.conversionRate).toBe(0);
+    expect(team.previous.activeHours).toBe(5);
   });
 });
 
