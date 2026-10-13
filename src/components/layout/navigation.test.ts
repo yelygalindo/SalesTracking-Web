@@ -96,9 +96,25 @@ describe("buildNavigationSections", () => {
     expect(findCurrentPage(sections, "/customers")?.label).toBe("Clientes");
     expect(findCurrentPage(sections, "/projects")?.label).toBe("Obras");
     expect(findCurrentPage(sections, "/projects/import")?.label).toBe("Obras");
-    expect(findCurrentPage(sections, "/reports/customers")?.label).toBe(
-      "Clientes",
+    expect(findCurrentPage(sections, "/projects/pipeline")).toEqual({
+      section: "Comercial",
+      parent: "Obras",
+      label: "Embudo",
+    });
+  });
+
+  it("places each former report inside its module", () => {
+    const sections = buildNavigationSections(construction);
+
+    expect(sections.map((section) => section.id)).not.toContain("analysis");
+    expect(findCurrentPage(sections, "/operations/productivity")?.section).toBe(
+      "Operación",
     );
+    expect(findCurrentPage(sections, "/admin/users")).toEqual({
+      section: "Configuración",
+      parent: "Administración",
+      label: "Usuarios",
+    });
   });
 
   it("keeps the general terminology by default", () => {
@@ -139,17 +155,13 @@ describe("filterNavigation with modules", () => {
     expect(findCurrentPage(sections, "/deliveries")?.label).toBe("Entregas");
   });
 
-  it("hides deliveries and their report when the module is off", () => {
+  it("hides deliveries when the module is off", () => {
     const sections = filterNavigation(navigationSections, everything, {
       deliveries: false,
       catalog: true,
     });
 
     expect(findCurrentPage(sections, "/deliveries")).toBeUndefined();
-    expect(findCurrentPage(sections, "/reports/deliveries")).toBeUndefined();
-    expect(findCurrentPage(sections, "/reports/customers")?.label).toBe(
-      "Contactos",
-    );
     expect(findCurrentPage(sections, "/catalog/products")?.label).toBe(
       "Productos",
     );

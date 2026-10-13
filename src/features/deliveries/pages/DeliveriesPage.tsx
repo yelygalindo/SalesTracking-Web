@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
 import { Pagination } from "@/components/data/Pagination";
@@ -16,6 +17,8 @@ import { formatDateTime } from "@/lib/i18n/dateTime";
 import { deliveryApi, type Delivery, type Input } from "../api/deliveryApi";
 import { DeliveryForm } from "../components/DeliveryForm";
 import { DeliveryDetail } from "../components/DeliveryDetail";
+import { reportApi } from "@/features/reports/api/reportApi";
+import { downloadBlob } from "@/lib/export/downloadBlob";
 
 const empty: Input = {
   projectExternalId: "",
@@ -66,15 +69,31 @@ export function DeliveriesPage() {
   const canCreate = usePermission("deliveries.create");
   const canUpdate = usePermission("deliveries.update");
   const canDelete = usePermission("deliveries.delete");
+  const canExport = usePermission("reports.read");
   const filters = useUrlFilters(["status"] as const),
     { page, setPage, update: updateFilters } = filters;
   const status = Number(filters.values.status) || undefined;
-  const [selected, setSelected] = useState<string | null>(null);
+  const [params] = useSearchParams(),
+    linked = params.get("selected");
+  const [selected, setSelected] = useState<string | null>(linked);
   const [editing, setEditing] = useState(false);
   const [creating, setCreating] = useState(false);
+  // Links from the dashboard or a project open the delivery with ?selected.
+  useEffect(() => {
+    if (!linked) return;
+    setCreating(false);
+    setEditing(false);
+    setSelected(linked);
+  }, [linked]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState<Input>(empty);
 
+  const exporter = useMutation({
+    mutationFn: () =>
+      reportApi.exportDeliveries({ status: status ? String(status) : undefined }),
+    onSuccess: ({ blob, fileName }) => downloadBlob(blob, fileName),
+    onError: (error: Error) => notify(error.message, "error"),
+  });
   const list = useQuery({
     queryKey: ["deliveries", status, page],
     queryFn: () => deliveryApi.list(status, page),
@@ -259,19 +278,31 @@ export function DeliveriesPage() {
         title="Entregas"
         description="Compromisos, recepción y cumplimiento de materiales."
         action={
-          canCreate && (
-            <button
-              className="action-primary"
-              onClick={() => {
-                setCreating(true);
-                setEditing(true);
-                setSelected(null);
-                setForm(empty);
-              }}
-            >
-              <Plus /> Nueva entrega
-            </button>
-          )
+          <div className="heading-actions">
+            {canExport && (
+              <button
+                className="excel-export-button"
+                disabled={exporter.isPending}
+                onClick={() => exporter.mutate()}
+              >
+                <FileSpreadsheet aria-hidden="true" />
+                {exporter.isPending ? "Exportando…" : "Exportar"}
+              </button>
+            )}
+            {canCreate && (
+              <button
+                className="action-primary"
+                onClick={() => {
+                  setCreating(true);
+                  setEditing(true);
+                  setSelected(null);
+                  setForm(empty);
+                }}
+              >
+                <Plus /> Nueva entrega
+              </button>
+            )}
+          </div>
         }
       />
       <div className="customer-toolbar delivery-toolbar">

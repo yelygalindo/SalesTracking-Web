@@ -54,7 +54,7 @@ export function ProjectPipelinePage() {
   return (
     <main className="customers-content reports-page pipeline-page">
       <PageHeader
-        eyebrow="Análisis"
+        eyebrow="Comercial"
         title={`Embudo de ${plural}`}
         description={`Cuánto negocio gestiona el equipo y en qué etapa está cada ${inSentence(term.singular)}.`}
       />

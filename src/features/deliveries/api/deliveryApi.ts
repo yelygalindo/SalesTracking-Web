@@ -19,6 +19,7 @@ const blobResult = (response: { data: Blob; headers: Record<string, unknown> }, 
 
 export const deliveryApi = {
   list: async (statusId: number | undefined, page: number) => (await apiClient.get<Page>("/api/deliveries", { params: { statusId, page, pageSize: 20 } })).data,
+  byProject: async (projectExternalId: string) => (await apiClient.get<Page>("/api/deliveries", { params: { projectExternalId, page: 1, pageSize: 100 } })).data.items,
   detail: async (id: string) => (await apiClient.get<Delivery>(`/api/deliveries/${id}`)).data,
   statuses: async () => (await apiClient.get<Status[]>("/api/delivery-statuses")).data,
   create: async (input: Input) => (await apiClient.post("/api/deliveries", { ...input, clientRequestId: uuid() })).data,

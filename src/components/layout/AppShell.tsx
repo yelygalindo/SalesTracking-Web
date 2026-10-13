@@ -384,15 +384,23 @@ export function PageHeader({
         </div>
         {action}
       </header>
-      {tabs.length > 0 && (
-        <nav className="page-tabs" aria-label="Secciones de esta página">
-          {tabs.map((tab) => (
-            <NavLink end key={tab.to} to={tab.to}>
-              {tab.label}
-            </NavLink>
-          ))}
-        </nav>
-      )}
+      <PageTabs />
     </>
+  );
+}
+
+/** Sibling pages of the current one, for pages that draw their own header. */
+export function PageTabs() {
+  const { pathname } = useLocation();
+  const tabs = findPageTabs(useNavigationSections(), pathname);
+  if (!tabs.length) return null;
+  return (
+    <nav className="page-tabs" aria-label="Secciones de esta página">
+      {tabs.map((tab) => (
+        <NavLink end key={tab.to} to={tab.to}>
+          {tab.label}
+        </NavLink>
+      ))}
+    </nav>
   );
 }

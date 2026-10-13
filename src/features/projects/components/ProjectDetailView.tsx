@@ -21,6 +21,9 @@ import { projectService } from "../services/projectService";
 import { ProjectProducts } from "./ProjectProducts";
 import { ProjectAttachments } from "./ProjectAttachments";
 import { ProjectNotes } from "./ProjectNotes";
+import { ProjectDeliveryReceipts } from "./ProjectDeliveryReceipts";
+import { usePermission } from "@/hooks/usePermission";
+import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
 import { formatMoney } from "@/lib/i18n/money";
 
 type MainTab = "summary" | "activity" | "attachments" | "products";
@@ -47,6 +50,9 @@ export function ProjectDetailView({
 }) {
   const [tab, setTab] = useState<MainTab>("summary"),
     [changingStatus, setChangingStatus] = useState(false);
+  const canReadDeliveries = usePermission("deliveries.read");
+  const { modules } = useOperationTerms();
+  const showDeliveries = canReadDeliveries && modules.deliveries;
   const timeline = useQuery({
     queryKey: ["project-timeline", project.externalId],
     queryFn: () => projectService.timeline(project.externalId),
@@ -163,7 +169,14 @@ export function ProjectDetailView({
           canDelete={canUpdate}
         />
       )}{" "}
-      {tab === "products" && <ProjectProducts id={project.externalId} />}
+      {tab === "products" && (
+        <>
+          <ProjectProducts id={project.externalId} />
+          {showDeliveries && (
+            <ProjectDeliveryReceipts projectId={project.externalId} />
+          )}
+        </>
+      )}
     </div>
   );
 }

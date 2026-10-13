@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { MoreVertical, Search, ShieldCheck } from "lucide-react";
 import { DataState } from "@/components/data/DataState";
 import { Pagination } from "@/components/data/Pagination";
+import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { notify } from "@/components/feedback/toast";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import { formatDateTime } from "@/lib/i18n/dateTime";
+import { translateValue } from "@/lib/i18n/labels";
 import { userAdminApi, type ManagedUser } from "../api/userAdminApi";
 
 export function UsersAdministration() {
@@ -15,7 +17,8 @@ export function UsersAdministration() {
     [search, setSearch] = useState(""),
     [active, setActive] = useState(""),
     [page, setPage] = useState(1),
-    [editing, setEditing] = useState<ManagedUser | null>(null);
+    [editing, setEditing] = useState<ManagedUser | null>(null),
+    [deactivating, setDeactivating] = useState<ManagedUser | null>(null);
   const query = useQuery({
     queryKey: ["admin-users", search, active, page],
     queryFn: () =>
@@ -31,13 +34,17 @@ export function UsersAdministration() {
     queryFn: userAdminApi.roles,
     enabled: can("roles.read"),
   });
+  const roleName = (code: string) =>
+    roles.data?.find((role) => role.code === code)?.name ?? translateValue(code);
   const status = useMutation({
     mutationFn: (value: ManagedUser) =>
       userAdminApi.status(value.externalId, !value.isActive),
-    onSuccess: async () => {
-      notify("Estado actualizado.");
+    onSuccess: async (_, value) => {
+      setDeactivating(null);
+      notify(value.isActive ? "Usuario desactivado." : "Usuario activado.");
       await cache.invalidateQueries({ queryKey: ["admin-users"] });
     },
+    onError: (error: Error) => notify(error.message, "error"),
   });
   const saveRoles = useMutation({
     mutationFn: (codes: string[]) =>
@@ -47,7 +54,12 @@ export function UsersAdministration() {
       setEditing(null);
       await cache.invalidateQueries({ queryKey: ["admin-users"] });
     },
+    onError: (error: Error) => notify(error.message, "error"),
   });
+  const canEditRoles = can("roles.update"),
+    canChangeStatus = can("users.update");
+  const closeMenu = (element: HTMLElement) =>
+    element.closest("details")?.removeAttribute("open");
   return (
     <section className="admin-card invitation-management">
       <form
@@ -116,6 +128,7 @@ export function UsersAdministration() {
                           title={item.fullName}
                         >
                           {item.fullName}
+                          {self && <span className="user-self-badge">Tú</span>}
                         </strong>
                         <small
                           className="result-cell-ellipsis"
@@ -128,12 +141,12 @@ export function UsersAdministration() {
                     <td className="result-col-secondary" data-label="Roles">
                       <div
                         className="role-badges"
-                        title={item.roles.join(", ") || "Sin rol"}
+                        title={item.roles.map(roleName).join(", ") || "Sin rol"}
                       >
                         {item.roles.length ? (
                           <>
                             {item.roles.slice(0, 2).map((role) => (
-                              <span key={role}>{role}</span>
+                              <span key={role}>{roleName(role)}</span>
                             ))}
                             {item.roles.length > 2 && (
                               <span className="role-badge-more">
@@ -157,24 +170,55 @@ export function UsersAdministration() {
                       {formatDateTime(item.createdAtUtc)}
                     </td>
                     <td className="result-col-actions">
-                      <div className="invitation-actions">
-                        {can("roles.update") && (
-                          <button
-                            disabled={self}
-                            onClick={() => setEditing(item)}
-                          >
-                            Roles
-                          </button>
-                        )}
-                        {can("users.update") && (
-                          <button
-                            disabled={self || status.isPending}
-                            onClick={() => status.mutate(item)}
-                          >
-                            {item.isActive ? "Desactivar" : "Activar"}
-                          </button>
-                        )}
-                      </div>
+                      {self ? (
+                        <small className="user-self-note">Tu cuenta</small>
+                      ) : (
+                        <div className="customer-row-actions">
+                          {canEditRoles && (
+                            <button
+                              className="row-action"
+                              onClick={() => setEditing(item)}
+                            >
+                              <ShieldCheck /> Roles
+                            </button>
+                          )}
+                          {canChangeStatus && (
+                            <details
+                              className="row-actions-menu"
+                              name="user-actions"
+                            >
+                              <summary
+                                aria-label={`Más acciones para ${item.fullName}`}
+                              >
+                                <MoreVertical />
+                              </summary>
+                              <div role="menu">
+                                {item.isActive ? (
+                                  <button
+                                    className="danger"
+                                    onClick={(event) => {
+                                      closeMenu(event.currentTarget);
+                                      setDeactivating(item);
+                                    }}
+                                  >
+                                    Desactivar usuario
+                                  </button>
+                                ) : (
+                                  <button
+                                    disabled={status.isPending}
+                                    onClick={(event) => {
+                                      closeMenu(event.currentTarget);
+                                      status.mutate(item);
+                                    }}
+                                  >
+                                    Activar usuario
+                                  </button>
+                                )}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -190,6 +234,15 @@ export function UsersAdministration() {
           />
         )}
       </DataState>
+      <ConfirmDialog
+        open={deactivating !== null}
+        title="Desactivar usuario"
+        description={`${deactivating?.fullName ?? "Este usuario"} ya no podrá iniciar sesión en la web ni en el celular. Puedes volver a activarlo cuando quieras.`}
+        confirmLabel="Desactivar"
+        busy={status.isPending}
+        onConfirm={() => deactivating && status.mutate(deactivating)}
+        onCancel={() => setDeactivating(null)}
+      />
       {editing && (
         <RoleDialog
           user={editing}
@@ -210,21 +263,34 @@ function RoleDialog({
   busy,
 }: {
   user: ManagedUser;
-  roles: { code: string; name: string }[];
+  roles: { code: string; name: string; permissions?: string[] }[];
   onClose: () => void;
   onSave: (codes: string[]) => void;
   busy: boolean;
 }) {
   const [selected, setSelected] = useState(user.roles);
   return (
-    <div className="upload-drawer-backdrop">
-      <section className="confirm-dialog" role="dialog">
-        <h2>Roles de {user.fullName}</h2>
+    <div
+      className="dialog-backdrop"
+      role="presentation"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <section
+        className="confirm-dialog role-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-dialog-title"
+      >
+        <h2 id="role-dialog-title">Roles de {user.fullName}</h2>
+        <p>Elige qué puede hacer este usuario. Debe tener al menos un rol.</p>
         <div className="admin-role-list">
           {roles
             .filter((r) => r.code.toLowerCase() !== "platform_admin")
             .map((role) => (
-              <label key={role.code}>
+              <label
+                key={role.code}
+                className={selected.includes(role.code) ? "selected" : undefined}
+              >
                 <input
                   type="checkbox"
                   checked={selected.includes(role.code)}
@@ -236,7 +302,15 @@ function RoleDialog({
                     )
                   }
                 />
-                {role.name}
+                <span>
+                  <strong>{role.name}</strong>
+                  {!!role.permissions?.length && (
+                    <small>
+                      {role.permissions.length}{" "}
+                      {role.permissions.length === 1 ? "permiso" : "permisos"}
+                    </small>
+                  )}
+                </span>
               </label>
             ))}
         </div>

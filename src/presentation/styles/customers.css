@@ -947,3 +947,107 @@
   width: 44px;
   height: 44px;
 }
+
+/* Shared look for listing headers and row actions (contacts, projects…): neutral
+   secondary buttons next to the single primary action, icon buttons of one size. */
+.heading-actions .excel-export-button,
+.heading-actions .excel-export-button.import-link {
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid var(--ut-border-strong);
+  border-radius: 11px;
+  color: var(--ut-text-strong);
+  background: var(--ut-surface);
+  box-shadow: var(--ut-shadow-sm);
+  font-weight: 700;
+  text-decoration: none;
+}
+.heading-actions .excel-export-button:hover:not(:disabled) {
+  border-color: var(--ut-text-muted);
+  background: var(--ut-surface-soft);
+  box-shadow: var(--ut-shadow-sm);
+  transform: none;
+}
+.heading-actions .excel-export-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ut-focus);
+}
+.heading-actions .excel-export-button svg {
+  width: 17px;
+  height: 17px;
+  color: var(--ut-text-secondary);
+}
+.heading-actions .excel-export-icon {
+  width: auto;
+  height: auto;
+  color: inherit;
+  background: none;
+}
+.heading-actions .excel-export-icon svg {
+  stroke-width: 2;
+}
+
+.customer-row-actions {
+  gap: 6px;
+}
+.customer-row-actions .customer-contact-action,
+.customer-row-actions .row-actions-menu summary {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid var(--ut-border);
+  border-radius: 9px;
+  color: var(--ut-text-secondary);
+  background: var(--ut-surface);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.customer-row-actions .customer-contact-action:hover {
+  transform: none;
+}
+.customer-row-actions .customer-contact-action.whatsapp {
+  color: #1a9e4f;
+}
+.customer-row-actions .customer-contact-action.whatsapp:hover {
+  border-color: #9fdcb7;
+  color: #128043;
+  background: #effaf3;
+}
+.customer-row-actions .customer-contact-action.email:hover {
+  border-color: var(--ut-border-strong);
+  color: var(--ut-info);
+  background: var(--ut-info-soft);
+}
+.customer-row-actions .row-action {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--ut-border);
+  border-radius: 9px;
+  color: var(--ut-text-strong);
+  background: var(--ut-surface);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.customer-row-actions .row-action svg {
+  color: var(--ut-text-secondary);
+}
+.customer-row-actions .row-action:hover,
+.customer-row-actions .row-actions-menu summary:hover,
+.customer-row-actions .row-actions-menu[open] summary {
+  border-color: var(--ut-primary);
+  color: var(--ut-primary);
+  background: var(--ut-primary-soft);
+}
+.customer-row-actions .row-action:hover svg {
+  color: inherit;
+}
+.heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}

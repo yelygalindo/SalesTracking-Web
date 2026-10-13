@@ -154,7 +154,7 @@ export function SellerProductivityPage() {
   return (
     <main className="customers-content reports-page productivity-page">
       <PageHeader
-        eyebrow="Análisis"
+        eyebrow="Operación"
         title="Productividad comercial"
         description="Resultados del equipo en el período elegido, comparados con el período anterior de la misma duración."
       />
@@ -451,7 +451,7 @@ function SellerTable({
                 <strong>{row.sellerName}</strong>
                 <small>
                   <Link
-                    to={`/reports/pipeline?seller=${encodeURIComponent(row.sellerExternalId)}`}
+                    to={`/projects/pipeline?seller=${encodeURIComponent(row.sellerExternalId)}`}
                   >
                     {labels.projectsOf}
                   </Link>

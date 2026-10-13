@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { ArrowLeft, FileSpreadsheet, Plus, X } from "lucide-react";
+import { ArrowLeft, Eye, FileSpreadsheet, Plus, X } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { usePermission } from "@/hooks/usePermission";
 import { useOperationTerms } from "@/features/operation-settings/hooks/useOperationTerms";
@@ -31,6 +31,7 @@ import { exportExcel } from "@/lib/export/exportExcel";
 import { ProjectDetailView } from "../components/ProjectDetailView";
 import { projectService } from "../services/projectService";
 import { ImportLink } from "@/components/imports/ImportLink";
+import { PageTabs } from "@/components/layout/AppShell";
 import { formatMoney } from "@/lib/i18n/money";
 import type {
   ProjectDetail,
@@ -326,6 +327,7 @@ export function ProjectsPage() {
           )}
         </div>
       </header>
+      <PageTabs />
       <section
         className="customer-metrics"
         aria-label={`Resumen de ${projectsName}`}
@@ -464,12 +466,14 @@ export function ProjectsPage() {
                         : "Sin fecha"}
                     </td>
                     <td className="result-col-actions">
-                      <button
-                        className="row-action"
-                        onClick={() => setSelected(project.externalId)}
-                      >
-                        Ver detalle
-                      </button>
+                      <div className="customer-row-actions">
+                        <button
+                          className="row-action"
+                          onClick={() => setSelected(project.externalId)}
+                        >
+                          <Eye /> Ver detalle
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

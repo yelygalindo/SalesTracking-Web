@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, Upload, X } from "lucide-react";
+import { FileSpreadsheet, Upload, X } from "lucide-react";
 import { customerService } from "../services/customerService";
 import type { CustomerImportResult } from "../api/customerApi";
 import { downloadBlob } from "@/lib/export/downloadBlob";
@@ -86,7 +86,6 @@ export function CustomerCsvActions({
             <FileSpreadsheet />
           </span>
           {exporter.isPending ? "Exportando…" : "Exportar CSV"}
-          <Download />
         </button>
       )}
       {result && (
