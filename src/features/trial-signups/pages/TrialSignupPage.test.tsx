@@ -63,4 +63,29 @@ describe("TrialSignupPage", () => {
       expect.objectContaining({ industry: "construction", captchaToken: "" }),
     );
   });
+
+  it("avisa cuando el correo no se pudo enviar y permite reintentar con los mismos datos", async () => {
+    api.create.mockResolvedValue({
+      email: "ana@empresa.com",
+      verificationExpiresAtUtc: "2026-10-13T12:00:00Z",
+      emailStatus: "Failed",
+      message: "Registramos tu solicitud, pero no pudimos enviar el correo.",
+    });
+    renderPage();
+    fill("Nombre completo", "Ana Pérez");
+    fill("Correo de trabajo", "ana@empresa.com");
+    fill("Teléfono", "+591 70000000");
+    fill("Empresa", "Constructora Andina");
+    await screen.findByRole("option", { name: "Construcción" });
+    fill("Rubro", "construction");
+    fill("Ciudad", "La Paz");
+    fill("País", "Bolivia");
+    fireEvent.click(screen.getByRole("button", { name: "Comenzar prueba gratuita" }));
+
+    expect(await screen.findByRole("heading", { name: "No pudimos enviar el correo" })).toBeInTheDocument();
+    expect(screen.queryByText(/Enviamos el enlace/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Volver a intentar" }));
+    expect(screen.getByLabelText(/^Correo de trabajo/)).toHaveValue("ana@empresa.com");
+  });
 });

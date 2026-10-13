@@ -87,6 +87,23 @@
   color: var(--ut-primary-text);
   background: var(--ut-primary-soft);
 }
+.trial-sent-icon.warning {
+  color: var(--ut-warning-text);
+  background: var(--ut-warning-soft);
+}
+.warning-message {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid #fde4b0;
+  border-radius: 10px;
+  color: var(--ut-warning-text);
+  background: var(--ut-warning-soft);
+  font-size: 0.88rem;
+}
+.trial-sent .primary-button {
+  width: 100%;
+  margin-bottom: 14px;
+}
 .trial-sent .link-button {
   display: block;
   margin: 18px auto 0;

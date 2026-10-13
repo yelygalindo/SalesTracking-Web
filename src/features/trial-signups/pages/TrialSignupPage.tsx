@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { MailCheck } from "lucide-react";
+import { MailCheck, MailWarning } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FormField } from "@/components/forms/FormField";
 import { env } from "@/config/env";
@@ -58,6 +58,38 @@ export function TrialSignupPage() {
     signup.mutate();
   };
 
+  const tryAgain = () => {
+    signup.reset();
+    setCaptchaAttempt((value) => value + 1);
+  };
+
+  // The API keeps the request even when the email could not be sent; sending the
+  // form again with the same address reuses it and retries the email.
+  if (signup.data?.emailStatus === "Failed")
+    return (
+      <main className="simple-auth-page">
+        <section className="simple-auth-card trial-sent">
+          <Brand />
+          <span className="trial-sent-icon warning">
+            <MailWarning aria-hidden="true" />
+          </span>
+          <p className="overline">Prueba gratuita</p>
+          <h1>No pudimos enviar el correo</h1>
+          <p className="warning-message" role="alert">
+            Guardamos tu solicitud, pero el correo de activación para{" "}
+            <strong>{signup.data.email}</strong> no se pudo enviar. Vuelve a intentarlo en unos minutos.
+          </p>
+          <button type="button" className="primary-button" onClick={tryAgain}>
+            Volver a intentar
+          </button>
+          <p className="form-hint">
+            Si el problema continúa, escríbenos a{" "}
+            <a href="mailto:contacto@urbantrack.io">contacto@urbantrack.io</a>.
+          </p>
+        </section>
+      </main>
+    );
+
   if (signup.data)
     return (
       <main className="simple-auth-page">
@@ -77,14 +109,7 @@ export function TrialSignupPage() {
             tus 10 días de prueba.
           </p>
           <p className="form-hint">¿No lo encuentras? Revisa la carpeta de spam o correo no deseado.</p>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              signup.reset();
-              setCaptchaAttempt((value) => value + 1);
-            }}
-          >
+          <button type="button" className="link-button" onClick={tryAgain}>
             Usar otro correo
           </button>
           <Link className="back-link" to="/login">
