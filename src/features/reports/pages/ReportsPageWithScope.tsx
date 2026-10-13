@@ -151,7 +151,7 @@ export function ReportsPage() {
   return (
     <main className="customers-content reports-page">
       <PageHeader
-        eyebrow="Reportes"
+        eyebrow="Análisis"
         title={labels[type]}
         description={
           type === "commercial-activity"

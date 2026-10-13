@@ -59,22 +59,53 @@ const metricDefinitions: Array<{
   key: keyof DashboardMetrics;
   label: string;
   Icon: LucideIcon;
+  /** Listing behind the number, opened when the card is clicked. */
+  to: string;
+  permission: keyof DashboardPermissions;
 }> = [
-  { key: "activeCustomers", label: "Contactos activos", Icon: Users },
+  {
+    key: "activeCustomers",
+    label: "Contactos activos",
+    Icon: Users,
+    to: "/customers?status=Active",
+    permission: "customers",
+  },
   // Counts every project not closed yet, not only the "Activo" status.
-  { key: "activeProjects", label: "Seguimientos abiertos", Icon: Building2 },
+  {
+    key: "activeProjects",
+    label: "Seguimientos abiertos",
+    Icon: Building2,
+    to: "/projects",
+    permission: "projects",
+  },
   {
     key: "pendingDeliveries",
     label: "Entregas pendientes",
     Icon: ClipboardCheck,
+    to: "/deliveries",
+    permission: "deliveries",
   },
-  { key: "overdueDeliveries", label: "Entregas vencidas", Icon: CalendarClock },
+  {
+    key: "overdueDeliveries",
+    label: "Entregas vencidas",
+    Icon: CalendarClock,
+    to: "/deliveries",
+    permission: "deliveries",
+  },
   {
     key: "completedDeliveriesThisMonth",
     label: "Entregas del mes",
     Icon: PackageCheck,
+    to: "/deliveries",
+    permission: "deliveries",
   },
-  { key: "todayFollowUps", label: "Seguimientos de hoy", Icon: CalendarClock },
+  {
+    key: "todayFollowUps",
+    label: "Recordatorios de hoy",
+    Icon: CalendarClock,
+    to: "/reminders",
+    permission: "customers",
+  },
 ];
 
 export function DashboardPage() {
@@ -105,13 +136,20 @@ export function DashboardPage() {
     queryFn: dashboardApi.sellers,
     enabled: canChooseSeller,
   });
+  const permissions: DashboardPermissions = {
+    reports: can("reports.read"),
+    activity: can("timeline.read"),
+    deliveries: can("deliveries.read"),
+    customers: can("customers.read"),
+    projects: can("projects.read"),
+  };
   const cards = metricDefinitions.filter(
     ({ key }) => typeof query.data?.metrics[key] === "number",
   );
   return (
     <main className="dashboard-content">
       <PageHeader
-        eyebrow="Resumen de actividad"
+        eyebrow="Resumen"
         title={`${greeting()}, ${user?.fullName.split(" ")[0] || "equipo"}`}
         description="Resumen actualizado del trabajo del equipo."
       />
@@ -128,17 +166,30 @@ export function DashboardPage() {
               className="real-metrics"
               aria-label="Indicadores operacionales"
             >
-              {cards.map(({ key, label, Icon }) => (
-                <article className="metric-card" key={key}>
-                  <span className="metric-icon orange">
-                    <Icon />
-                  </span>
-                  <div>
-                    <p>{label}</p>
-                    <strong>{query.data.metrics[key]}</strong>
-                  </div>
-                </article>
-              ))}
+              {cards.map(({ key, label, Icon, to, permission }) => {
+                const value = query.data.metrics[key] ?? 0;
+                const alert = key === "overdueDeliveries" && value > 0;
+                const content = (
+                  <>
+                    <span className={`metric-icon ${alert ? "danger" : "orange"}`}>
+                      <Icon />
+                    </span>
+                    <div>
+                      <p>{label}</p>
+                      <strong>{value}</strong>
+                    </div>
+                  </>
+                );
+                return permissions[permission] ? (
+                  <Link className="metric-card metric-card-link" to={to} key={key}>
+                    {content}
+                  </Link>
+                ) : (
+                  <article className="metric-card" key={key}>
+                    {content}
+                  </article>
+                );
+              })}
             </section>
             <DashboardSections
               data={query.data}
@@ -154,13 +205,7 @@ export function DashboardPage() {
                 sellers: sellers.data ?? [],
                 canChooseSeller,
               }}
-              permissions={{
-                reports: can("reports.read"),
-                activity: can("timeline.read"),
-                deliveries: can("deliveries.read"),
-                customers: can("customers.read"),
-                projects: can("projects.read"),
-              }}
+              permissions={permissions}
             />
           </>
         )}

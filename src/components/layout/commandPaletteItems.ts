@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
-import type { NavSection } from "@/components/layout/navigation";
+import { subpagesOf, type NavSection } from "@/components/layout/navigation";
+import { normalizeSearch } from "@/lib/text/normalizeSearch";
 
 export type PaletteItem = {
   id: string;
@@ -10,18 +11,13 @@ export type PaletteItem = {
   icon: LucideIcon;
 };
 
-export const normalize = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+export const normalize = normalizeSearch;
 
 /** Flattens the (already permission-filtered) navigation into searchable pages. */
 export function paletteItemsFrom(sections: NavSection[]): PaletteItem[] {
   return sections.flatMap((section) =>
     section.entries.flatMap<PaletteItem>((entry) =>
-      entry.kind === "link"
+      entry.kind === "link" && !entry.tabs
         ? [
             {
               id: `page:${entry.to}`,
@@ -32,7 +28,7 @@ export function paletteItemsFrom(sections: NavSection[]): PaletteItem[] {
               icon: entry.icon,
             },
           ]
-        : entry.children.map((child) => ({
+        : subpagesOf(entry).map((child) => ({
             id: `page:${child.to}`,
             group: "Páginas",
             label: child.label,

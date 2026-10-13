@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { usePermission } from "@/hooks/usePermission";
 import { PageHeader } from "@/components/layout/AppShell";
 import { DataState } from "@/components/data/DataState";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
+import { ImportLink } from "@/components/imports/ImportLink";
+import { formatMoney } from "@/lib/i18n/money";
+import { normalizeSearch } from "@/lib/text/normalizeSearch";
 import {
   productsApi,
   unitsApi,
@@ -48,7 +51,10 @@ export function CatalogPage() {
   const tab: "products" | "units" = section === "units" ? "units" : "products";
   const [edit, setEdit] = useState<Product | Unit | null>(null),
     [showForm, setShowForm] = useState(false),
-    [deleteTarget, setDeleteTarget] = useState<Product | Unit | null>(null);
+    [deleteTarget, setDeleteTarget] = useState<Product | Unit | null>(null),
+    [search, setSearch] = useState("");
+  const canImportProducts = usePermission("products.import"),
+    canImportUnits = usePermission("units.import");
   const [productForm, setProductForm] = useState(emptyProduct),
     [unitForm, setUnitForm] = useState(emptyUnit);
   const units = useQuery({
@@ -96,7 +102,18 @@ export function CatalogPage() {
     setDeleteTarget(null);
     await cache.invalidateQueries({ queryKey: [tab] });
   };
-  const rows = tab === "products" ? products.data?.items : units.data?.items;
+  const term = normalizeSearch(search);
+  const rows = (
+    tab === "products" ? products.data?.items : units.data?.items
+  )?.filter(
+    (item: Product | Unit) =>
+      !term ||
+      normalizeSearch(
+        `${item.name} ${"code" in item ? item.code : item.symbol}`,
+      ).includes(term),
+  );
+  const canImport =
+    tab === "products" ? canImportProducts : canReadUnits && canImportUnits;
   const openCreate = () => {
     setEdit(null);
     setShowForm(true);
@@ -126,8 +143,8 @@ export function CatalogPage() {
   return (
     <main className="customers-content">
       <PageHeader
-        eyebrow="Productos"
-        title={tab === "products" ? "Catálogo" : "Unidades"}
+        eyebrow="Comercial"
+        title="Catálogo"
         description={
           tab === "units"
             ? "Administra las unidades de medida disponibles para el catálogo."
@@ -136,15 +153,37 @@ export function CatalogPage() {
               : "Administra los productos disponibles en el catálogo."
         }
         action={
-          canCreate &&
-          !isSeller && (
-            <button className="action-primary" onClick={openCreate}>
-              <Plus />
-              Nuevo {tab === "products" ? "producto" : "unidad"}
-            </button>
+          !isSeller &&
+          (canCreate || canImport) && (
+            <div className="heading-actions">
+              {canImport && (
+                <ImportLink to={`/catalog/${tab}/import`} />
+              )}
+              {canCreate && (
+                <button className="action-primary" onClick={openCreate}>
+                  <Plus />
+                  {tab === "products" ? "Nuevo producto" : "Nueva unidad"}
+                </button>
+              )}
+            </div>
           )
         }
       />
+      <div className="customer-toolbar">
+        <label>
+          <Search />
+          <input
+            aria-label={tab === "products" ? "Buscar productos" : "Buscar unidades"}
+            placeholder={
+              tab === "products"
+                ? "Buscar por nombre o código"
+                : "Buscar por nombre o símbolo"
+            }
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </label>
+      </div>
       {isSeller && (
         <p className="assignment-note">
           Vista de consulta. Tu rol no permite crear ni modificar productos o
@@ -159,7 +198,11 @@ export function CatalogPage() {
             onRetry={tab === "products" ? products.refetch : units.refetch}
             skeleton="table"
             isEmpty={!rows?.length}
-            empty="No hay registros disponibles."
+            empty={
+              term
+                ? "No hay resultados para esta búsqueda."
+                : "No hay registros disponibles."
+            }
           >
             <div className="table-scroll search-results-scroll">
               <table className="search-results-table catalog-results-table">
@@ -167,8 +210,11 @@ export function CatalogPage() {
                   <tr>
                     <th className="result-col-primary">Nombre</th>
                     <th className="result-col-secondary">
-                      {tab === "products" ? "Código / Precio" : "Símbolo"}
+                      {tab === "products" ? "Código" : "Símbolo"}
                     </th>
+                    {tab === "products" && (
+                      <th className="result-col-secondary">Precio</th>
+                    )}
                     <th className="result-col-status">Estado</th>
                     {(canUpdate || canDelete) && !isSeller && (
                       <th className="result-col-actions">Acciones</th>
@@ -181,13 +227,20 @@ export function CatalogPage() {
                       <td className="result-col-primary">
                         <strong>{item.name}</strong>
                       </td>
-                      <td className="result-col-secondary" data-label={tab === "products" ? "Código / Precio" : "Símbolo"}>
-                        {"code" in item
-                          ? `${item.code} · ${item.price}`
-                          : item.symbol}
+                      <td className="result-col-secondary" data-label={tab === "products" ? "Código" : "Símbolo"}>
+                        {"code" in item ? item.code : item.symbol}
                       </td>
+                      {"code" in item && (
+                        <td className="result-col-secondary" data-label="Precio">
+                          {formatMoney(item.price)}
+                        </td>
+                      )}
                       <td className="result-col-status" data-label="Estado">
-                        {item.isActive ? "Activo" : "Inactivo"}
+                        <span
+                          className={`status-pill ${item.isActive ? "active" : "inactive"}`}
+                        >
+                          {item.isActive ? "Activo" : "Inactivo"}
+                        </span>
                       </td>
                       {(canUpdate || canDelete) && !isSeller && (
                         <td className="result-col-actions">

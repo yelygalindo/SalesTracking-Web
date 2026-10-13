@@ -65,3 +65,19 @@ export const localDayEndUtc = (date: string) => {
   next.setDate(next.getDate() + 1);
   return next.toISOString();
 };
+
+const relativeFormat = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+/** "hace 5 min" or "hace 2 h" for the last hours; the full date and time beyond that. */
+export const formatRelativeTime = (
+  value?: string | Date | null,
+  now = new Date(),
+) => {
+  if (!value) return "—";
+  const minutes = Math.round((now.getTime() - asDate(value).getTime()) / 60000);
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return relativeFormat.format(-minutes, "minute");
+  if (minutes < 12 * 60)
+    return relativeFormat.format(-Math.floor(minutes / 60), "hour");
+  return formatDateTime(value);
+};

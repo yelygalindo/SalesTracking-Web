@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import { divIcon, latLngBounds } from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import type {
   DashboardProjectItem,
   DashboardSeller,
@@ -188,8 +189,11 @@ export function DashboardProjectsMap({
           );
         })}
       </MapContainer>
-      <aside className="dashboard-map-legend" aria-label="Vendedores visibles">
-        <strong>Vendedores</strong>
+      <details className="dashboard-map-legend" aria-label="Responsables visibles">
+        <summary>
+          Responsables ({sellers.length})
+          <ChevronDown aria-hidden="true" />
+        </summary>
         <div>
           {sellers.map((seller) => (
             <span key={seller.externalId || "unassigned"}>
@@ -201,7 +205,7 @@ export function DashboardProjectsMap({
             </span>
           ))}
         </div>
-      </aside>
+      </details>
     </div>
   );
 }

@@ -10,7 +10,7 @@ describe("búsqueda rápida", () => {
 
   it("incluye páginas sueltas y las de cada grupo con su contexto", () => {
     expect(pages).toContainEqual(
-      expect.objectContaining({ label: "Estado del equipo", hint: "Monitoreo en vivo" }),
+      expect.objectContaining({ label: "Estado del equipo", hint: "Equipo en vivo" }),
     );
     expect(pages).toContainEqual(
       expect.objectContaining({ label: "Agenda", to: "/reminders" }),

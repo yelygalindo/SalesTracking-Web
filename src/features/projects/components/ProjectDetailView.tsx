@@ -20,6 +20,7 @@ import type {
 import { projectService } from "../services/projectService";
 import { ProjectProducts } from "./ProjectProducts";
 import { ProjectAttachments } from "./ProjectAttachments";
+import { formatMoney } from "@/lib/i18n/money";
 
 type MainTab = "summary" | "activity" | "attachments" | "products";
 type ActivityFilter = "all" | "visits" | "notes" | "reminders" | "files";
@@ -177,13 +178,7 @@ function ProjectSummary({
     queryKey: ["project-timeline", project.externalId],
     queryFn: () => projectService.timeline(project.externalId),
   });
-  const money =
-    project.estimatedAmount == null
-      ? "—"
-      : new Intl.NumberFormat("es-BO", {
-          style: "currency",
-          currency: "BOB",
-        }).format(project.estimatedAmount);
+  const money = formatMoney(project.estimatedAmount);
   return (
     <div className="project-summary project-summary-compact">
       <div className="project-overview-grid">

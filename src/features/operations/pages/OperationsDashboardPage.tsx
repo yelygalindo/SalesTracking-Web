@@ -25,6 +25,7 @@ import { MapResizeHandler } from "@/components/maps/MapResizeHandler";
 import { useAuthorization } from "@/features/auth/hooks/useAuthorization";
 import {
   formatDateTime,
+  formatRelativeTime,
   formatTime,
   localDayEndUtc,
   localDayKey,
@@ -260,7 +261,7 @@ export function OperationsDashboardPage() {
   return (
     <main className="customers-content operations-dashboard-page">
       <PageHeader
-        eyebrow="Monitoreo en vivo"
+        eyebrow="Operación"
         title="Estado del equipo"
         description={`Jornadas, ${inSentence(visit.plural)} e incidencias de hoy, actualizadas automáticamente.`}
         action={
@@ -555,7 +556,7 @@ function WorkerRow({ worker }: { worker: OperationsWorker }) {
         <small>Última señal</small>
         <strong>
           {worker.lastLocationAtUtc
-            ? formatTimeOrDate(worker.lastLocationAtUtc)
+            ? formatRelativeTime(worker.lastLocationAtUtc)
             : "—"}
         </strong>
       </div>
