@@ -119,6 +119,67 @@ describe("buildOperationsDashboard", () => {
     expect(result.metrics.incidents).toBe(1);
     expect(result.workers[0].incident).toBe("Sin señal hace 75 min");
   });
+
+  it("marca como incidencia el error de seguimiento que reportó el celular", () => {
+    const active: ActiveSeller[] = [
+      {
+        sellerExternalId: "seller-1",
+        hasOpenWorkday: true,
+        sellerName: "Ana Pérez",
+        startedAtUtc: "2026-10-09T12:00:00Z",
+        lastUpdatedAtUtc: "2026-10-09T17:55:00Z",
+        lastLocation: {
+          capturedAtUtc: "2026-10-09T17:55:00Z",
+          latitude: -17.39,
+          longitude: -66.15,
+        },
+        trackingHealth: {
+          installationId: "phone-123",
+          isError: true,
+          message: "Permiso de ubicación denegado",
+          occurredAtUtc: "2026-10-09T17:56:00Z",
+          receivedAtUtc: "2026-10-09T17:56:01Z",
+        },
+      },
+    ];
+
+    const result = buildOperationsDashboard(
+      sellers,
+      active,
+      workdays,
+      [],
+      new Date("2026-10-09T18:00:00Z"),
+    );
+
+    const ana = result.workers.find((worker) => worker.sellerExternalId === "seller-1");
+    expect(ana?.incident).toBe("Error en el celular: Permiso de ubicación denegado");
+    expect(ana?.trackingHealth?.installationId).toBe("phone-123");
+  });
+
+  it("conserva el estado del celular de quien no está trabajando sin marcar incidencia", () => {
+    const active: ActiveSeller[] = [
+      {
+        sellerExternalId: "seller-3",
+        hasOpenWorkday: false,
+        sellerName: "Marta Flores",
+        startedAtUtc: "",
+        trackingHealth: {
+          installationId: "phone-9",
+          isError: true,
+          message: "Upload response: 500",
+          occurredAtUtc: "2026-10-09T09:00:00Z",
+          receivedAtUtc: "2026-10-09T09:00:02Z",
+        },
+      },
+    ];
+
+    const result = buildOperationsDashboard(sellers, active, workdays, [], new Date("2026-10-09T18:00:00Z"));
+
+    const marta = result.workers.find((worker) => worker.sellerExternalId === "seller-3");
+    expect(marta?.status).toBe("not-started");
+    expect(marta?.incident).toBeUndefined();
+    expect(marta?.trackingHealth?.isError).toBe(true);
+  });
 });
 
 describe("trabajadores activos sin jornada", () => {

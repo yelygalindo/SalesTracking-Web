@@ -1136,6 +1136,39 @@
   color: #b42318;
   font-weight: 700;
 }
+/* Last diagnostic reported by the seller's phone about location tracking. */
+.tracking-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: help;
+}
+.tracking-health::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.tracking-health.ok {
+  color: var(--ut-success-text);
+  background: var(--ut-success-soft);
+}
+.tracking-health.error {
+  color: var(--ut-error-text);
+  background: var(--ut-error-soft);
+}
+.tracking-health.unknown {
+  color: var(--ut-text-muted);
+  background: var(--ut-surface-muted);
+  cursor: default;
+}
 .operations-worker-fact strong {
   margin-top: 3px;
   color: #425269;

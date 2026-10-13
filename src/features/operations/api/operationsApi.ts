@@ -48,6 +48,16 @@ export interface Workday {
   locationCount: number;
   visits?: WorkdayVisit[];
 }
+/** Last diagnostic the mobile app reported about its location tracking. */
+export interface TrackingHealth {
+  installationId: string;
+  isError: boolean;
+  message: string;
+  /** When it happened on the phone. */
+  occurredAtUtc: string;
+  /** When the API received it. */
+  receivedAtUtc: string;
+}
 export interface ActiveSeller {
   sellerExternalId: string;
   sellerName: string;
@@ -69,6 +79,8 @@ export interface ActiveSeller {
   currentVisitTargetName?: string | null;
   currentVisitStartedAtUtc?: string | null;
   currentVisit?: { name?: string | null; startedAtUtc?: string | null } | null;
+  /** Null when the seller's phone has not reported any diagnostic yet. */
+  trackingHealth?: TrackingHealth | null;
 }
 export interface OperationVisit {
   externalId: string;

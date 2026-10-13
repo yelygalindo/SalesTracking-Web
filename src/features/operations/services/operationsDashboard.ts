@@ -2,6 +2,7 @@ import type {
   ActiveSeller,
   OperationVisit,
   SellerOption,
+  TrackingHealth,
   Workday,
 } from "../api/operationsApi";
 
@@ -20,6 +21,7 @@ export interface OperationsWorker {
   completedVisits: number;
   currentVisitName?: string | null;
   currentVisitStartedAtUtc?: string | null;
+  trackingHealth?: TrackingHealth | null;
   incident?: string;
 }
 
@@ -54,6 +56,10 @@ export function buildOperationsDashboard(
     activeSellers
       .filter((seller) => seller.hasOpenWorkday)
       .map((seller) => [seller.sellerExternalId, seller]),
+  );
+  // Phone diagnostics are reported for every worker, working or not.
+  const healthBySeller = new Map(
+    activeSellers.map((seller) => [seller.sellerExternalId, seller.trackingHealth ?? null]),
   );
   const workdayById = new Map(workdays.map((workday) => [workday.id, workday]));
   const workdaysBySeller = new Map<string, Workday[]>();
@@ -125,6 +131,7 @@ export function buildOperationsDashboard(
       const lastLocation = active?.lastLocation;
       const lastLocationAtUtc =
         active?.lastUpdatedAtUtc ?? lastLocation?.capturedAtUtc ?? null;
+      const trackingHealth = healthBySeller.get(seller.externalId) ?? null;
       let incident: string | undefined;
 
       if (isWorking && !lastLocation) incident = "Sin ubicación reportada";
@@ -135,6 +142,8 @@ export function buildOperationsDashboard(
           incident = `Sin señal hace ${minutes} min`;
         }
       }
+      if (!incident && isWorking && trackingHealth?.isError)
+        incident = `Error en el celular: ${trackingHealth.message || "sin detalle"}`;
 
       return {
         sellerExternalId: seller.externalId,
@@ -161,6 +170,7 @@ export function buildOperationsDashboard(
         completedVisits: completedVisitsBySeller.get(seller.externalId) ?? 0,
         currentVisitName: active?.currentVisit?.name,
         currentVisitStartedAtUtc: active?.currentVisit?.startedAtUtc,
+        trackingHealth,
         incident,
       };
     },
